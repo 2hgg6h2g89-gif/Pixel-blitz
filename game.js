@@ -291,7 +291,7 @@ function koBlock(w,dt){const c=G.carrier,b=G.ball,air=b&&!b.caught;const fx=air?
  if(tg&&!(w.hcd>0)){w.blkK=tg;const ux=fx-tg.x,uy=fy-tg.y,l=Math.hypot(ux,uy)||1;steer(w,tg.x+ux/l*1.1,tg.y+uy/l*1.1,spk,dt,10);if(dist(w,tg)<2.3){w.hold=rnd(KO.holdMin,KO.holdMax);w.hcd=0.6;dust(tg.x,tg.y,6)}return}
  w.blkK=null;const k=i-(OL.length-1)/2;steer(w,cl(fx+k*2.4,2,FIELDW-2),fy+7-Math.abs(k)*1.1,spk,dt,10)}
 const KO={reach:34,blkSpd:0.9,engageAt:0.55,holdMin:1.0,holdMax:1.9,dMin:-4,dMax:6,tMin:3.6,tMax:4.2};window.KO=KO;
-const PUR={DL:6.8,LB:7.6,CB:8.0,S:8.0,gang:2.0,brkP:0.2,cut:0.2,maxT:2.2,juke:1.4,jukeT:0.14,behind:0.2,whiff:0.55,brk:0.8};window.PUR=PUR;
+const PUR={DL:6.8,LB:7.6,CB:8.15,S:8.25,gang:2.3,brkP:0.16,cut:0.2,maxT:2.2,juke:1.4,jukeT:0.14,behind:0.2,whiff:0.55,brk:0.8};window.PUR=PUR;
 function nearest(p,team,roles){let b=null,bd=1e9;for(const q of G.players)if(q.team===team&&roles.includes(q.role)){const d=dist(p,q);if(d<bd){bd=d;b=q}}return b}
 function defend(d,dt){if(d.dive>0)return;
  if(d.role==='DL'&&d.blk&&!d.shed&&!(d.fallen>0)){if(G.snapT>d.shedT||(G.carrier!==G.qb&&G.snapT>d.shedT*0.7)){d.shed=true;d.eng=false;d.vx+=(d.x<d.blk.x?-1:1)*5}else{d.eng=dist(d,d.blk)<2.9;const c=G.carrier;steer(d,c.x,c.y,G.play.t==='pass'?1.8:1.0,dt);return}}if(d.fallen>0||d.stun>0){d.vx*=0.9;d.vy*=0.9;return}
