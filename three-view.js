@@ -84,37 +84,38 @@ for(const s of[-1,1])for(const yy of[10,90]){const p=new THREE.Mesh(new THREE.Bo
 // LOS / first-down lines
 const los=new THREE.Mesh(new THREE.PlaneGeometry(FW,.35),new THREE.MeshBasicMaterial({color:0x2f6bff}));los.rotation.x=-Math.PI/2;los.position.y=.03;scene.add(los);
 const fd=new THREE.Mesh(new THREE.PlaneGeometry(FW,.35),new THREE.MeshBasicMaterial({color:0xffe23f}));fd.rotation.x=-Math.PI/2;fd.position.y=.03;scene.add(fd);
-// players: instanced parts
-const N=24;
-const PARTS=[
- ['legL',new THREE.BoxGeometry(.34,.8,.36),[-.2,.42,0],'p'],['legR',new THREE.BoxGeometry(.34,.8,.36),[.2,.42,0],'p'],
- ['pants',new THREE.BoxGeometry(.82,.34,.52),[0,.86,0],'p'],
- ['torso',new THREE.BoxGeometry(.86,.72,.54),[0,1.32,0],'j'],['pads',new THREE.BoxGeometry(1.18,.3,.66),[0,1.66,0],'j'],
- ['armL',new THREE.BoxGeometry(.26,.66,.26),[-.62,1.28,0],'s'],['armR',new THREE.BoxGeometry(.26,.66,.26),[.62,1.28,0],'s'],
- ['helm',new THREE.IcosahedronGeometry(.56,1),[0,2.25,0],'h'],['stripe',new THREE.BoxGeometry(.16,.18,1.05),[0,2.67,0.02],'c2'],
- ['mask',new THREE.BoxGeometry(.62,.36,.14),[0,2.1,-.52],'m'],['shoe',new THREE.BoxGeometry(.8,.14,.5),[0,.07,-.05],'k'],
-];
-const SKIN=['#5a3a26','#8a5a3c','#c08a5e','#e0b48c','#f1cfb0'];
-const parts=PARTS.map(([n,g,o,k])=>{const m=new THREE.InstancedMesh(g,new THREE.MeshLambertMaterial({flatShading:true}),N);m.count=0;m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);scene.add(m);return{n,o,k,m}});
-const shadow=new THREE.InstancedMesh(new THREE.CircleGeometry(1.1,12),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.28,depthWrite:false}),N);scene.add(shadow);
+// players: pixel-art billboards (instanced, nearest filtering)
+const N=14,S=window.SPR;
+const shadow=new THREE.InstancedMesh(new THREE.CircleGeometry(1.0,12),new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.3,depthWrite:false}),N*2);scene.add(shadow);
 const ring=new THREE.Mesh(new THREE.RingGeometry(1.4,1.85,24),new THREE.MeshBasicMaterial({color:0x8a5cff,transparent:true,opacity:.85}));ring.rotation.x=-Math.PI/2;ring.position.y=.04;scene.add(ring);const sh=new THREE.Shape();for(let i=0;i<10;i++){const r=i%2?.32:.75,a=i/10*Math.PI*2-Math.PI/2;i?sh.lineTo(Math.cos(a)*r,Math.sin(a)*r):sh.moveTo(Math.cos(a)*r,Math.sin(a)*r)}const star=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshBasicMaterial({color:0xffd23f,side:THREE.DoubleSide}));star.rotation.x=-Math.PI/2;star.position.y=.05;scene.add(star);
 const ball=new THREE.Mesh(new THREE.SphereGeometry(.28,10,6),lam(0x8a4a1f));ball.scale.set(1.8,1.8,2.8);scene.add(ball);
 const tgtMk=new THREE.Mesh(new THREE.RingGeometry(.6,.85,16),new THREE.MeshBasicMaterial({color:0xffe23f}));tgtMk.rotation.x=-Math.PI/2;tgtMk.position.y=.05;scene.add(tgtMk);
-const tmp=new THREE.Object3D(),pm=new THREE.Matrix4(),om=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v3=new THREE.Vector3(),one=new THREE.Vector3(1.9,1.9,1.9);
-let lastPlayers=null;
-function colorsFor(){parts.forEach(pt=>{G.players.forEach((p,i)=>{const t=p.team===0?home():away();
- const c={p:t.p,j:t.c1,s:SKIN[p.skin],h:t.h,c2:t.c2,m:'#c9c9c9',k:'#1a1a1a'}[pt.k];pt.m.setColorAt(i,col.set(c))});if(pt.m.instanceColor)pt.m.instanceColor.needsUpdate=true})}
-function updatePlayers(){const P=G.players;if(P!==lastPlayers){lastPlayers=P;colorsFor()}
- P.forEach((p,i)=>{const sp=Math.hypot(p.vx,p.vy);let fx=p.vx,fz=-p.vy;if(sp<0.3){fx=0;fz=p.team===0?-1:1}p.face=p.face??Math.atan2(-fx,-fz);
-  const tgt=Math.atan2(-fx,-fz);let d=tgt-p.face;d=Math.atan2(Math.sin(d),Math.cos(d));p.face+=d*0.25;
-  const bob=sp>0.5?Math.abs(Math.sin(p.anim*3))*.12:0;const lean=Math.min(sp/8,1)*.18;const st=p.stun>0;
-  const fl=p.fallen>0?-1.45:p.dive>0?-1.1:0;e.set(fl||(st?0.5:-lean),p.face,0);q.setFromEuler(e);pm.compose(v3.set(Xw(p.x),fl?.35:bob,Z(p.y)),q,one);
-  const sw=Math.sin(p.anim*3)*Math.min(sp/5,1)*.7;
-  parts.forEach(pt=>{tmp.position.set(...pt.o);tmp.rotation.set(0,0,0);
-   if(pt.n==='legL'||pt.n==='armR')tmp.rotation.x=sw;if(pt.n==='legR'||pt.n==='armL')tmp.rotation.x=-sw;
-   tmp.updateMatrix();om.multiplyMatrices(pm,tmp.matrix);pt.m.setMatrixAt(i,om)});
-  m4.makeRotationX(-Math.PI/2);m4.setPosition(Xw(p.x),.02,Z(p.y));shadow.setMatrixAt(i,m4)});
- parts.forEach(pt=>{pt.m.count=P.length;pt.m.instanceMatrix.needsUpdate=true});shadow.count=P.length;shadow.instanceMatrix.needsUpdate=true}
+const bgeo=new THREE.PlaneGeometry(1,1);bgeo.translate(0,.5,0);
+const CU=1/(S.DIRS*S.POSES),CV=1/10;
+function mkTeamMesh(){const tex=new THREE.CanvasTexture(document.createElement('canvas'));
+ const mat=new THREE.MeshBasicMaterial({map:tex,alphaTest:.5,side:THREE.DoubleSide});
+ mat.onBeforeCompile=sh=>{sh.vertexShader='attribute vec2 uvOff;\n'+sh.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\n vMapUv = vMapUv*vec2('+CU.toFixed(8)+','+CV.toFixed(8)+') + uvOff;')};
+ const m=new THREE.InstancedMesh(bgeo,mat,N);m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);const uo=new THREE.InstancedBufferAttribute(new Float32Array(N*2),2);uo.setUsage(THREE.DynamicDrawUsage);m.geometry=bgeo.clone();m.geometry.setAttribute('uvOff',uo);m.frustumCulled=false;scene.add(m);return{m,mat,uo}}
+const TM=[mkTeamMesh(),mkTeamMesh()];window.__atlases=[];
+let atlasKey='';function ensureAtlas(){const k=G.home+'-'+G.away;if(k===atlasKey)return;atlasKey=k;[home(),away()].forEach((t,i)=>{const c=S.buildAtlas(t);window.__atlases[i]=c;const tx=new THREE.CanvasTexture(c);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;tx.generateMipmaps=false;tx.colorSpace=THREE.SRGBColorSpace;TM[i].mat.map=tx;TM[i].mat.needsUpdate=true})}
+const pm=new THREE.Matrix4(),v3=new THREE.Vector3(),sc=new THREE.Vector3();
+function poseOf(p){const P=S.P,line=p.role==='OL'||p.role==='DL';
+ if(p.dive>0)return P.dive;if(p.fallen>0)return P.fall;
+ if(G.st==='presnap')return line?P.stance:P.idle;
+ if(G.celeb&&p.team===0&&G.st==='result')return P.celeb;
+ if(p.throwT>0)return P.throw;if(p.catchT>0)return P.catch;if(p.eng)return P.block;
+ if(Math.hypot(p.vx,p.vy)>0.6)return Math.floor(p.anim/0.8)%2?P.run2:P.run1;return P.idle}
+function updatePlayers(){ensureAtlas();const cnt=[0,0];
+ G.players.forEach((p,si)=>{const sp=Math.hypot(p.vx,p.vy);let fx=p.vx,fy=p.vy;
+  if(p.eng&&p.blk){fx=p.blk.x-p.x;fy=p.blk.y-p.y}
+  else if(sp<0.4||G.st==='presnap'){fx=0;fy=p.team===0?1:-1}
+  const l=Math.hypot(fx,fy)||1;p.fdx=(p.fdx??0)*.75+fx/l*.25;p.fdy=(p.fdy??(p.team?-1:1))*.75+fy/l*.25;
+  const a=Math.atan2(p.fdx,p.fdy),aa=Math.abs(a)*180/Math.PI;const dir=aa<22.5?4:aa<67.5?3:aa<112.5?2:aa<157.5?1:0;const mir=a<0?-1:1;
+  const pose=poseOf(p);const line=(p.role==='OL'||p.role==='DL')?1:0;const T=TM[p.team],i=cnt[p.team]++;
+  const s=4.3*(line?1.12:1);sc.set(s*mir,s,1);pm.compose(v3.set(Xw(p.x),0.02,Z(p.y)),cam.quaternion,sc);T.m.setMatrixAt(i,pm);
+  T.uo.setXY(i,(dir*S.POSES+pose)*CU,1-((p.skin*2+line)+1)*CV);
+  m4.makeRotationX(-Math.PI/2);m4.setPosition(Xw(p.x),.02,Z(p.y));shadow.setMatrixAt(si,m4)});
+ TM.forEach((T,k)=>{T.m.count=cnt[k];T.m.instanceMatrix.needsUpdate=true;T.uo.needsUpdate=true});shadow.count=G.players.length;shadow.instanceMatrix.needsUpdate=true}
 // route ribbons
 const RCOL=[0xff2a2a,0xff8a1f,0xffd400,0x9a3cff];let routeGrp=new THREE.Group();scene.add(routeGrp);let routeVer=-1;
 function buildRoutes(){routeGrp.clear();(G.routes||[]).forEach((r,ri)=>{const pts=r.pts;const pos=[];const w=.55;
@@ -131,7 +132,7 @@ const cpos=new THREE.Vector3(0,17,0),clook=new THREE.Vector3();let camX=0;
 window.R3D=()=>{const st=G.st;if(st==='title'||st==='team'){ren.domElement.style.visibility='hidden';return}ren.domElement.style.visibility='visible';
  paintSB();const fk=G.home+'-'+G.away;if(fk!==fieldKey){fieldKey=fk;paintField();ftex.needsUpdate=true}
  const on=st==='live'||st==='result'||st==='presnap';
- if(on)updatePlayers();parts.forEach(pt=>pt.m.visible=on);shadow.visible=on;
+ cam.updateMatrixWorld();if(on)updatePlayers();TM.forEach(T=>T.m.visible=on);shadow.visible=on;
  if(G.routeVer!==routeVer){routeVer=G.routeVer;buildRoutes()}
  routeGrp.visible=st==='presnap'||(st==='live'&&!G.thrown&&G.carrier&&G.carrier.role==='QB'&&G.play.t==='pass');
  los.position.z=Z(G.los);fd.position.z=Z(Math.min(G.los+G.togo,100));fd.visible=G.los+G.togo<100;
