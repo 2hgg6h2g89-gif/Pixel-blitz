@@ -9,7 +9,7 @@ const TEAMS=[
  {n:'GLACIER YETIS',a:'GLY',c1:'#e9f6ff',c2:'#16a07a',h:'#16a07a',p:'#e9f6ff'},
 ];
 const QLEN=180;
-const DIFFS=[{n:'ROOKIE',td:.18,fg:.14,clk:[75,105],def:.86,shed:1.3,int:.35,cov:1.6},{n:'PRO',td:.28,fg:.2,clk:[60,90],def:1,shed:1,int:.6,cov:1.2},{n:'ALL-PRO',td:.38,fg:.22,clk:[50,78],def:1.08,shed:.82,int:.75,cov:.9},{n:'LEGEND',td:.5,fg:.22,clk:[40,65],def:1.16,shed:.68,int:.9,cov:.6}];
+const DIFFS=[{n:'ROOKIE',td:.18,fg:.14,clk:[75,105],def:.84,shed:1.65,int:.3,cov:2.8,sep:.9,pk:4.2},{n:'PRO',td:.28,fg:.2,clk:[60,90],def:.97,shed:1.25,int:.5,cov:2.0,sep:.6,pk:3.8},{n:'ALL-PRO',td:.38,fg:.22,clk:[50,78],def:1.06,shed:.85,int:.7,cov:1.1,sep:.25,pk:3.3},{n:'LEGEND',td:.5,fg:.22,clk:[40,65],def:1.14,shed:.7,int:.85,cov:.7,sep:0,pk:3.0}];
 const LS={get(){try{return JSON.parse(localStorage.getItem('pb_ladder')||'{}')}catch(e){return{}}},set(o){try{localStorage.setItem('pb_ladder',JSON.stringify(o))}catch(e){}}};
 const MAXLVL=9;function unlocked(){return Math.max(1,LS.get()['d'+G.diff]||1)}
 function lvlOpp(l){const o=[0,1,2,3].filter(i=>i!==G.home);return o[(l-1)%3]}
@@ -23,7 +23,7 @@ const PLAYS=[
  {n:'SWEEP LEFT',t:'sweep',r:[['block',-1],['block',1],['block',-1]]},
 ];
 let G={diff:1,lvl:1,clock:QLEN,aud:4,paused:false,st:'title',t:0,home:0,away:1,sh:0,sa:0,q:1,drive:0,maxDrives:8,los:25,down:1,togo:10,msg:'',msgT:0,sel:0,players:[],ball:null,carrier:null,stats:{py:0,ry:0,td:0,int:0,sack:0},log:[],juke:0,jcd:0,cam:0,snapT:0,shake:0,parts:[]};
-window.G=G;
+window.G=G;G.adv=localStorage.getItem('pb_adv')==='1';
 // ---------- input ----------
 const IN={jx:0,jy:0,taps:[],keyp:[],flick:0,truck:false,sprint:false,aimP:null};
 function pos(e){const r=C.getBoundingClientRect();const p=e.touches?e.touches[0]||e.changedTouches[0]:e;return[(p.clientX-r.left)*W/r.width,(p.clientY-r.top)*H/r.height]}
@@ -31,7 +31,7 @@ const PT=new Map(),STK={x:W-84,y:H-170,r:56};
 function ptsOf(e){const r=C.getBoundingClientRect();const L=e.changedTouches?[...e.changedTouches]:[e];return L.map(p=>({id:e.changedTouches?p.identifier:'m',x:(p.clientX-r.left)*W/r.width,y:(p.clientY-r.top)*H/r.height}))}
 function kindFor(x,y){if(G.st!=='live'||G.paused)return'tap';if(x<52&&y<50)return'tap';
  if(G.play&&G.play.t==='ko'&&G.ko&&x<120&&y>H-140)return'tap';
- if(passerPhase())return x<W/2?'joy':'aim';
+ if(passerPhase()){if(G.adv)return x<W/2?'joy':'aim';return(x<190&&y>H-300)?'joy':'tap'}
  for(const p of PT.values())if(p.kind==='stick')return'truck';
  return x<W/2?'act':'stick'}
 function pd(e){e.preventDefault();for(const q of ptsOf(e)){IN.press={x:q.x,y:q.y,t:performance.now(),down:true};if(q.id==='m'&&e.button>0)continue;PT.set(q.id,{...q,sx:q.x,sy:q.y,t0:performance.now(),kind:kindFor(q.x,q.y),moved:0})}}
@@ -76,16 +76,21 @@ function setupPlay(p){
  P.push(mk(1,'S',cx,L+15,31));
  {const ols=P.filter(q=>q.role==='OL'),used=new Set();P.filter(q=>q.role==='DL').forEach(d=>{let b=null,bd=1e9;ols.forEach(o=>{if(used.has(o))return;const dd=Math.abs(o.x-d.x);if(dd<bd){bd=dd;b=o}});used.add(b);d.blk=b;b.blk=d;d.shedT=(p.t==='pass'?rnd(2.4,3.6):rnd(0.9,1.8))*DIFFS[G.diff].shed})}
  G.celeb=false;G.players=P;G.qb=qb;G.rb=rb;G.carrier=qb;G.ball=null;G.snapT=0;G.cam=L;G.juke=0;G.jcd=0;G.thrown=false;G.passer=true;
- G.st='presnap';G.handed=false;G.audOpen=false;G.pend=null;buildRoutesG();G.routeVer=(G.routeVer||0)+1;G.ovT=1.5;G.ko=false;hint('snap','ROUTES SHOWN FROM ABOVE|TAP SNAP TO START|AUDIBLE TO CHANGE IT UP');;
+ G.st='presnap';G.handed=false;G.audOpen=false;G.pend=null;buildRoutesG();G.routeVer=(G.routeVer||0)+1;G.ovT=1.0;G.ko=false;hint('snap','ROUTES SHOWN FROM ABOVE|TAP SNAP TO START|AUDIBLE TO CHANGE IT UP');;
 }
-function buildRoutesG(){G.routes=G.players.filter(q=>q.role==='WR').map((w,i)=>w.route==='block'?null:Object.assign(simRoute(w),{i})).filter(Boolean);G.routeVer=(G.routeVer||0)+1}
-function setDepth(i,deep){const w=G.players.filter(q=>q.role==='WR')[i];if(!w||G.aud<=0)return;
+function buildRoutesG(){G.routes=G.players.filter(q=>q.role==='WR').map((w,i)=>w.route==='block'?null:Object.assign(simRoute(w),{i})).filter(Boolean);if(G.play&&G.play.t==='pass'&&G.rb&&G.qb){const r=G.rb,q=G.qb,pts=[];const P0=[[r.x,r.y],[q.x+1.4,q.y-0.6],[q.x+1.8,G.los+1],[q.x+2.4,G.los+5]];for(let s=0;s<3;s++)for(let k=0;k<6;k++){const u=k/6,A=P0[s],B=P0[s+1];pts.push([A[0]+(B[0]-A[0])*u,A[1]+(B[1]-A[1])*u])}pts.push(P0[3]);G.routes.push({w:r,pts,i:3})}G.routeVer=(G.routeVer||0)+1}
+function setDepth(i,lv){const deep=lv===0;const w=G.players.filter(q=>q.role==='WR')[i];if(!w||G.aud<=0)return;
  if(deep){w.route={flat:'corner',drag:'post',block:'go',curl:'go',slant:'post',out:'corner'}[w.route]||w.route;w.dk=1.7}
- else{w.route={go:'curl',post:'slant',corner:'out',block:'curl'}[w.route]||w.route;w.dk=0.8}
- G.aud--;buildRoutesG();say((deep?'DEEP':'MEDIUM')+' - WR'+(i+1),1)}
+ else if(lv===1){w.route={go:'curl',post:'curl',corner:'out',block:'curl',flat:'out',drag:'slant'}[w.route]||w.route;w.dk=1.15}
+ else{w.route={go:'slant',post:'slant',corner:'out',block:'flat',curl:'drag',out:'flat'}[w.route]||w.route;w.dk=0.7}
+ G.aud--;buildRoutesG();G.ovT=0.8;say(['DEEP','MEDIUM','SHORT'][lv]+' - WR'+(i+1),1)}
 function simRoute(w){const c={x:w.x,y:w.y,vx:0,vy:0,rt:0,route:w.route,dir:w.dir,dk:w.dk};const pts=[[c.x,c.y]];for(let i=0;i<78;i++){c.rt+=1/30;const r=routeTarget(c,c.rt);steer(c,r.x,r.y,7.2,1/30);c.x=cl(c.x+c.vx/30,1,FIELDW-1);c.y+=c.vy/30;if(i%3==2)pts.push([c.x,c.y])}return{w,pts}}
 function scr(x,y,h=1){return window.PROJ?window.PROJ(x,y,h):[sx(x),sy(y)]}
-function routeTarget(w,t){const L=G.los,d=w.dir;t=t/(w.dk||1.2);
+function routeTarget(w,t){const r=routeTarget0(w,t);const goal=G.los>=78&&['go','post','corner'].includes(w.route);
+ if(goal&&w.y>101)return{x:cl(w.x+(w.x<FIELDW/2?-0.8:0.8),3,FIELDW-3),y:Math.min(w.y+0.6,106)};
+ if(r.y>106||w.y>105.5)return{x:cl(w.x+Math.sin(t*1.6)*0.6,3,FIELDW-3),y:Math.min(r.y,105.8)};
+ r.x=cl(r.x,2,FIELDW-2);return r}
+function routeTarget0(w,t){const L=G.los,d=w.dir;t=t/(w.dk||1.2);
  switch(w.route){
  case 'slant':return t<0.6?{x:w.x,y:w.y+1}:{x:w.x+d*2,y:w.y+1.4};
  case 'out':return t<1.4?{x:w.x,y:w.y+1}:{x:w.x-d*3*(w.x<FIELDW/2?1:-1)*0+(w.x<FIELDW/2?-1:1),y:w.y+0.1};
@@ -97,11 +102,11 @@ function routeTarget(w,t){const L=G.los,d=w.dir;t=t/(w.dk||1.2);
  case 'corner':return t<1.4?{x:w.x,y:w.y+1}:{x:w.x+(w.x<FIELDW/2?-1:1),y:w.y+1.2};
  case 'block':return{x:w.x,y:Math.min(w.y+0.5,L+2)};}
  return{x:w.x,y:w.y};}
-function steer(p,tx,ty,sp,dt){let dx=tx-p.x,dy=ty-p.y,d=Math.hypot(dx,dy);if(d<0.05){p.vx*=0.8;p.vy*=0.8}else{const k=Math.min(1,dt*8);p.vx+=(dx/d*sp-p.vx)*k;p.vy+=(dy/d*sp-p.vy)*k}}
+function steer(p,tx,ty,sp,dt,sh){let dx=tx-p.x,dy=ty-p.y,d=Math.hypot(dx,dy);if(d<0.05){p.vx*=0.8;p.vy*=0.8}else{const k=Math.min(1,dt*(sh||8));p.vx+=(dx/d*sp-p.vx)*k;p.vy+=(dy/d*sp-p.vy)*k}}
 // ---------- live update ----------
 function endPlay(kind,y){
  if(G.st!=='live')return;G.aim=null;G.pend=null;
- if(G.play.t==='ko'&&kind!=='td'){G.st='result';G.resT=1.6;G.ko=false;const y2=cl(Math.round(y??G.carrier.y),1,99);G.los=y2;G.down=1;G.togo=10;G.next='down';banner('RETURN TO THE '+(y2<=50?y2:100-y2),y2<=50?'OWN TERRITORY':'OPPONENT TERRITORY');return}G.st='result';G.resT=1.6;const gain=Math.round((y??G.carrier.y)-G.los);let m='';
+ if(G.play.t==='ko'&&kind!=='td'){G.st='result';G.resT=1.6;G.ko=false;const y2=cl(Math.round(y??G.carrier.y),1,99);G.los=y2;G.down=1;G.togo=10;G.next='down';banner('RETURN TO THE '+(y2<=50?y2:100-y2),y2<=50?'OWN TERRITORY':'OPPONENT TERRITORY');return}G.st='result';G.resT=1.15;const gain=Math.round((y??G.carrier.y)-G.los);let m='';
  if(kind==='td'){G.celeb=true;G.sh+=7;G.stats.td++;m='TOUCHDOWN!';G.shake=0.6;burst(G.carrier.x,G.carrier.y);G.next='drive'}
  else if(kind==='int'){G.stats.int++;m='INTERCEPTED!';G.next='drive'}
  else if(kind==='inc'){m='INCOMPLETE';G.down++;G.next='down'}
@@ -115,17 +120,22 @@ function endPlay(kind,y){
 function dust(x,y,n){for(let i=0;i<n;i++)G.parts.push({x:x+rnd(-.5,.5),y:y+rnd(-.5,.5),vx:rnd(-3,3),vy:rnd(-3,3),l:rnd(.3,.7),c:['#e6d8b0','#c9b98f','#fff4d6'][i%3],dust:1})}
 function burst(x,y){for(let i=0;i<40;i++)G.parts.push({x,y,vx:rnd(-8,8),vy:rnd(-8,8),l:rnd(.5,1.2),c:['#ff4fa3','#ffe14f','#3fd0ff'][i%3]})}
 function finish(){if(G.sh>G.sa){const o=LS.get(),k='d'+G.diff;o[k]=Math.max(o[k]||1,Math.min(MAXLVL,G.lvl+1));LS.set(o);G.unlockMsg=G.lvl<MAXLVL?'LEVEL '+(G.lvl+1)+' UNLOCKED':'LADDER CLEARED'}else G.unlockMsg='WIN TO UNLOCK THE NEXT LEVEL'}
+function autoPick(change){const L=G.los,dn=G.down,tg=G.togo;let w=[1,1,1,0,0,0];
+ if(tg<=2){w=[2,.4,1.6,0,0,0]}else if(tg>=8||dn>=3){w=[1.6,2.2,1.8,0,0,0]}else w=[1.6,1,1.5,0,0,0];
+ if(L>=88){w[1]*=.4;w[0]*=1.6;w[2]*=1.4}
+ const cur=G.play?PLAYS.indexOf(G.play):-1;if(cur>=0)w[cur]*=change?0:.35;
+ let s=w.reduce((a,b)=>a+b),r=Math.random()*s,i=0;for(;i<2;i++){r-=w[i];if(r<=0)break}setupPlay(PLAYS[i])}
 function nextAfter(){
  if(G.next==='drive'){ G.drive++;
   // CPU possession sim
   const D=DIFFS[G.diff],bonus=lvlStr(G.lvl),r=Math.random(),pts=r<D.td+bonus?7:r<D.td+bonus+D.fg?3:0;G.sa+=pts;
   const ab=TEAMS[G.away].a;G.oppMsg=pts===7?ab+' SCORED A TD':pts===3?ab+' KICKED A FG':ab+' PUNTED';G.log.unshift(G.oppMsg);
   G.clock-=rnd(D.clk[0],D.clk[1])*(1-bonus);G.oppT=2.4;G.afterOpp=true;
-  G.los=25;G.down=1;G.togo=10;if(G.clock<=0&&G.q>=4){G.st='final';finish();return}G.st='oppcard';return}
+  G.los=25;G.down=1;G.togo=10;if(G.clock<=0&&G.q>=4){G.st='final';finish();return}if(G.clock<=0){G.q++;G.clock=QLEN;if(G.q===3){startKickoff();banner(G.oppMsg,'HALFTIME KICKOFF');return}}autoPick();banner(G.oppMsg,'YOUR BALL  '+TEAMS[G.home].a+' '+G.sh+' - '+G.sa+' '+TEAMS[G.away].a);return}
  if(G.clock<=0){if(G.q>=4){G.st='final';finish();return}G.q++;G.clock=QLEN;G.log.unshift('END OF QUARTER '+(G.q-1));if(G.q===3){startKickoff();return}}
- G.st='select';
+ autoPick();
 }
-function snap(){G.st='live';G.snapT=0;G.stam=1;G.qbRun=false;G.aim=null;G.runHinted=false;say('HIKE!',0.8);if(G.play.t==='pass')hint('pass','LEFT THUMB: MOVE THE QB|RIGHT THUMB: PULL BACK TO AIM|RELEASE TO THROW');}
+function snap(){G.st='live';G.snapT=0;G.stam=1;G.qbRun=false;G.aim=null;G.runHinted=false;say('HIKE!',0.8);if(G.play.t==='pass')G.dropY=G.qb.y-(G.diff<2?3.5:3);hint(G.adv?'passadv':'pass2',G.adv?'LEFT THUMB: MOVE THE QB|RIGHT THUMB: PULL BACK TO AIM|RELEASE TO THROW':'TAP A RECEIVER BUBBLE TO THROW|GREEN = OPEN  YELLOW = COVERED  RED = BLANKETED|TAP HANDOFF ON THE RB TO RUN IT|DRAG BOTTOM-LEFT TO SCRAMBLE');}
 function startKickoff(){const cx=FIELDW/2,P=[];const ret=mk(0,'RB',cx+rnd(-6,6),4,22);P.push(ret);
  for(let i=0;i<5;i++)P.push(mk(0,'OL',cx-10+i*5,24+(i%2)*3,[72,65,60,66,77][i]));
  for(let i=0;i<10;i++){const d=mk(1,'LB',3+i*5.2,62,40+i);P.push(d)}
@@ -137,11 +147,11 @@ function update(dt){
  if(G.flash){G.flash.t+=dt;if(G.flash.t>0.45)G.flash=null}
  G.parts=G.parts.filter(p=>(p.l-=dt)>0);G.parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt});
  const taps=IN.taps.splice(0),keys=IN.keyp.splice(0);if(keys.includes(' '))taps.push(null);readSticks();if(G.hint){G.hint.t-=dt;if(G.hint.t<=0)G.hint=null}if(G.banner)G.banner.a+=dt;
- if(G.paused){for(const t of taps){if(!t)continue;if(t[1]>380&&t[1]<440)G.paused=false;else if(t[1]>460&&t[1]<520){G.paused=false;Object.assign(G,{sh:0,sa:0,drive:0,q:1,clock:QLEN,aud:4,los:25,down:1,togo:10,log:[],stats:{py:0,ry:0,td:0,int:0,sack:0}});G.st='title'}}return}
+ if(G.paused){for(const t of taps){if(!t)continue;if(t[1]>560&&t[1]<620){G.adv=!G.adv;localStorage.setItem('pb_adv',G.adv?'1':'0')}else if(t[1]>380&&t[1]<440)G.paused=false;else if(t[1]>460&&t[1]<520){G.paused=false;Object.assign(G,{sh:0,sa:0,drive:0,q:1,clock:QLEN,aud:4,los:25,down:1,togo:10,log:[],stats:{py:0,ry:0,td:0,int:0,sack:0}});G.st='title'}}return}
  if(G.st!=='title'&&G.st!=='team'&&taps.some(t=>t&&t[0]<52&&t[1]<50)){G.paused=true;return}
  if(G.st==='title'){if(taps.length)G.st='team';return}
  if(G.st==='presnap'){if(G.ovT>0)G.ovT-=dt;if(keys.includes('u')&&!G.audOpen){G.audOpen=true}G.cam+=(G.los+4-G.cam)*Math.min(1,dt*4);for(const t of taps){if(G.audOpen&&t){if(t[1]<H-AP_H){G.audOpen=false;return}const b=audBtn(t[0],t[1]);if(!b)return;
-   if(b.c===3){if(b.r===0){if(G.aud>0){G.aud--;G.audOpen=false;G.st='select';say('AUDIBLE!',1)}}else G.audOpen=false}else setDepth(b.c,b.r===0);return}
+   if(b.c===3){if(b.r===0){autoPick(true);G.audOpen=true;say('NEW PLAY: '+G.play.n,1.2)}else if(b.r===1)G.audOpen=false}else setDepth(b.c,b.r);return}
   if(t&&Math.hypot(t[0]-60,t[1]-(H-84))<44){G.audOpen=true;return}
   if(!t||Math.hypot(t[0]-(W-64),t[1]-(H-84))<48)return snap();}return}
  if(G.st==='team'){for(const t of taps){if(!t)continue;const[x,y]=t;
@@ -151,7 +161,7 @@ function update(dt){
   else if(y>=590&&y<660){if(x<110)G.lvl=Math.max(1,G.lvl-1);else if(x>280)G.lvl=Math.min(unlocked(),G.lvl+1)}}
   G.away=lvlOpp(G.lvl);return}
  if(G.st==='oppcard'){G.oppT-=dt;if(G.oppT<=0||taps.length){if(G.clock<=0){if(G.q>=4){G.st='final';finish();return}G.q++;G.clock=QLEN;if(G.q===3){startKickoff();return}}G.st='drivecard';G.cardT=1.6}return}
- if(G.st==='drivecard'){G.cardT-=dt;if(G.cardT<=0||taps.length)G.st='select';return}
+ if(G.st==='drivecard'){G.cardT-=dt;if(G.cardT<=0||taps.length)autoPick();return}
  if(G.st==='select'){for(const t of taps){if(!t)continue;const i=Math.floor((t[1]-208)/100)*2+(t[0]>W/2?1:0);if(t[1]>208&&t[1]<508&&i>=0&&i<6)setupPlay(PLAYS[i])}return}
  if(G.st==='result'){G.resT-=dt;if(G.resT<=0)nextAfter();return}
  if(G.st==='final'){if(taps.length){Object.assign(G,{clock:QLEN,aud:4,sh:0,sa:0,drive:0,q:1,los:25,down:1,togo:10,log:[],stats:{py:0,ry:0,td:0,int:0,sack:0}});G.st='title'}return}
@@ -176,38 +186,39 @@ function update(dt){
  for(const k of keys){if('123'.includes(k)&&passerPhase()){const w=P.filter(q=>q.role==='WR')[+k-1];if(w)throwTo(w)}if(k==='b'&&G.ko)return touchback()}
  for(const t of taps)if(t&&G.ko&&t[0]<120&&t[1]>H-140)return touchback();let sp=(cur.role==='QB'&&!runner?6.6:8.2)*(G.slow>0?0.7:1);if(G.juke>0)sp*=1.5;
  if(!G.ball||G.ball.caught){
-  if(jx||jy)steer(cur,cur.x+jx*5,cur.y-jy*5,sp*runMul,dt);
+  if(jx||jy)steer(cur,cur.x+jx*5,cur.y-jy*5,sp*runMul,dt,16);
   else if(cur.role==='RB'||cur.role==='WR'||(cur.role==='QB'&&p.t==='keep'))steer(cur,cur.x,cur.y+5,sp*0.85,dt);
-  else steer(cur,cur.x,cur.y,0,dt);}
+  else if(passerPhase()&&cur.y>G.dropY+0.15)steer(cur,G.qb.x,G.dropY,5.2,dt);else steer(cur,cur.x,cur.y,0,dt);}
  G.juke-=dt;G.jcd-=dt;
  // taps: throw or juke
  for(const t of taps){
   if(passerPhase()){
-   let best=null,bd=1e9;for(const w of P)if(w.role==='WR'||w.role==='RB'){const s2=t?scr(w.x,w.y,1):0;const d=t?Math.hypot(s2[0]-t[0],s2[1]-t[1]):w.y;const dd=t?d:-d;if(dd<bd){bd=dd;best=w}}
-   if(best&&(!t||bd<60))throwTo(best);else jukeIt();
+   let best=null,bd=1e9;const tg=targets();for(const w of tg){let d;if(!t)d=-openness(w)*10-w.y*.01;else{const b=bubblePos(w),i=tg.indexOf(w),ic=iconPos(i),s2=scr(w.x,w.y,1);d=Math.min(Math.hypot(b[0]-t[0],b[1]-t[1]),Math.hypot(ic[0]-t[0],ic[1]-t[1]),Math.hypot(s2[0]-t[0],s2[1]-t[1]))}if(d<bd){bd=d;best=w}}
+   if(best&&best===G.rb&&canHand()){handoff()}else if(best&&(!t||bd<70))throwTo(best,true);
   }else jukeIt();}
  // receivers
  for(const w of P){if(w===G.carrier)continue;
   if(w.team===0){
    if(G.ball&&!G.ball.caught&&(w.role==='WR'||w.role==='RB')&&Math.hypot(w.x-G.ball.tx,w.y-G.ball.ty)<9){steer(w,G.ball.tx,G.ball.ty,7.6,dt);continue}
-   if(w.role==='WR'){w.rt+=dt;if(G.ball&&!G.ball.caught&&G.ball.tgt===w)steer(w,G.ball.tx,G.ball.ty,7.4,dt);else if(G.passer===false)steer(w,w.x,w.y+1,4,dt);else{const r=routeTarget(w,w.rt);steer(w,r.x,r.y,w.route==='block'?3:7.2,dt)}}
+   if(w.role==='WR'){w.rt+=dt;if(G.ball&&!G.ball.caught&&G.ball.tgt===w)steer(w,G.ball.tx,G.ball.ty,7.4,dt);else if(G.passer===false)steer(w,w.x,w.y+1,4,dt);else{const r=routeTarget(w,w.rt);w.spd=7.2+DIFFS[G.diff].sep;steer(w,r.x,r.y,w.route==='block'?3:w.spd,dt)}}
    else if(w.role==='OL'){let d=w.blk;if(!d||d.shed||d.fallen>0){d=null;let bd=6;for(const q of P)if(q.team===1&&(q.role==='DL'||q.role==='LB')&&!(q.fallen>0)){const dd=dist(w,q);if(dd<bd){bd=dd;d=q}}}
     if(d){const ref=G.carrier,dx=ref.x-d.x,dy=ref.y-d.y,l=Math.hypot(dx,dy)||1;steer(w,d.x+dx/l*2.3,d.y+dy/l*2.3,p.t==='pass'?5:6,dt);w.eng=dist(w,d)<2.9}else{w.eng=false;steer(w,G.carrier.x+(w.x-G.carrier.x)*.9,G.carrier.y+2,3,dt)}}
-   else if(w.role==='RB'&&!G.handed){steer(w,w.x+(p.t==='pass'?3:0),w.y+(p.t==='pass'?1:3),5,dt)}
+   else if(w.role==='RB'&&!G.handed){if(p.t==='pass'&&G.snapT<1.2)steer(w,G.qb.x+1.4,G.qb.y-0.4,5,dt);else steer(w,w.x+(p.t==='pass'?3:0),w.y+(p.t==='pass'?1:3),5,dt)}
    else if(w.role==='RB'){steer(w,w.x+2,w.y+1.5,5,dt)}
    else if(w.role==='QB'){steer(w,w.x,w.y-0.2,2,dt)}
   }else defend(w,dt);}
  if(G.pend){G.qb.vx*=0.5;G.qb.vy*=0.5;G.pend.t-=dt;if(G.pend.t<=0){releaseBall();if(G.st!=='live')return}}
- for(const q of P){if(q.throwT>0)q.throwT-=dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.x=cl(q.x,0.5,FIELDW-0.5);q.anim+=Math.hypot(q.vx,q.vy)*dt}
+ for(const q of P){if(q.throwT>0)q.throwT-=dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.x=cl(q.x,0.5,FIELDW-0.5);if(q!==G.carrier||G.play.t==='ko')q.y=Math.min(q.y,109.4);q.anim+=Math.hypot(q.vx,q.vy)*dt}
  // OL vs DL separation
  const ballAir=G.ball&&!G.ball.caught;for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const a=P[i],b=P[j];if(a.fallen>0||b.fallen>0)continue;
   if((a===G.carrier||b===G.carrier)&&a.team!==b.team)continue;const ra=(a.role==='OL'||a.role==='DL')?1.15:0.7,rb=(b.role==='OL'||b.role==='DL')?1.15:0.7;
   const dx=a.x-b.x,dy=a.y-b.y,d=Math.hypot(dx,dy),m=ra+rb;if(d<m&&d>0.001){const k=(m-d)/2,ux=dx/d,uy=dy/d;const wa=a===G.carrier?0.2:1,wb=b===G.carrier?0.2:1;a.x+=ux*k*wa;a.y+=uy*k*wa;b.x-=ux*k*wb;b.y-=uy*k*wb}}
  // ball flight
- if(G.ball&&!G.ball.caught){const b=G.ball;b.t+=dt;(G.trail=G.trail||[]).push([b.x,b.y,b.z,b.t,b.T,b.h0||1.6]);if(G.trail.length>16)G.trail.shift();const k=Math.min(1,b.t/b.T);b.x=b.x0+(b.tx-b.x0)*k;b.y=b.y0+(b.ty-b.y0)*k;b.z=Math.sin(k*Math.PI)*b.h;
+ if(G.ball&&!G.ball.caught){const b=G.ball;b.t+=dt;(G.trail=G.trail||[]).push([b.x,b.y,b.z,b.t,b.T,b.h0||1.6]);if(G.trail.length>16)G.trail.shift();if(G.assist&&b.tgt===G.assist&&b.t>b.T*0.35){const w=b.tgt,a=Math.min(1,dt*3.5);b.tx+=(cl(w.x,1.5,FIELDW-1.5)-b.tx)*a;b.ty+=(Math.min(w.y,108.5)-b.ty)*a}const k=Math.min(1,b.t/b.T);b.x=b.x0+(b.tx-b.x0)*k;b.y=b.y0+(b.ty-b.y0)*k;b.z=Math.sin(k*Math.PI)*b.h;
   if(k>=1){let w=b.tgt;{let bd=w?Math.hypot(w.x-b.x,w.y-b.y):99;for(const q of P)if(q.team===0&&(q.role==='WR'||q.role==='RB')&&q!==G.qb){const d=Math.hypot(q.x-b.x,q.y-b.y);if(d<bd){bd=d;w=q}}}if(!w){endPlay('inc');return}const dd=P.filter(q=>q.team===1).reduce((m,q)=>Math.min(m,Math.hypot(q.x-b.x,q.y-b.y)),99);const wd=Math.hypot(w.x-b.x,w.y-b.y);
    if(dd<1.1&&dd<wd&&Math.random()<DIFFS[G.diff].int){endPlay('int');return}
-   if(wd<2.2&&!(dd<0.9&&Math.random()<0.5)){b.caught=true;G.carrier=w;w.catchT=0.45;G.trail=[];G.flash={x:w.x,y:w.y,t:0};burst(w.x,w.y);G.passer=false;if(G.play.t!=='ko')say('CATCH!',0.8);else G.ko=false}else{endPlay('inc');return}}}
+   if(w.y>110||w.x<0.5||w.x>FIELDW-0.5){say('OUT OF BOUNDS',0.8);endPlay('inc');return}const dw=P.filter(q=>q.team===1&&!(q.fallen>0)).reduce((m,q)=>Math.min(m,dist(q,w)),99);if(dw<1.6&&Math.random()<[.22,.36,.5,.62][G.diff]*(1.6-dw)/1.2+0.08*G.diff){if(Math.random()<DIFFS[G.diff].int*0.35){endPlay('int');return}say('BROKEN UP!',0.8);endPlay('inc');return}
+   if(wd<2.2&&!(dd<0.9&&Math.random()<(G.assist?0.35:0.5))){b.caught=true;G.carrier=w;w.catchT=0.45;G.trail=[];G.flash={x:w.x,y:w.y,t:0};burst(w.x,w.y);G.passer=false;if(G.play.t!=='ko')say('CATCH!',0.8);else G.ko=false}else{endPlay('inc');return}}}
  // tackles
  const cc=G.carrier;if(!(G.ball&&!G.ball.caught)){
   for(const d of P){if(d.team!==1||d.fallen>0)continue;const dd=dist(d,cc);
@@ -227,7 +238,7 @@ function update(dt){
 function nearest(p,team,roles){let b=null,bd=1e9;for(const q of G.players)if(q.team===team&&roles.includes(q.role)){const d=dist(p,q);if(d<bd){bd=d;b=q}}return b}
 function defend(d,dt){if(d.dive>0)return;
  if(d.role==='DL'&&d.blk&&!d.shed&&!(d.fallen>0)){if(G.snapT>d.shedT||(G.carrier!==G.qb&&G.snapT>d.shedT*0.7)){d.shed=true;d.eng=false;d.vx+=(d.x<d.blk.x?-1:1)*5}else{d.eng=dist(d,d.blk)<2.9;const c=G.carrier;steer(d,c.x,c.y,G.play.t==='pass'?1.8:1.0,dt);return}}if(d.fallen>0||d.stun>0){d.vx*=0.9;d.vy*=0.9;return}
- const c=G.carrier,inAir=G.ball&&!G.ball.caught;const rushBoost=G.snapT>3.2?1.35:1;const DF=DIFFS[G.diff];let sp={DL:5.4*rushBoost,LB:6.2,CB:7,S:6.8}[d.role]*(DF.def+lvlStr(G.lvl));
+ const c=G.carrier,inAir=G.ball&&!G.ball.caught;const rushBoost=G.snapT>DIFFS[G.diff].pk?1.3:1;const DF=DIFFS[G.diff];let sp={DL:5.4*rushBoost,LB:6.2,CB:7,S:6.8}[d.role]*(DF.def+lvlStr(G.lvl));
  if(G.snapT<0.25)return;if(G.play.t!=='pass'&&G.snapT<1.3)sp*=d.role==='DL'?0.45:0.6;
  // pursuit
  const pursue=!G.passer||c.role!=='QB'||d.role==='DL'||(d.role==='LB'&&G.snapT>2.2)||(c.y>G.los-0.5);
@@ -237,9 +248,17 @@ function defend(d,dt){if(d.dive>0)return;
  if(d.role==='LB'&&!pursue){return steer(d,c.x+(d.x<FIELDW/2?-3:3),G.los+5,sp*0.6,dt)}
  // lead the carrier
  const lead=Math.min(1.2,dist(d,c)/sp);steer(d,c.x+c.vx*lead*0.8,c.y+c.vy*lead*0.8,sp,dt)}
-function throwTo(w){const q=G.carrier;const d0=dist(q,w);const T=0.22+d0/40;throwSpot(cl(w.x+w.vx*T,1,FIELDW-1),w.y+w.vy*T,w)}
+function canHand(){return passerPhase()&&!G.handed&&G.snapT<2.6&&G.qb.y<G.los&&dist(G.qb,G.rb)<6}
+function handoff(){G.carrier=G.rb;G.rb.hasBall=1;G.qb.hasBall=0;G.handed=true;G.passer=false;G.thrown=false;G.runHinted=false;G.players.forEach(d=>{if(d.role==='DL'&&!d.shed)d.shedT=G.snapT/0.7+rnd(0.9,1.5)*DIFFS[G.diff].shed});say('HANDOFF!',0.8);dust(G.rb.x,G.rb.y,6)}
+function targets(){return G.players.filter(q=>q.team===0&&(q.role==='WR'||q.role==='RB')&&q!==G.qb)}
+function openness(w){const d=G.players.filter(q=>q.team===1&&!(q.fallen>0)).reduce((m,q)=>Math.min(m,dist(q,w)),99);return d}
+function openCol(w){const d=openness(w);return d>3.2?'#3fd07a':d>1.7?'#ffd23f':'#ff4d5e'}
+function bubblePos(w){const s=scr(w.x,w.y,4.2);return[s[0],s[1]-22]}
+function iconPos(i){return[214+i*50,H-62]}
+function throwTo(w,assist){const q=G.carrier;let px=w.x,py=w.y,T=0;for(let i=0;i<3;i++){T=0.22+Math.hypot(px-q.x,py-q.y)/40+0.3;const f=simAhead(w,T);px=f[0];py=f[1]}throwSpot(cl(px,1.5,FIELDW-1.5),Math.min(py,108.5),w);if(assist)G.assist=w}
+function simAhead(w,T){if(w.role!=='WR')return[w.x+w.vx*T,w.y+w.vy*T];const c={x:w.x,y:w.y,vx:w.vx,vy:w.vy,route:w.route,dir:w.dir,dk:w.dk};let rt=w.rt;for(let s=0;s<T;s+=1/30){rt+=1/30;const r=routeTarget(c,rt);steer(c,r.x,r.y,w.spd||7.2,1/30);c.x+=c.vx/30;c.y+=c.vy/30}return[c.x,c.y]}
 function touchback(){G.ko=false;G.los=25;G.down=1;G.togo=10;G.st='result';G.resT=1.3;G.next='down';banner('TOUCHBACK','BALL ON THE 25')}
-function throwSpot(tx,ty,w){const q=G.carrier;if(G.pend)return;q.throwT=0.5;q.throwDir={x:tx-q.x,y:ty-q.y};G.thrown=true;G.pend={tx,ty,w,t:0.3}}
+function throwSpot(tx,ty,w){const q=G.carrier;if(G.pend)return;if(q.y>G.los+0.3){say('CROSSED THE LINE',0.8);return}G.assist=null;tx=cl(tx,1.5,FIELDW-1.5);ty=Math.min(ty,108.5);q.throwT=0.5;q.throwDir={x:tx-q.x,y:ty-q.y};G.thrown=true;G.pend={tx,ty,w,t:0.3}}
 function releaseBall(){const q=G.qb,{tx,ty,w}=G.pend;G.pend=null;const d0=Math.hypot(tx-q.x,ty-q.y);const T=0.22+d0/40;q.hasBall=0;
  G.ball={x0:q.x,y0:q.y,x:q.x,y:q.y,tx,ty,t:0,T,h:0.8+d0*0.08,tgt:w,caught:false,z:0,h0:3.1};G.thrown=true;if(q.y>G.los+0.5){endPlay('inc');say('ILLEGAL FORWARD PASS');}}
 function jukeIt(dir){if(G.jcd>0)return;G.juke=0.35;G.jcd=1.1;const c=G.carrier;const s=(dir||IN.jx||Math.sign(Math.random()-.5));c.vx+=s*6;say('JUKE!',0.5)}
@@ -322,7 +341,7 @@ function render(){
   const s=G.stats;txt('PASS YDS  '+s.py,W/2,430,16);txt('RUSH YDS  '+s.ry,W/2,458,16);txt('TOUCHDOWNS  '+s.td,W/2,486,16);txt('INT '+s.int+'   SACKED '+s.sack,W/2,514,16);txt(G.unlockMsg||'',W/2,540,13,PAL.pink);txt('TAP FOR NEW GAME',W/2,564,14,PAL.cy)}
  if(G.msgT>0&&(G.st==='live'||G.st==='presnap')){pill(40,158,W-80,34,'rgba(14,20,48,.88)','#4fa3ff');txt(G.msg,W/2,175,G.msg.length>26?12:18,PAL.yel)}
  if(G.st==='presnap'&&!G.audOpen)drawAudible();if(G.st==='presnap'&&G.audOpen)drawAudPanel();
- if(G.paused){rect(0,0,W,H,'rgba(8,10,30,.8)');pill(60,300,W-120,250,'#141a3a','#4fa3ff');txt('PAUSED',W/2,340,28,PAL.yel);pill(90,380,W-180,56,'#1f6fd6','#fff');txt('RESUME',W/2,408,20);pill(90,462,W-180,56,'#e8344e','#fff');txt('QUIT TO TITLE',W/2,490,16)}
+ if(G.paused){rect(0,0,W,H,'rgba(8,10,30,.8)');pill(60,300,W-120,340,'#141a3a','#4fa3ff');txt('PAUSED',W/2,340,28,PAL.yel);pill(90,380,W-180,56,'#1f6fd6','#fff');txt('RESUME',W/2,408,20);pill(90,462,W-180,56,'#e8344e','#fff');txt('QUIT TO TITLE',W/2,490,16);txt('SETTINGS',W/2,545,12,'#9fb3ff');pill(90,562,W-180,56,G.adv?'#1f8a4a':'#2a3158','#fff');txt('ADVANCED AIM: '+(G.adv?'ON':'OFF'),W/2,584,15);txt(G.adv?'PULL-BACK SLINGSHOT':'TAP RECEIVERS TO THROW',W/2,604,10,'#cfd3da');}
  if(!window.PROJ){ if(G.st==='live'&&G.carrier.role!=='QB'||G.st==='live'&&G.play.t==='keep')txt(G.jcd>0?'JUKE RECHARGING':'TAP = JUKE',W/2,H-30,12,G.jcd>0?'#8a7ab0':PAL.cy);
  if(G.st==='live'&&G.carrier.role==='QB'&&G.play.t==='pass'&&!G.thrown){const pr=Math.min(1,G.snapT/4.5);box(20,H-40,W-40,16,'#120a24','#5a4a8a');rect(23,H-37,(W-46)*pr,10,pr>.7?PAL.pink:PAL.cy);txt('POCKET',W/2,H-56,10,PAL.txt)}}
  drawControls();X.restore();
@@ -382,8 +401,8 @@ function drawAudPanel(){X.beginPath();X.roundRect(0,H-AP_H,W,AP_H+20,22);X.fillS
  const lc=['#ff2a2a','#ff8a1f','#ffd400'];const wrs=G.players.filter(q=>q.role==='WR');
  lc.forEach((c,i)=>{const x=22+i*86;X.beginPath();X.arc(x,H-AP_H+26,6,0,7);X.fillStyle=c;X.fill();txt('WR'+(i+1),x+12,H-AP_H+27,12,'#fff','left',false)});
  txt('AUDIBLE',W-92,H-AP_H+27,12,'#fff','right',false);txt(G.aud+' LEFT',W-16,H-AP_H+27,12,'#ffd23f','right',false);
- for(let c=0;c<4;c++)for(let r=0;r<2;r++){const[a,b,w,h]=audGeom(c,r);let lab,f='#22335e',fc='#fff';
-  if(c<3){lab=r?'MEDIUM':'DEEP';const w0=wrs[c];const on=w0&&(r?w0.dk===0.8:w0.dk===1.7);if(on)f='#2b4a8e';if(G.aud<=0&&!on)fc='#6a7aa0'}else{lab=r?'CLOSE':'CHANGE PLAY';if(!r)f='#1f7bff'}
+ for(let c=0;c<4;c++)for(let r=0;r<2;r++){const[a,b,w,h]=audGeom(c,r);let lab,f='#1c2a52',fc='#fff';
+  if(c<3){lab=r?'MEDIUM':'DEEP';const w0=wrs[c];const on=w0&&(r?w0.dk!==1.7:w0.dk===1.7);if(on)f='#2b4a8e';if(G.aud<=0&&!on)fc='#6a7aa0'}else{lab=r?'CLOSE':'CHANGE PLAY';if(!r)f='#1f7bff'}
   pill(a,b,w,h,f,null);txt(lab,a+w/2,b+h/2,lab.length>8?11:13,fc,'center',false)}}
 function drawAudible(){const x=60,y=H-84;X.beginPath();X.arc(x,y,36,0,7);X.fillStyle='#16224e';X.fill();X.lineWidth=4;X.strokeStyle='#4fa3ff';X.stroke();
  X.fillStyle='#fff';X.beginPath();X.moveTo(x-14,y-10);X.lineTo(x+6,y-20);X.lineTo(x+6,y+4);X.lineTo(x-14,y-4);X.closePath();X.fill();X.fillRect(x-18,y-10,5,6);
@@ -393,6 +412,13 @@ function drawBadges(){X.textBaseline='middle';X.textAlign='center';for(const p o
  X.textAlign='center';
 function drawControls(){if(!window.PROJ)return;const live=G.st==='live';
  if(G.st==='presnap'&&!G.audOpen){const x=W-64,y=H-84;const pr=pressed(x-44,y-44,88,88);X.beginPath();X.arc(x,y+5,44,0,7);X.fillStyle='rgba(0,0,0,.4)';X.fill();const yy=y+(pr?3:0);const gg=X.createLinearGradient(0,yy-44,0,yy+44);gg.addColorStop(0,'#3ddc6f');gg.addColorStop(1,'#11853a');X.beginPath();X.arc(x,yy,44,0,7);X.fillStyle=gg;X.fill();X.lineWidth=4;X.strokeStyle='#d6ffe0';X.stroke();txt('SNAP',x,yy+1,20,'#fff');if(G.ovT>0)txt('ROUTE VIEW',W/2,H-150,12,'#fff')}
+ if(live&&passerPhase()&&!G.adv&&!G.pend){const tg=targets();tg.forEach((w,i)=>{const c=openCol(w),[bx,by]=bubblePos(w),pr=pressed(bx-24,by-24,48,48);
+  X.beginPath();X.moveTo(bx-6,by+18);X.lineTo(bx+6,by+18);X.lineTo(bx,by+27);X.fillStyle=c;X.fill();
+  X.beginPath();X.arc(bx,by,pr?24:21,0,7);X.fillStyle='rgba(10,14,36,.85)';X.fill();X.lineWidth=4;X.strokeStyle=c;X.stroke();if(w===G.rb){if(canHand()){pill(bx-38,by-14,76,28,'#ff8a1f','#fff');txt('HANDOFF',bx,by+1,12,'#fff','center',false)}else txt(String(w.num),bx,by+1,15,'#fff')}else txt(String(w.num),bx,by+1,15,'#fff');
+  const[ix,iy]=iconPos(i),ip=pressed(ix-22,iy-22,44,44);X.beginPath();X.arc(ix,iy+(ip?2:0),21,0,7);X.fillStyle=c;X.fill();X.lineWidth=3;X.strokeStyle='#0a0e24';X.stroke();txt(w.role==='RB'?'RB':'WR'+(G.players.filter(q=>q.role==='WR').indexOf(w)+1),ix,iy-3+(ip?2:0),10,'#0a0e24','center',false);txt(String(w.num),ix,iy+9+(ip?2:0),11,'#0a0e24','center',false)});
+  txt('TAP A RECEIVER TO THROW',W/2,H-104,12,'#fff');
+  let jd=false;for(const p of PT.values())if(p.kind==='joy'){jd=true;const dx=p.x-p.sx,dy=p.y-p.sy;X.beginPath();X.arc(p.sx,p.sy,50,0,7);X.fillStyle='rgba(255,255,255,.12)';X.fill();X.lineWidth=3;X.strokeStyle='#fff';X.stroke();X.beginPath();X.arc(p.sx+dx,p.sy+dy,22,0,7);X.fillStyle='#fff';X.fill()}
+  if(!jd){X.globalAlpha=.35;X.setLineDash([6,6]);X.beginPath();X.arc(80,H-150,46,0,7);X.lineWidth=3;X.strokeStyle='#fff';X.stroke();X.setLineDash([]);X.globalAlpha=1;txt('MOVE',80,H-150,11,'rgba(255,255,255,.7)','center',false)}}
  if(live){for(const p of PT.values())if(p.kind==='joy'){X.globalAlpha=.14;X.strokeStyle='#fff';X.lineWidth=3;X.beginPath();X.arc(p.sx,p.sy,50,0,7);X.stroke();X.globalAlpha=1}
   if(G.aim){const c=G.carrier,a=G.aim,d0=Math.hypot(a.tx-c.x,a.ty-c.y),h=0.8+d0*0.08;X.strokeStyle='#3f9bff';X.lineWidth=4;X.beginPath();
    for(let i=0;i<=20;i++){const k=i/20;const q=scr(c.x+(a.tx-c.x)*k,c.y+(a.ty-c.y)*k,1.6+Math.sin(k*Math.PI)*h*2.2);i?X.lineTo(q[0],q[1]):X.moveTo(q[0],q[1])}X.stroke();
@@ -407,7 +433,7 @@ function drawControls(){if(!window.PROJ)return;const live=G.st==='live';
    const bx=20,by=H-92,bw=170;pill(bx,by,bw,18,'rgba(16,20,44,.9)','#ffd23f');rect(bx+3,by+3,(bw-6)*G.stam,12,G.truck?'#ff4d5e':G.stam<.25?'#ff8a1f':'#3fd07a');
    txt(G.truck?'TRUCKING!':'HOLD TO TRUCK',bx+bw/2,by-14,13,G.truck?'#ff4d5e':'#fff');txt('STAMINA',bx+bw/2,by+32,10,'#cfd3da')}}
  if(G.ko&&G.st==='live')btn(16,H-112,104,52,'TOUCHBACK','#e8344e','#ffd0d6',13);
- if(G.banner&&(G.st==='result'||G.st==='live')&&G.banner.a<2.2){const k=Math.min(1,G.banner.a/0.32),c1=1.70158,c3=c1+1,eb=1+c3*Math.pow(k-1,3)+c1*Math.pow(k-1,2),y=-90+(G.banner.a>1.8?212-(G.banner.a-1.8)*500:212*eb);pill(24,y,W-48,G.banner.sub?78:58,'#141a3a','#ffd23f');rect(30,y+2,W-60,5,'#e8344e');txt(G.banner.t,W/2,y+30,G.banner.t.length>16?20:26,'#ffd23f');if(G.banner.sub)txt(G.banner.sub,W/2,y+58,13,'#fff')}
+ if(G.st==='presnap'&&!G.audOpen&&G.play){pill(W/2-90,156,180,26,'rgba(10,14,36,.8)','#ffd23f');txt(G.play.n,W/2,169,13,'#ffd23f','center',false)}if(G.banner&&(G.st==='result'||G.st==='live'||G.st==='presnap')&&G.banner.a<2.2){const k=Math.min(1,G.banner.a/0.32),c1=1.70158,c3=c1+1,eb=1+c3*Math.pow(k-1,3)+c1*Math.pow(k-1,2),y=-90+(G.banner.a>1.8?212-(G.banner.a-1.8)*500:212*eb);pill(24,y,W-48,G.banner.sub?78:58,'#141a3a','#ffd23f');rect(30,y+2,W-60,5,'#e8344e');txt(G.banner.t,W/2,y+30,G.banner.t.length>16?20:26,'#ffd23f');if(G.banner.sub)txt(G.banner.sub,W/2,y+58,13,'#fff')}
  if(G.hint&&!G.paused){const L=G.hint.txt.split('|');const y=H*0.36;pill(28,y,W-56,26+L.length*20,'rgba(10,14,36,.92)','#3fd0ff');txt('TIP',W/2,y+12,10,'#3fd0ff','center',false);L.forEach((l,i)=>txt(l,W/2,y+30+i*20,12,'#fff','center',false))}}
 
 let last=performance.now();function loop(n){const dt=Math.min(0.05,(n-last)/1000);last=n;if(!window.__hold)update(dt);if(window.R3D)window.R3D();render();requestAnimationFrame(loop)}requestAnimationFrame(loop);
