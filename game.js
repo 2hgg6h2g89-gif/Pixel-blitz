@@ -191,9 +191,9 @@ function update(dt){
  if(IN.thr){const{w,ht}=IN.thr;IN.thr=null;if(G.tuck&&passerPhase()){G.tuck=false;}if(passerPhase()){if(w===G.rb&&canHand())handoff();else throwTo(w,true,holdType(ht))}}
  G.aim=null;if(passerPhase()&&IN.aimP&&IN.aimP.moved>4){const a=IN.aimP,fw=cl((a.y-a.sy)*0.3,2,60),lat=-(a.x-a.sx)*0.24;let tx=cl(cur.x+lat,1,FIELDW-1),ty=cur.y+fw;let lock=null,ld=0;
   for(const w of P)if((w.role==='WR'||w.role==='RB')&&w!==cur){const d=Math.hypot(w.x-tx,w.y-ty);if(d<ld){ld=d;lock=w}}
-  if(lock){const T=0.22+Math.hypot(lock.x-cur.x,lock.y-cur.y)/40;tx=cl(lock.x+lock.vx*T,1,FIELDW-1);ty=lock.y+lock.vy*T}{let bw=null,bd=4.5;const T0=flightT(Math.hypot(tx-cur.x,ty-cur.y),G.bullet?'bullet':'lob')+0.3;for(const w of targets()){if(w===G.rb)continue;const f=simAhead(w,T0);const d=Math.hypot(f[0]-tx,f[1]-ty);if(d<bd){bd=d;bw=f}}if(bw){const k=0.45*(1-bd/4.5);tx+=(bw[0]-tx)*k;ty+=(bw[1]-ty)*k}}
+  if(lock){const T=0.22+Math.hypot(lock.x-cur.x,lock.y-cur.y)/40;tx=cl(lock.x+lock.vx*T,1,FIELDW-1);ty=lock.y+lock.vy*T}{let bw=null,bd=6;const T0=flightT(Math.hypot(tx-cur.x,ty-cur.y),G.bullet?'bullet':'lob')+0.15;for(const w of targets()){if(w===G.rb)continue;const f=simAhead(w,T0);const d=Math.hypot(f[0]-tx,f[1]-ty);if(d<bd){bd=d;bw=f}}if(bw){const k=0.7*(1-bd/6);tx+=(bw[0]-tx)*k;ty+=(bw[1]-ty)*k}}
   {const S=G.aimS;if(S&&G.aimSid===a.t0){tx=S.x+(tx-S.x)*0.4;ty=S.y+(ty-S.y)*0.4}G.aimS={x:tx,y:ty};G.aimSid=a.t0;tx=cl(tx,1.5,FIELDW-1.5);ty=Math.min(ty,108.5)}
-  const pl=Math.hypot(a.x-a.sx,a.y-a.sy);const d0=Math.hypot(tx-cur.x,ty-cur.y),ty2=d0>(G.bullet?42:32)?'bomb':G.bullet?'bullet':'lob';let ok=false;if(ty<=110&&tx>0.5&&tx<FIELDW-0.5)for(const w of targets()){if(w===G.rb&&!G.handed&&G.snapT<1.2)continue;const f=simAhead(w,flightT(d0,ty2)+0.3);if(Math.hypot(f[0]-tx,f[1]-ty)<4.8){ok=true;break}}G.aim={tx,ty,lock,ty2,ok}}
+  const pl=Math.hypot(a.x-a.sx,a.y-a.sy);const d0=Math.hypot(tx-cur.x,ty-cur.y),ty2=d0>(G.bullet?42:32)?'bomb':G.bullet?'bullet':'lob';let ok=false;if(ty<=110&&tx>0.5&&tx<FIELDW-0.5)for(const w of targets()){if(w===G.rb&&!G.handed&&G.snapT<1.2)continue;const f=simAhead(w,flightT(d0,ty2)+0.15);if(Math.hypot(f[0]-tx,f[1]-ty)<4.8){ok=true;break}}G.aim={tx,ty,lock,ty2,ok}}
  if(G.relAim){G.relAim=false;if(G.lastAim&&passerPhase()){G.tuck=false;}if(G.lastAim&&passerPhase())throwSpot(G.lastAim.tx,G.lastAim.ty,G.lastAim.lock,G.lastAim.ty2)}G.lastAim=G.aim;
  for(const k of keys){if('123'.includes(k)&&passerPhase()){const w=P.filter(q=>q.role==='WR')[+k-1];if(w)throwTo(w)}if(k==='b'&&G.ko)return touchback()}
  for(const t of taps)if(t&&G.ko&&t[0]<120&&t[1]>H-140)return touchback();let sp=(cur.role==='QB'&&!runner?(G.tuck?7.8:6.6):8.2)*(G.slow>0?0.7:1);if(G.juke>0)sp*=1.5;
@@ -212,8 +212,8 @@ function update(dt){
  // receivers
  for(const w of P){if(w===G.carrier)continue;
   if(w.team===0){
-   if(G.ball&&!G.ball.caught&&(w.role==='WR'||w.role==='RB')&&Math.hypot(w.x-G.ball.tx,w.y-G.ball.ty)<9){steer(w,G.ball.tx,G.ball.ty,7.6,dt);continue}
-   if(w.role==='WR'){w.rt+=dt;if(G.ball&&!G.ball.caught&&G.ball.tgt===w)steer(w,G.ball.tx,G.ball.ty,7.4,dt);else if(G.passer===false)steer(w,w.x,w.y+1,4,dt);else{const r=routeTarget(w,w.rt);w.spd=7.2+DIFFS[G.diff].sep;steer(w,r.x,r.y,w.route==='block'?3:w.spd,dt)}}
+   if(G.ball&&!G.ball.caught&&(w.role==='WR'||w.role==='RB')&&Math.hypot(w.x-G.ball.tx,w.y-G.ball.ty)<9&&Math.hypot(w.x-G.ball.tx,w.y-G.ball.ty)>1.4){const rem=Math.max(0.05,G.ball.T-G.ball.t),dx=G.ball.tx-w.x,dy=G.ball.ty-w.y,need=Math.hypot(dx,dy)/rem;steer(w,G.ball.tx+dx*0.3,G.ball.ty+dy*0.3,cl(need,4.5,7.8),dt);continue}
+   if(w.role==='WR'){w.rt+=dt;if(G.passer===false)steer(w,w.x,w.y+1,4,dt);else{const r=routeTarget(w,w.rt);w.spd=7.2+DIFFS[G.diff].sep;steer(w,r.x,r.y,w.route==='block'?3:w.spd,dt)}}
    else if(w.role==='OL'){let d=w.blk;if(!d||d.shed||d.fallen>0){d=null;let bd=6;for(const q of P)if(q.team===1&&(q.role==='DL'||q.role==='LB')&&!(q.fallen>0)){const dd=dist(w,q);if(dd<bd){bd=dd;d=q}}}
     if(d){const ref=G.carrier,dx=ref.x-d.x,dy=ref.y-d.y,l=Math.hypot(dx,dy)||1;steer(w,d.x+dx/l*2.3,d.y+dy/l*2.3,p.t==='pass'?5:6,dt);w.eng=dist(w,d)<2.9}else{w.eng=false;steer(w,G.carrier.x+(w.x-G.carrier.x)*.9,G.carrier.y+2,3,dt)}}
    else if(w.role==='RB'&&!G.handed){if(p.t==='pass'&&G.snapT<1.2)steer(w,G.qb.x+1.4,G.qb.y-0.4,5,dt);else steer(w,w.x+(p.t==='pass'?3:0),w.y+(p.t==='pass'?1:3),5,dt)}
@@ -231,7 +231,7 @@ function update(dt){
   if(k>=1){let w=b.tgt;{let bd=w?Math.hypot(w.x-b.x,w.y-b.y):99;for(const q of P)if(q.team===0&&(q.role==='WR'||q.role==='RB')&&q!==G.qb){const d=Math.hypot(q.x-b.x,q.y-b.y);if(d<bd){bd=d;w=q}}}if(!w){endPlay('inc');return}const dd=P.filter(q=>q.team===1).reduce((m,q)=>Math.min(m,Math.hypot(q.x-b.x,q.y-b.y)),99);const wd=Math.hypot(w.x-b.x,w.y-b.y);
    if(G.play.t==='ko'&&w){w.x=b.x;w.y=b.y;b.caught=true;G.carrier=w;w.catchT=0.45;G.trail=[];G.ko=false;G.passer=false;say('RETURN IT!',0.8);return}
    if(dd<1.1&&dd<wd-0.3&&Math.random()<DIFFS[G.diff].int*0.4){endPlay('int');return}
-   if(w.y>110||w.x<0.5||w.x>FIELDW-0.5){say('OUT OF BOUNDS',0.8);endPlay('inc');return}const dw=P.filter(q=>q.team===1&&!(q.fallen>0)).reduce((m,q)=>Math.min(m,dist(q,w)),99);const tm=b.tt==='bullet'?(b.T<0.8?0.6:1.3):b.tt==='bomb'?1.15:0.8;if(dw<1.6&&Math.random()<([.22,.36,.5,.62][G.diff]*(1.6-dw)/1.2+0.08*G.diff)*tm){const dv=P.filter(q=>q.team===1&&!(q.fallen>0)).sort((a,c)=>dist(a,w)-dist(c,w))[0];if(dv){dv.dive=0.45;dv.vx=(b.x-dv.x)*4;dv.vy=(b.y-dv.y)*4;dust(dv.x,dv.y,8)}if(Math.random()<DIFFS[G.diff].int*0.35){banner('INTERCEPTED!','DIVING PICK');endPlay('int');return}if(Math.random()<0.35){say('TIPPED!',0.8)}else say('BROKEN UP!',0.8);endPlay('inc');return}
+   if(w.y>110||w.x<0.5||w.x>FIELDW-0.5){say('OUT OF BOUNDS',0.8);endPlay('inc');return}const dw=P.filter(q=>q.team===1&&!(q.fallen>0)).reduce((m,q)=>Math.min(m,dist(q,w)),99);const tm=b.tt==='bullet'?(b.T<0.8?0.6:1.3):b.tt==='bomb'?1.15:0.8;if(dw<1.3&&Math.random()<([.12,.2,.3,.42][G.diff]*(1.3-dw)/1.0+0.05*G.diff)*tm){const dv=P.filter(q=>q.team===1&&!(q.fallen>0)).sort((a,c)=>dist(a,w)-dist(c,w))[0];if(dv){dv.dive=0.45;dv.vx=(b.x-dv.x)*4;dv.vy=(b.y-dv.y)*4;dust(dv.x,dv.y,8)}if(Math.random()<DIFFS[G.diff].int*0.35){banner('INTERCEPTED!','DIVING PICK');endPlay('int');return}if(Math.random()<0.35){say('TIPPED!',0.8)}else say('BROKEN UP!',0.8);endPlay('inc');return}
    if(wd>=2.9&&wd<4.6&&w.role!=='QB'){w.dive=0.45;w.vx=(b.x-w.x)*4;w.vy=(b.y-w.y)*4;dust(w.x,w.y,10);if(Math.random()<0.62-G.diff*0.06){b.caught=true;G.carrier=w;w.catchT=0.45;G.trail=[];G.flash={x:b.x,y:b.y,t:0};burst(b.x,b.y);G.passer=false;G.shake=0.15;G.dcatch=true;banner('DIVING CATCH!');return}say('JUST OUT OF REACH',0.8);endPlay('inc');return}
    if(wd<2.2&&Math.random()<0.035+G.diff*0.01){say('DROPPED!',0.8);endPlay('inc');return}
    if(wd<2.9&&!(dd<0.9&&Math.random()<(G.assist?0.35:0.5))){if(b.dv===w){G.dcatch=true;w.dive=Math.max(w.dive,0.4);banner('DIVING CATCH!');G.shake=0.15}b.caught=true;G.carrier=w;w.catchT=0.45;G.trail=[];G.flash={x:w.x,y:w.y,t:0};burst(w.x,w.y);G.passer=false;if(G.play.t!=='ko')say('CATCH!',0.8);else G.ko=false}else{endPlay('inc');return}}}
@@ -265,7 +265,7 @@ function defend(d,dt){if(d.dive>0)return;
  if(G.snapT<0.25)return;if(G.play.t!=='pass'&&G.snapT<1.3)sp*=d.role==='DL'?0.45:0.6;
  // pursuit
  const pursue=!G.passer||c.role!=='QB'||d.role==='DL'||(d.role==='LB'&&d.blitz)||(c.y>G.los-0.5);
- if(inAir){const b=G.ball;if(Math.hypot(d.x-b.tx,d.y-b.ty)<8)return steer(d,b.tx,b.ty,sp*1.05,dt)}
+ if(inAir){const b=G.ball;if(b.t>0.3+(3-G.diff)*0.12&&Math.hypot(d.x-b.tx,d.y-b.ty)<6)return steer(d,b.tx,b.ty,sp*(0.82+G.diff*0.06),dt)}
  if(d.role==='CB'&&!pursue&&d.man){return steer(d,d.man.x+(d.man.vx*0.3),d.man.y+DIFFS[G.diff].cov+d.man.vy*0.2,sp*0.97,dt)}
  if(d.role==='S'&&!pursue){const wrs=G.players.filter(q=>q.role==='WR');let deep=wrs.reduce((a,b)=>a.y>b.y?a:b);return steer(d,cl((deep.x+FIELDW/2)/2+(d.x<FIELDW/2?-3:3),6,FIELDW-6),Math.max(deep.y+5,G.los+Math.max(13,G.togo+5)),sp*0.8,dt)}
  if(d.role==='LB'&&!pursue&&d.spy){return steer(d,cl(c.x,4,FIELDW-4),G.los+3.5,sp*0.7,dt)}
@@ -283,7 +283,7 @@ function tgtAngle(w){return slotAngles().get(w)??-Math.PI/2}
 function tgtAngle0(w){const q=scr(G.qb.x,G.qb.y,1),s=scr(w.x,w.y,1);return Math.atan2(s[1]-q[1],s[0]-q[0])}
 function stickRead(p){const dx=p.x-STK.x,dy=p.y-STK.y,d=Math.hypot(dx,dy);if(d<16||!G.qb)return{};if(dy>d*0.7)return{tuck:true};const a=Math.atan2(dy,dx);let best=null,bd=0.9;for(const w of targets()){if(w===G.rb)continue;let da=Math.abs(((tgtAngle(w)-a)+Math.PI*3)%(Math.PI*2)-Math.PI);if(da<bd){bd=da;best=w}}return{w:best}}
 function holdType(ht){return ht<0.28?'bullet':ht<0.75?'lob':'bomb'}
-function flightT(d,ty){return ty==='bullet'?0.12+d/60:ty==='bomb'?0.45+d/28:0.26+d/36}
+function flightT(d,ty){return ty==='bullet'?0.08+d/80:ty==='bomb'?0.4+d/32:0.2+d/46}
 function arcH(d,ty){return ty==='bullet'?0.35+d*0.025:ty==='bomb'?3.5+d*0.22:1.6+d*0.13}
 function canHand(){return passerPhase()&&!G.tuck&&!G.pend&&!G.handed&&G.snapT<2.6&&G.qb.y<G.los&&dist(G.qb,G.rb)<6}
 function handoff(){G.carrier=G.rb;G.rb.hasBall=1;G.qb.hasBall=0;G.handed=true;G.passer=false;G.thrown=false;G.runHinted=false;G.players.forEach(d=>{if(d.role==='DL'&&!d.shed)d.shedT=G.snapT/0.7+rnd(0.9,1.5)*DIFFS[G.diff].shed});say('HANDOFF!',0.8);dust(G.rb.x,G.rb.y,6)}
@@ -292,10 +292,10 @@ function openness(w){const d=G.players.filter(q=>q.team===1&&!(q.fallen>0)).redu
 function openCol(w){const d=openness(w);return d>3.2?'#3fd07a':d>1.7?'#ffd23f':'#ff4d5e'}
 function bubblePos(w){const s=scr(w.x,w.y,4.2);return[s[0],s[1]-22]}
 function iconPos(i){return[-999,-999]}
-function throwTo(w,assist,ty){const q=G.carrier;let px=w.x,py=w.y,T=0;if(!ty){const d=dist(q,w);ty=d<14?'bullet':d<30?'lob':'bomb'}G.ttype=ty;for(let i=0;i<3;i++){T=flightT(Math.hypot(px-q.x,py-q.y),ty)+0.3;const f=simAhead(w,T);px=f[0];py=f[1]}throwSpot(cl(px,1.5,FIELDW-1.5),Math.min(py,108.5),w,ty);if(assist)G.assist=w}
+function throwTo(w,assist,ty){const q=G.carrier;let px=w.x,py=w.y,T=0;if(!ty){const d=dist(q,w);ty=d<14?'bullet':d<30?'lob':'bomb'}G.ttype=ty;for(let i=0;i<3;i++){T=flightT(Math.hypot(px-q.x,py-q.y),ty)+0.15;const f=simAhead(w,T);px=f[0];py=f[1]}throwSpot(cl(px,1.5,FIELDW-1.5),Math.min(py,108.5),w,ty);if(assist)G.assist=w}
 function simAhead(w,T){if(w.role!=='WR')return[w.x+w.vx*T,w.y+w.vy*T];const c={x:w.x,y:w.y,vx:w.vx,vy:w.vy,route:w.route,dir:w.dir,dk:w.dk};let rt=w.rt;for(let s=0;s<T;s+=1/30){rt+=1/30;const r=routeTarget(c,rt);steer(c,r.x,r.y,w.spd||7.2,1/30);c.x+=c.vx/30;c.y+=c.vy/30}return[c.x,c.y]}
 function touchback(){G.ko=false;G.los=25;G.down=1;G.togo=10;G.st='result';G.resT=1.3;G.next='down';banner('TOUCHBACK','BALL ON THE 25')}
-function throwSpot(tx,ty,w,tt){const q=G.carrier;if(G.pend)return;if(q.y>G.los+0.3){say('CROSSED THE LINE',0.8);return}G.assist=null;tx=cl(tx,1.5,FIELDW-1.5);ty=Math.min(ty,108.5);const tt0=tt||G.ttype||'lob',dur=tt0==='bullet'?0.3:tt0==='bomb'?0.46:0.4;q.throwT=dur;q.throwDur=dur;q.throwDir={x:tx-q.x,y:ty-q.y};G.thrown=true;G.pend={tx,ty,w,t:dur*0.55,tt:tt0};G.ttype=null}
+function throwSpot(tx,ty,w,tt){const q=G.carrier;if(G.pend)return;if(q.y>G.los+0.3){say('CROSSED THE LINE',0.8);return}G.assist=null;tx=cl(tx,1.5,FIELDW-1.5);ty=Math.min(ty,108.5);const tt0=tt||G.ttype||'lob',dur=tt0==='bullet'?0.24:tt0==='bomb'?0.4:0.32;q.throwT=dur;q.throwDur=dur;q.throwDir={x:tx-q.x,y:ty-q.y};G.thrown=true;G.pend={tx,ty,w,t:dur*0.4,tt:tt0};G.ttype=null}
 function releaseBall(){const q=G.qb;let{tx,ty,w,tt}=G.pend;G.pend=null;const d0=Math.hypot(tx-q.x,ty-q.y);const T=flightT(d0,tt);q.hasBall=0;
  const pres=G.players.some(d=>d.team===1&&!(d.fallen>0)&&dist(d,q)<3)?0.9:0,mov=Math.hypot(q.vx,q.vy)*0.12;const sg=(0.25+(95-q.ovr)*0.025+pres+mov+d0*0.012)*(tt==='bomb'?1.4:tt==='bullet'?0.7:1);const ga=()=>(Math.random()+Math.random()+Math.random()-1.5)*1.4;tx=cl(tx+ga()*sg,1.5,FIELDW-1.5);ty=Math.min(ty+ga()*sg,108.5);
  {const l=Math.hypot(tx-q.x,ty-q.y)||1;q.hx=q.x+(tx-q.x)/l*0.35;q.hy=q.y+(ty-q.y)/l*0.35}G.ball={x0:q.hx,y0:q.hy,x:q.hx,y:q.hy,tx,ty,t:0,T,h:arcH(d0,tt),tt,fz:1.5+sg*1.4,tgt:w,caught:false,z:0,h0:3.1};G.thrown=true;if(q.y>G.los+0.5){endPlay('inc');say('ILLEGAL FORWARD PASS');}}

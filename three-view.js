@@ -182,7 +182,7 @@ function updatePlayers(){ensureAtlas();const cnt=[0,0],nc=[0,0];camUp.set(0,1,0)
   const l=Math.hypot(fx,fy)||1;const k=p.throwT>0?1:.25;p.fdx=(p.fdx??0)*(1-k)+fx/l*k;p.fdy=(p.fdy??(p.team?-1:1))*(1-k)+fy/l*k;
   const a=Math.atan2(p.fdx,p.fdy),aa=Math.abs(a)*180/Math.PI;const dir=aa<22.5?4:aa<67.5?3:aa<112.5?2:aa<157.5?1:0;const mir=a<0?-1:1;
   let pose=poseOf(p);let hy=0.02,sq=0;if(p.dive>0){p._dm=Math.max(p._dm||0,p.dive);const k=1-p.dive/p._dm;if(k<0.15)pose=S.P.stance;else hy+=Math.sin(Math.min(1,(k-0.15)/0.85)*Math.PI)*0.8}else p._dm=0;if(p===G.carrier&&G.juke>0)sq=G.jukeCut?0.1:0.16;const line=(p.role==='OL'||p.role==='DL')?1:0;const T=TM[p.team],i=cnt[p.team]++;
-  const s=3.5*(line?1.15:1);sc.set(s*mir*(1+sq),s*(1-sq),1);pm.compose(v3.set(Xw(p.x),hy,Z(p.y)),cam.quaternion,sc);T.m.setMatrixAt(i,pm);
+  const s=2.8*(line?1.18:1);sc.set(s*mir*(1+sq),s*(1-sq),1);pm.compose(v3.set(Xw(p.x),hy,Z(p.y)),cam.quaternion,sc);T.m.setMatrixAt(i,pm);
   T.uo.setXY(i,(dir*S.POSES+pose)*CU,1-((p.skin*2+line)+1)*CV);
   const P=S.P;const noNum=dir===2||pose===P.dive||pose===P.fall||((dir<=1)&&(pose===P.hold||(pose>=P.hrun&&pose<P.hrun+4)||pose===P.catch2||pose===P.throw));
   if(!noNum){const Nm=NM[p.team],j=nc[p.team]++;const y0=1+crouchOf(pose);const hpx=24-(y0+11.5);const u=s/24;
@@ -203,7 +203,7 @@ function buildRoutes(){routeGrp.clear();(G.routes||[]).forEach((r,ri)=>{const pt
 // projection for 2D overlay
 const pv=new THREE.Vector3();
 window.PROJ=(x,y,h=1)=>{pv.set(Xw(x),h,Z(y)).project(cam);return[(pv.x+1)/2*W,(1-pv.y)/2*H]};
-const cpos=new THREE.Vector3(0,17,0),clook=new THREE.Vector3();let camX=0,camZ=1;const cl3=(v,a,b)=>Math.max(a,Math.min(b,v));
+const cpos=new THREE.Vector3(0,17,0),clook=new THREE.Vector3();let camX=0,camZ=1,camFy;const cl3=(v,a,b)=>Math.max(a,Math.min(b,v));
 window.R3D=()=>{const st=G.st;if(st==='title'||st==='team'){ren.domElement.style.visibility='hidden';return}ren.domElement.style.visibility='visible';
  paintSB();const fk=G.home+'-'+G.away;if(fk!==fieldKey){fieldKey=fk;paintField();ftex.needsUpdate=true;restyleStadium()}if(ledMat.map)ledMat.map.offset.x=(performance.now()/1000*0.02)%1;
  const on=st==='live'||st==='result'||st==='presnap';
@@ -222,5 +222,12 @@ window.R3D=()=>{const st=G.st;if(st==='title'||st==='team'){ren.domElement.style
   let tX=0;if(xs.length){const mn=Math.min(...xs),mx=Math.max(...xs);tX=Xw((mn+mx)/2)*0.62}
   const pre=G.st==='presnap';camX+=(tX-camX)*(pre?0.3:0.12);
   const zT=b2&&!b2.caught&&b2.tt==='bomb'?1.12:1;camZ+=(zT-camZ)*(pre?0.3:0.05)}
- cpos.set(camX*(1-ov),(36*camZ)*(1-ov)+80*ov,(Z(G.cam)+30*camZ)*(1-ov)+(Z(G.los+10)+8)*ov);cam.position.copy(cpos);if(G.shake>0){cam.position.x+=(Math.random()-.5)*G.shake*3;cam.position.y+=(Math.random()-.5)*G.shake*3}clook.set(camX*.9*(1-ov),0,(Z(G.cam)-19)*(1-ov)+Z(G.los+10)*ov);cam.lookAt(clook);if(window.__camOv){const o=window.__camOv;cam.position.set(...o.p);cam.lookAt(...o.l)}
+ {const CP=window.CAMP||(window.CAMP={h:52,pitch:62,fov:62});if(cam.fov!==CP.fov){cam.fov=CP.fov;cam.updateProjectionMatrix()}
+  const c3=G.carrier,b3=G.ball,inAir=b3&&!b3.caught;const passMode=G.play&&G.play.t==='pass'&&(G.st==='presnap'||(c3===G.qb&&!G.qbRun));
+  const fyT=inAir?(G.ball.y):(c3?c3.y:G.los);const ndc=passMode?-0.55:inAir?-0.1:-0.3;
+  const th=CP.pitch*Math.PI/180,al=th+Math.atan(-ndc*Math.tan(CP.fov*Math.PI/360));const back=CP.h/Math.tan(al);
+  camFy=camFy===undefined||G.st==='presnap'&&Math.abs(camFy-fyT)>30?fyT:camFy+(fyT-camFy)*(G.st==='presnap'?0.3:inAir?0.12:0.2);
+  const pz=camFy-back,lz=pz+CP.h/Math.tan(th);
+  cpos.set(camX*(1-ov),CP.h*(1-ov)+80*ov,Z(pz)*(1-ov)+(Z(G.los+10)+8)*ov);cam.position.copy(cpos);if(G.shake>0){cam.position.x+=(Math.random()-.5)*G.shake*2;cam.position.y+=(Math.random()-.5)*G.shake*2}
+  clook.set(camX*(1-ov),0,Z(lz)*(1-ov)+Z(G.los+10)*ov)}cam.lookAt(clook);if(window.__camOv){const o=window.__camOv;cam.position.set(...o.p);cam.lookAt(...o.l)}
  ren.render(scene,cam)};
