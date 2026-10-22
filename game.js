@@ -189,7 +189,7 @@ function update(dt){
  if(IN.thr){const{w,ht}=IN.thr;IN.thr=null;if(G.tuck&&passerPhase()){G.tuck=false;}if(passerPhase()){if(w===G.rb&&canHand())handoff();else throwTo(w,true,holdType(ht))}}
  G.aim=null;if(passerPhase()&&IN.aimP&&IN.aimP.moved>18){const a=IN.aimP,fw=cl((a.y-a.sy)*0.17,2,55),lat=-(a.x-a.sx)*0.14;let tx=cl(cur.x+lat,1,FIELDW-1),ty=cur.y+fw;let lock=null,ld=5.5;
   for(const w of P)if((w.role==='WR'||w.role==='RB')&&w!==cur){const d=Math.hypot(w.x-tx,w.y-ty);if(d<ld){ld=d;lock=w}}
-  if(lock){const T=0.22+Math.hypot(lock.x-cur.x,lock.y-cur.y)/40;tx=cl(lock.x+lock.vx*T,1,FIELDW-1);ty=lock.y+lock.vy*T}const pl=Math.hypot(a.x-a.sx,a.y-a.sy);const d0=Math.hypot(tx-cur.x,ty-cur.y);G.aim={tx,ty,lock,ty2:d0>(G.bullet?42:32)?'bomb':G.bullet?'bullet':'lob'}}
+  if(lock){const T=0.22+Math.hypot(lock.x-cur.x,lock.y-cur.y)/40;tx=cl(lock.x+lock.vx*T,1,FIELDW-1);ty=lock.y+lock.vy*T}const pl=Math.hypot(a.x-a.sx,a.y-a.sy);const d0=Math.hypot(tx-cur.x,ty-cur.y),ty2=d0>(G.bullet?42:32)?'bomb':G.bullet?'bullet':'lob';let ok=false;if(ty<=110&&tx>0.5&&tx<FIELDW-0.5)for(const w of targets()){if(w===G.rb&&!G.handed&&G.snapT<1.2)continue;const f=simAhead(w,flightT(d0,ty2)+0.3);if(Math.hypot(f[0]-tx,f[1]-ty)<3.6){ok=true;break}}G.aim={tx,ty,lock,ty2,ok}}
  if(G.relAim){G.relAim=false;if(G.lastAim&&passerPhase()){G.tuck=false;}if(G.lastAim&&passerPhase())throwSpot(G.lastAim.tx,G.lastAim.ty,G.lastAim.lock,G.lastAim.ty2)}G.lastAim=G.aim;
  for(const k of keys){if('123'.includes(k)&&passerPhase()){const w=P.filter(q=>q.role==='WR')[+k-1];if(w)throwTo(w)}if(k==='b'&&G.ko)return touchback()}
  for(const t of taps)if(t&&G.ko&&t[0]<120&&t[1]>H-140)return touchback();let sp=(cur.role==='QB'&&!runner?(G.tuck?7.8:6.6):8.2)*(G.slow>0?0.7:1);if(G.juke>0)sp*=1.5;
@@ -459,10 +459,10 @@ function drawControls(){if(!window.PROJ)return;const live=G.st==='live';
   let jd=false;for(const p of PT.values())if(p.kind==='joy'){jd=true;const dx=p.x-p.sx,dy=p.y-p.sy;X.beginPath();X.arc(p.sx,p.sy,50,0,7);X.fillStyle='rgba(255,255,255,.12)';X.fill();X.lineWidth=3;X.strokeStyle='#fff';X.stroke();X.beginPath();X.arc(p.sx+dx,p.sy+dy,22,0,7);X.fillStyle='#fff';X.fill()}
   if(!jd&&G.adv){X.globalAlpha=.35;X.setLineDash([6,6]);X.beginPath();X.arc(80,H-150,46,0,7);X.lineWidth=3;X.strokeStyle='#fff';X.stroke();X.setLineDash([]);X.globalAlpha=1;txt('MOVE',80,H-150,11,'rgba(255,255,255,.7)','center',false)}}
  if(live){for(const p of PT.values())if(p.kind==='joy'){X.globalAlpha=.14;X.strokeStyle='#fff';X.lineWidth=3;X.beginPath();X.arc(p.sx,p.sy,50,0,7);X.stroke();X.globalAlpha=1}
-  if(G.aim){const c=G.carrier,a=G.aim,d0=Math.hypot(a.tx-c.x,a.ty-c.y),h=arcH(d0,a.ty2)*0.45;X.strokeStyle='#3f9bff';X.lineWidth=4;X.beginPath();
+  if(G.aim){const c=G.carrier,a=G.aim,d0=Math.hypot(a.tx-c.x,a.ty-c.y),h=arcH(d0,a.ty2)*0.45;X.strokeStyle=(a.ok?'#3f9bff':'#ff4d5e');X.lineWidth=4;X.beginPath();
    for(let i=0;i<=20;i++){const k=i/20;const q=scr(c.x+(a.tx-c.x)*k,c.y+(a.ty-c.y)*k,1.6+Math.sin(k*Math.PI)*h*2.2);i?X.lineTo(q[0],q[1]):X.moveTo(q[0],q[1])}X.stroke();
    const ring=(x,y,r)=>{X.beginPath();for(let i=0;i<=24;i++){const an=i/24*Math.PI*2,q=scr(x+Math.cos(an)*r,y+Math.sin(an)*r,0.05);i?X.lineTo(q[0],q[1]):X.moveTo(q[0],q[1])}};
-   {const q=scr(a.tx,a.ty,0.05);txt(a.ty2.toUpperCase(),q[0],q[1]+24,13,a.ty2==='bullet'?'#ffd23f':a.ty2==='bomb'?'#ff4d5e':'#9fd0ff')}ring(a.tx,a.ty,1.6);X.fillStyle='rgba(63,155,255,.3)';X.fill();X.strokeStyle='#3f9bff';X.lineWidth=3;X.stroke();
+   {const q=scr(a.tx,a.ty,0.05);txt(a.ty2.toUpperCase(),q[0],q[1]+24,13,a.ty2==='bullet'?'#ffd23f':a.ty2==='bomb'?'#ff4d5e':'#9fd0ff')}ring(a.tx,a.ty,1.6);X.fillStyle=(a.ok?'rgba(63,155,255,.3)':'rgba(255,77,94,.3)');X.fill();X.strokeStyle=(a.ok?'#3f9bff':'#ff4d5e');X.lineWidth=3;X.stroke();
    if(a.lock){ring(a.lock.x,a.lock.y,2.4);X.setLineDash([6,5]);X.strokeStyle='#ffd23f';X.lineWidth=3;X.stroke();X.setLineDash([]);const q=scr(a.lock.x,a.lock.y,5.4);txt('LOCK',q[0],q[1],11,'#ffd23f')}}
   const runner=!passerPhase()&&!G.pend&&(!G.ball||G.ball.caught)&&G.carrier;
   if(runner){let kx=0,ky=0;for(const p of PT.values())if(p.kind==='stick'){let dx=p.x-STK.x,dy=p.y-STK.y,d=Math.hypot(dx,dy);if(d>STK.r){dx=dx/d*STK.r;dy=dy/d*STK.r}kx=dx;ky=dy}
