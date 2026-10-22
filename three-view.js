@@ -27,7 +27,7 @@ function paintField(){const W2=fc.width;
  for(let x=0;x<FW;x+=FW/8){f.fillStyle='rgba(255,255,255,.035)';if(Math.round(x/(FW/8))%2)f.fillRect(x*PX,10*PX,FW/8*PX,100*PX)}
  const ez=(tm,y0,flip)=>{f.fillStyle=tm.c1;f.fillRect(0,y0,W2,10*PX);f.save();f.beginPath();f.rect(0,y0,W2,10*PX);f.clip();f.strokeStyle=HELM.mix(tm.c1,.82);f.lineWidth=PX*1.2;for(let x=-W2;x<W2*2;x+=PX*4){f.beginPath();f.moveTo(x,y0);f.lineTo(x+10*PX,y0+10*PX);f.stroke()}f.restore();
   f.save();f.translate(W2/2,y0+5*PX);if(flip)f.rotate(Math.PI);f.font=`900 ${5.2*PX}px "Arial Black", Arial`;f.textAlign='center';f.textBaseline='middle';f.lineWidth=PX*.7;f.strokeStyle=HELM.mix(tm.c1,.4);const nm=tm.nick||tm.n.split(' ')[1];f.strokeText(nm,0,PX*.3);f.fillStyle=tm.c2===tm.c1?'#fff':(Math.abs(parseInt(tm.c2.slice(1),16)-parseInt(tm.c1.slice(1),16))>0x303030?tm.c2:'#fff');f.fillText(nm,0,PX*.3);f.restore()};
- ez(away(),0,true);ez(home(),110*PX,false);
+ ez(away(),0,false);ez(home(),110*PX,false);
  f.fillStyle='#f4f8f2';
  for(let yd=0;yd<=100;yd+=5){const y=(110-yd)*PX;f.fillRect(0,y-2,W2,yd%50?4:6)}
  for(let yd=1;yd<100;yd++){if(yd%5==0)continue;const y=(110-yd)*PX;for(const hx of[1,22.9,29.4,FW-2.6])f.fillRect(hx*PX,y-1.5,1.4*PX,3)}
@@ -223,12 +223,13 @@ function animOf(p,dt){const line=p.role==='OL'||p.role==='DL';const sp=Math.hypo
  const ph=(p.num||0)*0.37;
  if(G.st==='presnap'||(G.st==='fg'&&!(p.throwT>0)&&p.role!=='K')){if(line)o.pose=N_.stance;else if(p.role==='QB')o.pose=G.st==='fg'?N_.getup0:N_.hold;else if(p.role==='WR'||p.role==='CB'||p.role==='LB'||p.role==='S')o.pose=N_.ready;else o.pose=(Math.floor(G.t*1.3+ph)%2)?N_.idle1:N_.idle0;return o}
  if(G.celeb&&p.team===0&&G.st==='result'){const t=((G.t*4+ph)%4)|0;if(p===G.carrier){const e=1.15-(G.resT||0);o.pose=e<0.2?N_.cel0:e<0.55?N_.cel3:[N_.cel1,N_.cel2][(G.t*3|0)%2]}else o.pose=[N_.cel0,N_.cel1,N_.cel1,N_.cel0][t];if(o.pose===N_.cel1)o.lift=0.3;return o}
+ if(p.reach>0&&!(p.fallen>0)){o.pose=p.reach>0.15?N_.catchUp:N_.catchTuck;o.lift=Math.sin(Math.min(1,(0.45-p.reach)/0.45)*Math.PI)*0.7;return o}
  if(p.throwT>0){const k=1-p.throwT/(p.throwDur||0.5);if(p.role==='K'){o.pose=N_.kick0+Math.min(2,Math.floor(k*3));return o}o.pose=N_.thr0+Math.max(0,Math.min(5,Math.floor(k*6)));return o}
  if(p.catchT>0){o.pose=p.catchT>0.25?N_.catchUp:N_.catchTuck;return o}
- if(p.eng){o.pose=N_.blk0+(Math.floor(G.t*5+ph)%3);return o}
+ if(p.eng){o.pose=N_.blk0+(sp>1.2?Math.floor(p.anim/0.5)%3:(Math.floor(G.t*3+ph)%2)+1);return o}
  const car=p===G.carrier&&(!G.ball||G.ball.caught)&&!G.pend;
  if(car&&G.juke>0){const e=0.32-G.juke;o.pose=e<0.09?N_.jplant:e<0.19?N_.jfake:N_.jcut;o.roll=(G.jukeS||1)*(e<0.09?0:e<0.19?0.12:-0.18);return o}
- if(sp<0.6){o.pose=car?N_.hold:(Math.floor(G.t*1.3+ph)%2?N_.idle1:N_.idle0);return o}
+ if(sp<0.35){o.pose=car?N_.hold:(Math.floor(G.t*1.3+ph)%2?N_.idle1:N_.idle0);return o}
  const fwd=p.team===0?1:-1;const back=(p.vy*fwd<-0.6*sp&&sp>0.8&&!car)||(p.role==='QB'&&car&&p.vy*fwd<-0.5*sp);
  if(back){o.face=[0,fwd];const f=Math.floor(p.anim/0.38)%4;o.pose=(p.role==='QB'&&car?N_.drop0:N_.bp0)+f;return o}
  if(car&&sp>3){let d=99;for(const q of G.players)if(q.team!==p.team&&!(q.fallen>0)){const dd=Math.hypot(q.x-p.x,q.y-p.y);if(dd<d)d=dd}if(d<1.9){o.pose=Math.floor(p.anim/0.5)%2?N_.stiff1:N_.stiff0;return o}}
@@ -240,8 +241,10 @@ function updatePlayers(){ensureAtlas();const now=performance.now();const dt=wind
   if(p.throwT>0&&p.throwDir){fx=p.throwDir.x;fy=p.throwDir.y}else if(p.eng&&p.blk){fx=p.blk.x-p.x;fy=p.blk.y-p.y}
   else if(sp<0.4||G.st==='presnap'){fx=0;fy=p.team===0?1:-1}
   const A=animOf(p,dt);if(A.face){fx=A.face[0];fy=A.face[1]}
-  const l=Math.hypot(fx,fy)||1;const k=p.throwT>0?1:.25;p.fdx=(p.fdx??0)*(1-k)+fx/l*k;p.fdy=(p.fdy??(p.team?-1:1))*(1-k)+fy/l*k;
-  const a=Math.atan2(p.fdx,p.fdy),aa=Math.abs(a)*180/Math.PI;const dir=aa<22.5?4:aa<67.5?3:aa<112.5?2:aa<157.5?1:0;const mir=a<0?-1:1;
+  if(p.fa===undefined)p.fa=Math.atan2(0,p.team?-1:1);if(Math.hypot(fx,fy)>0.05&&(sp>0.7||G.st==='presnap'||p.throwT>0||p.eng||A.face)){const ta=Math.atan2(fx,fy);const da=ang(ta-p.fa);const mt=(p.throwT>0?22:p.dive>0?16:9)*dt;p.fa=ang(p.fa+Math.max(-mt,Math.min(mt,da)))}
+  const a=p.fa,aa=Math.abs(a)*180/Math.PI;const cand=aa<22.5?4:aa<67.5?3:aa<112.5?2:aa<157.5?1:0;const mirC=a<0?-1:1;
+  {let d0=p._dir;if(d0===undefined||Math.abs(aa-[180,135,90,45,0][d0])>29.5)d0=cand;p._dir=d0;if(p._mir===undefined||d0===0||d0===4)p._mir=mirC;else if(mirC!==p._mir&&aa>12&&aa<168)p._mir=mirC}
+  const dir=p._dir,mir=p._mir;
   const rk=Math.min(1,dt*18);p._r=(p._r||0)+(A.roll-(p._r||0))*rk;p._sy=(p._sy??1)+(A.sy-(p._sy??1))*rk;p._lf=(p._lf||0)+(A.lift-(p._lf||0))*Math.min(1,dt*22);
   let sq=0;if(p===G.carrier&&G.juke>0)sq=G.jukeCut?0.06:0.1;const line=(p.role==='OL'||p.role==='DL')?1:0;const T=TM[p.team],i=cnt[p.team]++;const pose=A.pose;
   const s=2.8*(line?1.18:1);sc.set(s*mir*(1+sq),s*(1-sq)*p._sy,1);qR.setFromAxisAngle(zAx,p._r);qC.copy(cam.quaternion).multiply(qR);pm.compose(v3.set(Xw(p.x),0.02+p._lf,Z(p.y)),qC,sc);T.m.setMatrixAt(i,pm);
@@ -276,7 +279,7 @@ window.R3D=()=>{const st=G.st;if(window.MENU_ST?window.MENU_ST(st)||st==='vs':(s
  los.position.z=Z(G.los);fd.position.z=Z(Math.min(G.los+G.togo,100));fd.visible=G.los+G.togo<100;
  const c=G.carrier;ring.visible=on&&!!c;star.visible=ring.visible;if(c){ring.position.set(Xw(c.x),.04,Z(c.y));star.position.set(Xw(c.x),.05,Z(c.y));star.rotation.z=G.t*2}
  const b=G.ball;ball.visible=on&&!!b&&!b.caught;tgtMk.visible=false;if(fgB){ball.visible=true;ball.position.set(Xw(fgB.x),fgB.z+0.3,Z(fgB.y));ball.rotation.x=-(G.t*14)}
- ballSh.visible=false;if(b&&!b.caught){{const kk=Math.min(1,b.t/b.T);ball.position.set(Xw(b.x),(b.h0||1.6)*(1-kk)+1.6*kk+b.z*0.9,Z(b.y))}ball.rotation.y=Math.atan2(-(b.tx-b.x0),(b.ty-b.y0));ball.rotation.x=-.5;ball.rotation.z=(b.t||0)*28;tgtMk.visible=true;tgtMk.position.set(Xw(b.tx),.05,Z(b.ty));{const hz=ball.position.y;ballSh.visible=true;ballSh.position.set(Xw(b.x),.07,Z(b.y));const s=Math.max(.8,1.7-hz*0.05);ballSh.scale.set(s,s*0.8,1);ballSh.material.opacity=Math.max(.3,.6-hz*0.02)}}
+ ballSh.visible=false;if(b&&!b.caught){{const kk=Math.min(1,b.t/b.T);ball.position.set(Xw(b.x),(b.h0||1.6)*(1-kk)+1.6*kk+b.z*0.9,Z(b.y))}ball.rotation.y=Math.atan2(-(b.tx-b.x0),(b.ty-b.y0));ball.rotation.x=-.5;ball.rotation.z=(b.t||0)*28;if(b.spin){ball.rotation.x=b.t*b.spin;ball.rotation.y=b.t*b.spin*0.6}tgtMk.visible=true;tgtMk.position.set(Xw(b.tx),.05,Z(b.ty));{const hz=ball.position.y;ballSh.visible=true;ballSh.position.set(Xw(b.x),.07,Z(b.y));const s=Math.max(.8,1.7-hz*0.05);ballSh.scale.set(s,s*0.8,1);ballSh.material.opacity=Math.max(.3,.6-hz*0.02)}}
  else if(c){const a=(c.face||0);ball.position.set(Xw(c.x)+Math.cos(a)*.55,1.25,Z(c.y)-Math.sin(a)*.55);ball.rotation.set(0,a,0)}
  let ov=G.st==='presnap'&&G.ovT>0?Math.min(1,G.ovT/0.6):0;ov=ov*ov*(3-2*ov);
  {const xs=[];const c2=G.carrier,b2=G.ball;
