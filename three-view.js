@@ -203,7 +203,7 @@ function buildRoutes(){routeGrp.clear();(G.routes||[]).forEach((r,ri)=>{const pt
 // projection for 2D overlay
 const pv=new THREE.Vector3();
 window.PROJ=(x,y,h=1)=>{pv.set(Xw(x),h,Z(y)).project(cam);return[(pv.x+1)/2*W,(1-pv.y)/2*H]};
-const cpos=new THREE.Vector3(0,17,0),clook=new THREE.Vector3();let camX=0,camZ=1.2;
+const cpos=new THREE.Vector3(0,17,0),clook=new THREE.Vector3();let camX=0,camZ=1;const cl3=(v,a,b)=>Math.max(a,Math.min(b,v));
 window.R3D=()=>{const st=G.st;if(st==='title'||st==='team'){ren.domElement.style.visibility='hidden';return}ren.domElement.style.visibility='visible';
  paintSB();const fk=G.home+'-'+G.away;if(fk!==fieldKey){fieldKey=fk;paintField();ftex.needsUpdate=true;restyleStadium()}if(ledMat.map)ledMat.map.offset.x=(performance.now()/1000*0.02)%1;
  const on=st==='live'||st==='result'||st==='presnap';
@@ -216,12 +216,11 @@ window.R3D=()=>{const st=G.st;if(st==='title'||st==='team'){ren.domElement.style
  if(b&&!b.caught){{const kk=Math.min(1,b.t/b.T);ball.position.set(Xw(b.x),(b.h0||1.6)*(1-kk)+1.6*kk+b.z*0.9,Z(b.y))}ball.rotation.y=Math.atan2(-(b.tx-b.x0),(b.ty-b.y0));ball.rotation.x=-.5;ball.rotation.z=(b.t||0)*28;tgtMk.visible=true;tgtMk.position.set(Xw(b.tx),.05,Z(b.ty))}
  else if(c){const a=(c.face||0);ball.position.set(Xw(c.x)+Math.cos(a)*.55,1.25,Z(c.y)-Math.sin(a)*.55);ball.rotation.set(0,a,0)}
  let ov=G.st==='presnap'&&G.ovT>0?Math.min(1,G.ovT/0.6):0;ov=ov*ov*(3-2*ov);
- {const pts=[],add=(x,y,h)=>pts.push([x,y,h||1]);const c2=G.carrier,b2=G.ball,foc=b2&&!b2.caught?b2:c2;const longP=b2&&!b2.caught&&b2.T>1.4||(c2&&c2.y>G.los+18);
-  if(on){for(const q of G.players){if(q.team===1&&longP&&foc&&Math.hypot(q.x-foc.x,q.y-foc.y)>22)continue;add(q.x,q.y,1.8)}
-   if(b2&&!b2.caught){add(b2.x,b2.y,1+b2.z);add(b2.tx,b2.ty)}if(G.aim){add(G.aim.tx,G.aim.ty)}}
-  let mn=1e9,mx=-1e9;for(const p of pts){mn=Math.min(mn,p[0]);mx=Math.max(mx,p[0])}
-  const tX=pts.length?Xw((mn+mx)/2)*0.85:0;camX+=(tX-camX)*0.08;
-  let need=0;const v=new THREE.Vector3();for(const p of pts){v.set(Xw(p[0]),p[2],Z(p[1])).project(cam);const nx=Math.abs(v.x)/0.84,ny=v.y>0?v.y/0.52:-v.y/0.5;need=Math.max(need,nx,ny,v.z>1?2:0)}
-  let zT=camZ;if(need>1)zT=Math.min(2.8,camZ*Math.min(need,1.25));else if(need<0.82)zT=Math.max(1,camZ*0.985);camZ+=(zT-camZ)*0.07}
+ {const xs=[];const c2=G.carrier,b2=G.ball;
+  if(on){if(b2&&!b2.caught){xs.push(b2.x,b2.tx)}else if(c2){xs.push(c2.x+cl3(c2.vx*0.5,-4,4))}
+   if(G.aim)xs.push(G.aim.tx);if(G.carrier===G.qb&&G.qb)xs.push(G.qb.x)}
+  let tX=0;if(xs.length){const mn=Math.min(...xs),mx=Math.max(...xs);tX=Xw((mn+mx)/2)*0.62}
+  const pre=G.st==='presnap';camX+=(tX-camX)*(pre?0.3:0.12);
+  const zT=b2&&!b2.caught&&b2.tt==='bomb'?1.12:1;camZ+=(zT-camZ)*(pre?0.3:0.05)}
  cpos.set(camX*(1-ov),(36*camZ)*(1-ov)+80*ov,(Z(G.cam)+30*camZ)*(1-ov)+(Z(G.los+10)+8)*ov);cam.position.copy(cpos);if(G.shake>0){cam.position.x+=(Math.random()-.5)*G.shake*3;cam.position.y+=(Math.random()-.5)*G.shake*3}clook.set(camX*.9*(1-ov),0,(Z(G.cam)-19)*(1-ov)+Z(G.los+10)*ov);cam.lookAt(clook);if(window.__camOv){const o=window.__camOv;cam.position.set(...o.p);cam.lookAt(...o.l)}
  ren.render(scene,cam)};

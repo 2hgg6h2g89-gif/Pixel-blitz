@@ -155,7 +155,7 @@ function update(dt){
  if(G.paused){for(const t of taps){if(!t)continue;if(t[1]>560&&t[1]<620){G.bulletPref=!G.bulletPref;localStorage.setItem('pb_bullet',G.bulletPref?'1':'0')}else if(t[1]>380&&t[1]<440)G.paused=false;else if(t[1]>460&&t[1]<520){G.paused=false;Object.assign(G,{sh:0,sa:0,drive:0,q:1,clock:QLEN,aud:4,los:25,down:1,togo:10,log:[],stats:{py:0,ry:0,td:0,int:0,sack:0}});G.st='title'}}return}
  if(G.st!=='title'&&G.st!=='team'&&taps.some(t=>t&&t[0]<52&&t[1]<50)){G.paused=true;return}
  if(G.st==='title'){if(taps.length)G.st='team';return}
- if(G.st==='presnap'){if(G.ovT>0)G.ovT-=dt;if(keys.includes('u')&&!G.audOpen){G.audOpen=true}G.cam+=(G.los+4-G.cam)*Math.min(1,dt*4);for(const t of taps){if(G.audOpen&&t){if(t[1]<H-AP_H){G.audOpen=false;return}const b=audBtn(t[0],t[1]);if(!b)return;
+ if(G.st==='presnap'){if(G.ovT>0)G.ovT-=dt;if(keys.includes('u')&&!G.audOpen){G.audOpen=true}G.cam+=(G.los+4-G.cam)*Math.min(1,dt*10);for(const t of taps){if(G.audOpen&&t){if(t[1]<H-AP_H){G.audOpen=false;return}const b=audBtn(t[0],t[1]);if(!b)return;
    if(b.c===3){if(b.r===0){autoPick(true);G.audOpen=true;say('NEW PLAY: '+G.play.n,1.2)}else if(b.r===1)G.audOpen=false}else setDepth(b.c,b.r);return}
   if(t&&Math.hypot(t[0]-60,t[1]-(H-84))<44){G.audOpen=true;return}
   if(!t||Math.hypot(t[0]-(W-64),t[1]-(H-84))<48)return snap();}return}
@@ -248,7 +248,7 @@ function update(dt){
  if(G.dcatch&&cc.dive<=0){G.dcatch=false;if(cc.y<100){cc.fallen=1;endPlay('tackle',cc.y);return}}if(G.dcatch&&cc.dive>0){/*diving*/}
  if(cc.y>=100){endPlay('td',100);return}
  if(cc.x<=0.6||cc.x>=FIELDW-0.6){if(G.snapT>0.5){say('OUT OF BOUNDS');endPlay('tackle',cc.y);return}}
- G.cam+=((G.ball&&!G.ball.caught?G.ball.y+(G.ball.tt==='bomb'?6:0):cc.y)+4-G.cam)*Math.min(1,dt*(G.ball&&!G.ball.caught?7:4));
+ G.cam+=((G.ball&&!G.ball.caught?G.ball.y+(G.ball.tt==='bomb'?6:0):G.aim?Math.max(cc.y,(cc.y+G.aim.ty)/2-3):cc.y+cl(cc.vy*0.4,-2,4))+4-G.cam)*Math.min(1,dt*(G.ball&&!G.ball.caught?7:4));
 }
 function nearest(p,team,roles){let b=null,bd=1e9;for(const q of G.players)if(q.team===team&&roles.includes(q.role)){const d=dist(p,q);if(d<bd){bd=d;b=q}}return b}
 function defend(d,dt){if(d.dive>0)return;
