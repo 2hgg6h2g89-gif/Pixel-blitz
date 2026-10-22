@@ -141,5 +141,6 @@ window.R3D=()=>{const st=G.st;if(st==='title'||st==='team'){ren.domElement.style
  if(b&&!b.caught){ball.position.set(Xw(b.x),1.6+b.z*0.9,Z(b.y));ball.rotation.y=Math.atan2(-(b.tx-b.x0),(b.ty-b.y0));ball.rotation.x=-.5;tgtMk.visible=true;tgtMk.position.set(Xw(b.tx),.05,Z(b.ty))}
  else if(c){const a=(c.face||0);ball.position.set(Xw(c.x)+Math.cos(a)*.55,1.25,Z(c.y)-Math.sin(a)*.55);ball.rotation.set(0,a,0)}
  const fx=on?(b&&!b.caught?Xw(b.x):c?Xw(c.x):0)*.25:0;camX+=(fx-camX)*.08;
- cpos.set(camX,36,Z(G.cam)+30);cam.position.copy(cpos);clook.set(camX*.6,0,Z(G.cam)-19);cam.lookAt(clook);
+ let ov=G.st==='presnap'&&G.ovT>0?Math.min(1,G.ovT/0.6):0;ov=ov*ov*(3-2*ov);
+ cpos.set(camX*(1-ov),36+(80-36)*ov,(Z(G.cam)+30)*(1-ov)+(Z(G.los+10)+8)*ov);cam.position.copy(cpos);clook.set(camX*.6*(1-ov),0,(Z(G.cam)-19)*(1-ov)+Z(G.los+10)*ov);cam.lookAt(clook);
  ren.render(scene,cam)};
