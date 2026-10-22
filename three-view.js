@@ -182,10 +182,10 @@ function fwStep(dt){const n=performance.now();fwQueue=fwQueue.filter(q=>{if(q.at
  fwG.attributes.position.needsUpdate=true;fwG.attributes.color.needsUpdate=true;fwPts.visible=any}
 // ===== lens flare ghosts on the light banks =====
 // ===== soft player shadows =====
-const softTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');const gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(0,0,0,.55)');gr.addColorStop(.55,'rgba(0,0,0,.3)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
+const softTex=(()=>{const c=document.createElement('canvas');c.width=c.height=16;const g=c.getContext('2d');for(let y=0;y<16;y++)for(let x=0;x<16;x++){const dx=(x+.5-8)/8,dy=(y+.5-8)/5.2,r=dx*dx+dy*dy;if(r<1){const a=r<0.45?0.5:((x+y)%2?0.32:0.12);g.fillStyle='rgba(8,14,10,'+a+')';g.fillRect(x,y,1,1)}}const t=new THREE.CanvasTexture(c);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;return t})();
 // players: pixel-art billboards (instanced, nearest filtering)
 const N=14,S=window.SPR;
-const shadow=new THREE.InstancedMesh(new THREE.PlaneGeometry(2.1,2.1),new THREE.MeshBasicMaterial({map:softTex,transparent:true,opacity:.75,depthWrite:false}),N*2);scene.add(shadow);
+const shadow=new THREE.InstancedMesh(new THREE.PlaneGeometry(1.7,1.7),new THREE.MeshBasicMaterial({map:softTex,transparent:true,opacity:.9,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}),N*2);scene.add(shadow);
 const ring=new THREE.Mesh(new THREE.RingGeometry(1.4,1.85,24),new THREE.MeshBasicMaterial({color:0x8a5cff,transparent:true,opacity:.85}));ring.rotation.x=-Math.PI/2;ring.position.y=.04;scene.add(ring);const sh=new THREE.Shape();for(let i=0;i<10;i++){const r=i%2?.32:.75,a=i/10*Math.PI*2-Math.PI/2;i?sh.lineTo(Math.cos(a)*r,Math.sin(a)*r):sh.moveTo(Math.cos(a)*r,Math.sin(a)*r)}const star=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshBasicMaterial({color:0xffd23f,side:THREE.DoubleSide}));star.rotation.x=-Math.PI/2;star.position.y=.05;scene.add(star);
 const ball=new THREE.Mesh(new THREE.SphereGeometry(.28,10,6),lam(0x9a5424));ball.scale.set(1.8,1.8,2.8);scene.add(ball);{const ol=new THREE.Mesh(new THREE.SphereGeometry(.28,10,6),new THREE.MeshBasicMaterial({color:0x140a04,side:THREE.BackSide}));ol.scale.setScalar(1.28);ball.add(ol);const ln=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.6,0.05),new THREE.MeshBasicMaterial({color:0xffffff}));ln.position.set(0,0,0.26);ball.add(ln)}
 const VB={spk:1.4,x:0.93,top:0.68,bot:0.92,cap:4,capKo:4.5};let SPK=1;window.VB=VB;const _cv=new THREE.Vector3();
@@ -258,7 +258,7 @@ function updatePlayers(){SPK+=(SPKT-SPK)*0.25;window.__SPK=SPK;{const bs=Math.ma
   let sq=0;if(p===G.carrier&&G.juke>0)sq=G.jukeCut?0.06:0.1;const line=(p.role==='OL'||p.role==='DL')?1:0;const T=TM[p.team],i=cnt[p.team]++;const pose=A.pose;
   const s=2.8*SPK*(line?1.18:1);sc.set(s*mir*(1+sq),s*(1-sq)*p._sy,1);qR.setFromAxisAngle(zAx,p._r);qC.copy(cam.quaternion).multiply(qR);pm.compose(v3.set(Xw(p.x),0.02+p._lf,Z(p.y)),qC,sc);T.m.setMatrixAt(i,pm);
   T.uo.setXY(i,pose*CU,1-((dir*10+p.skin*2+line)+1)*CV);
-  const M=S.META[dir*S.POSES+N_.idle0]||{ty:9};const noNum=Math.abs(p._r)>0.3||p._sy<0.85||p.fallen>0||p.dive>0;p._ny=p._ny===undefined?M.ty:p._ny+(M.ty-p._ny)*Math.min(1,dt*10);
+  const M=S.META[dir*S.POSES+N_.idle0]||{ty:9};const noNum=Math.abs(p._r)>0.3||p._sy<0.85||p.fallen>0||p.dive>0||((p.role==='OL'||p.role==='DL')&&G.st==='live'&&(p.eng||G.players.some(q=>q!==p&&q.team!==p.team&&(q.role==='OL'||q.role==='DL')&&Math.abs(q.x-p.x)<1.6&&Math.abs(q.y-p.y)<1.8)));p._ny=p._ny===undefined?M.ty:p._ny+(M.ty-p._ny)*Math.min(1,dt*10);
   if(!noNum){const Nm=NM[p.team],j=nc[p.team]++;const hpx=24-(p._ny+3.5)+(dir===2?0.5:0);const u=s/24;
    v3.set(Xw(p.x),0.02+p._lf,Z(p.y)).addScaledVector(camUp,hpx*u).addScaledVector(camBk,0.18);pm.compose(v3,cam.quaternion,sc.set(9*u*(line?1.05:0.95)*(dir===2?0.8:1),7*u*(dir===2?0.85:1),1));Nm.m.setMatrixAt(j,pm);const n=Math.max(0,Math.min(99,p.num|0));Nm.uo.setXY(j,(n%10)*0.1,1-(Math.floor(n/10)+1)*0.1)}
   m4.makeRotationX(-Math.PI/2);m4.setPosition(Xw(p.x),.02,Z(p.y));shadow.setMatrixAt(si,m4)});
@@ -293,7 +293,8 @@ function camPose(CA,bb,want,zf){zf=zf||1;const w=CA.w,asp=W/H;const Tp=CA.t.p+(C
     const hs=(HX+0.4)/m,h0w=CA.ref?CA.w.wv/2:(HX+0.4)/w.m,hr=h0w+(CA.r.wv/2-h0w)*bb;const hw=hs+(hr-hs)*RR;h=hw*Math.sin(al)/(Math.cos(ang)*t*asp)}
   if(bb>0&&RR>0)cx=_cl(Xw(camX),-HX+8,HX-8)*bb*RR;
   h*=zf;const yc=camFy-h/Math.tan(af);cam.position.set(cx,h,Z(yc));cam.lookAt(cx,0,Z(yc+h/Math.tan(p)));cam.updateMatrixWorld();cam._h=h}
-window.R3D=()=>{const st=G.st;if(window.MENU_ST?window.MENU_ST(st)||st==='vs':(st==='title'||st==='team')){ren.domElement.style.visibility='hidden';return}ren.domElement.style.visibility='visible';
+let _pixDone=false;function pixelize(){_pixDone=true;scene.traverse(o=>{const ms=o.material?(Array.isArray(o.material)?o.material:[o.material]):[];for(const m of ms){const mp=m.map;if(mp&&mp.isCanvasTexture&&mp!==ftex&&mp.image&&mp.image.width>4){mp.magFilter=THREE.NearestFilter;mp.needsUpdate=true}}})}
+window.R3D=()=>{if(!_pixDone)pixelize();const st=G.st;if(window.MENU_ST?window.MENU_ST(st)||st==='vs':(st==='title'||st==='team')){ren.domElement.style.visibility='hidden';return}ren.domElement.style.visibility='visible';
  paintSB();const fk=G.home+'-'+G.away;if(fk!==fieldKey){fieldKey=fk;paintField();ftex.needsUpdate=true;restyleStadium();paintSideline();setDay(window.__forceDay!==undefined?window.__forceDay:Math.random()<0.35)}
  {const now=performance.now(),dt=Math.min(0.05,(now-(window.__lt||now))/1000);window.__lt=now;const big=G.celeb||(G.banner&&G.banner.a<2&&/TOUCHDOWN|FIRST DOWN|GOOD!|INTERCEPT/.test(G.banner.t+' '+G.banner.sub));const tc=big?1:0;cCheer.value+=(tc-cCheer.value)*0.06;if(G.celeb&&!window.__fwDone){window.__fwDone=true;window.__fireworks()}if(!G.celeb)window.__fwDone=false;fwStep(window.__hold?1/30:dt);SL.update(now/1000,cCheer.value)}if(ledMat.map)ledMat.map.offset.x=(performance.now()/1000*0.02)%1;
  const on=st==='live'||st==='result'||st==='presnap'||st==='fg'||st==='patpick';const fgB=(st==='fg'||st==='result'&&G.fgDone)&&G.fgBall;
