@@ -73,7 +73,7 @@ function setupPlay(p){
  const qb=mk(0,'QB',cx,L-(p.t==='run'||p.t==='sweep'?4:5),7);qb.hasBall=1;P.push(qb);
  const rb=mk(0,'RB',cx+(p.t==='sweep'?-2:0),L-7.5,22);P.push(rb);
  const OLN=[72,65,60,66,77];for(let i=-2;i<=2;i++)P.push(mk(0,'OL',cx+i*3.0,L-1.0,OLN[i+2]));
- const wxs=[cx-12.5,cx+12.5,cx-8];
+ const wxs=[cx-9.5,cx+9.5,cx-5.5];
  p.r.forEach((r,i)=>{const w=mk(0,'WR',wxs[i],L-1,[11,84,3][i]);w.route=r[0];w.dir=r[1]*(i===1?-1:1)*(wxs[i]<cx?1:-1);w.rt=0;P.push(w)});
  const DLN=[94,97,92,99];[-4.5,-1.5,1.5,4.5].forEach((o,k)=>P.push(mk(1,'DL',cx+o,L+1.6,DLN[k])));
  P.push(mk(1,'LB',cx-5,L+6,50));P.push(mk(1,'LB',cx+5,L+6,54));
@@ -90,12 +90,12 @@ function setDepth(i,lv){const deep=lv===0;const w=G.players.filter(q=>q.role==='
  else if(lv===1){w.route={go:'curl',post:'curl',corner:'out',block:'curl',flat:'out',drag:'slant'}[w.route]||w.route;w.dk=1.15}
  else{w.route={go:'slant',post:'slant',corner:'out',block:'flat',curl:'drag',out:'flat'}[w.route]||w.route;w.dk=0.7}
  G.aud--;buildRoutesG();G.ovT=0.8;say(['DEEP','MEDIUM','SHORT'][lv]+' - WR'+(i+1),1)}
-function simRoute(w){const c={x:w.x,y:w.y,vx:0,vy:0,rt:0,route:w.route,dir:w.dir,dk:w.dk};const pts=[[c.x,c.y]];for(let i=0;i<78;i++){c.rt+=1/30;const r=routeTarget(c,c.rt);steer(c,r.x,r.y,7.2,1/30);c.x=cl(c.x+c.vx/30,1,FIELDW-1);c.y+=c.vy/30;if(i%3==2)pts.push([c.x,c.y])}return{w,pts}}
+function simRoute(w){const c={x:w.x,y:w.y,vx:0,vy:0,rt:0,route:w.route,dir:w.dir,dk:w.dk};const pts=[[c.x,c.y]];for(let i=0;i<78;i++){c.rt+=1/30;const r=routeTarget(c,c.rt);steer(c,r.x,r.y,7.2,1/30);c.x=cl(c.x+c.vx/30,FIELDW/2-13,FIELDW/2+13);c.y+=c.vy/30;if(i%3==2)pts.push([c.x,c.y])}return{w,pts}}
 function scr(x,y,h=1){return window.PROJ?window.PROJ(x,y,h):[sx(x),sy(y)]}
 function routeTarget(w,t){const r=routeTarget0(w,t);const goal=G.los>=78&&['go','post','corner'].includes(w.route);
  if(goal&&w.y>101)return{x:cl(w.x+(w.x<FIELDW/2?-0.8:0.8),3,FIELDW-3),y:Math.min(w.y+0.6,106)};
  if(r.y>106||w.y>105.5)return{x:cl(w.x+Math.sin(t*1.6)*0.6,3,FIELDW-3),y:Math.min(r.y,105.8)};
- r.x=cl(r.x,2,FIELDW-2);return r}
+ r.x=cl(r.x,FIELDW/2-12.5,FIELDW/2+12.5);return r}
 function routeTarget0(w,t){const L=G.los,d=w.dir;t=t/(w.dk||1.2);
  switch(w.route){
  case 'slant':return t<0.6?{x:w.x,y:w.y+1}:{x:w.x+d*2,y:w.y+1.4};
@@ -113,7 +113,7 @@ function steer(p,tx,ty,sp,dt,sh){let dx=tx-p.x,dy=ty-p.y,d=Math.hypot(dx,dy);if(
 function endPlay(kind,y){
  if(G.st!=='live')return;G.aim=null;G.pend=null;
  if(G.play.t==='ko'&&kind!=='td'){G.st='result';G.resT=1.6;G.ko=false;const y2=cl(Math.round(y??G.carrier.y),1,99);G.los=y2;G.down=1;G.togo=10;G.next='down';banner('RETURN TO THE '+(y2<=50?y2:100-y2),y2<=50?'OWN TERRITORY':'OPPONENT TERRITORY');return}G.st='result';G.resT=1.15;const gain=Math.round((y??G.carrier.y)-G.los);let m='';
- if(kind==='td'){G.celeb=true;G.sh+=7;G.stats.td++;m='TOUCHDOWN!';G.shake=0.6;burst(G.carrier.x,G.carrier.y);G.next='drive'}
+ if(kind==='td'){G.celeb=true;G.sh+=6;G.stats.td++;m='TOUCHDOWN!';G.shake=0.6;burst(G.carrier.x,G.carrier.y);G.next='pat'}
  else if(kind==='int'){G.stats.int++;m='INTERCEPTED!';G.next='drive'}
  else if(kind==='inc'){m='INCOMPLETE';G.down++;G.next='down'}
  else{ if(kind==='sack'){G.stats.sack++;m='SACKED! '+gain+' YDS'}else m=(gain>=0?'+':'')+gain+' YARDS';
@@ -121,6 +121,7 @@ function endPlay(kind,y){
   G.los=cl(G.los+gain,1,99);G.togo-=gain;if(G.togo<=0){G.down=1;G.togo=Math.min(10,100-G.los);m+='  FIRST DOWN'}else G.down++;G.next='down'}
  if(G.next==='down'&&G.down>4){m+='  TURNOVER ON DOWNS';G.next='drive'}
  if(kind!=='inc'&&kind!=='td'&&kind!=='int')G.clock=Math.max(0,G.clock-12);
+ if(G.two){G.two=false;G.next='drive';if(kind==='td'){G.sh-=4;G.stats.td--;m='2-PT GOOD!'}else m='2-PT NO GOOD'}
  G.log.unshift(m);const mm=m.split('  ');banner(mm[0],mm.slice(1).join(' '));
 }
 function dust(x,y,n){for(let i=0;i<n;i++)G.parts.push({x:x+rnd(-.5,.5),y:y+rnd(-.5,.5),vx:rnd(-3,3),vy:rnd(-3,3),l:rnd(.3,.7),c:['#e6d8b0','#c9b98f','#fff4d6'][i%3],dust:1})}
@@ -131,7 +132,8 @@ function autoPick(change){const L=G.los,dn=G.down,tg=G.togo;let w=[1,1,1,0,0,0];
  if(L>=88){w[1]*=.4;w[0]*=1.6;w[2]*=1.4}
  const cur=G.play?PLAYS.indexOf(G.play):-1;if(cur>=0)w[cur]*=change?0:.35;
  let s=w.reduce((a,b)=>a+b),r=Math.random()*s,i=0;for(;i<2;i++){r-=w[i];if(r<=0)break}setupPlay(PLAYS[i])}
-function nextAfter(){
+function nextAfter(){G.fgDone=false;
+ if(G.next==='pat'){G.st='patpick';G.celeb=false;return}
  if(G.next==='drive'){ G.drive++;
   // CPU possession sim
   const D=DIFFS[G.diff],bonus=lvlStr(G.lvl),r=Math.random(),pts=r<D.td+bonus?7:r<D.td+bonus+D.fg?3:0;G.sa+=pts;
