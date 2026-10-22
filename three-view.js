@@ -4,7 +4,7 @@ const wrap=document.getElementById('wrap');
 const ren=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 ren.setPixelRatio(Math.min(devicePixelRatio||1,2));ren.domElement.id='c3';wrap.insertBefore(ren.domElement,wrap.firstChild);
 const scene=new THREE.Scene();
-const cam=new THREE.PerspectiveCamera(80,W/H,0.5,600);
+const cam=new THREE.PerspectiveCamera(84,W/H,0.5,600);
 function resize(){const r=wrap.getBoundingClientRect();ren.setSize(r.width,r.height,false);}
 addEventListener('resize',resize);resize();
 // sky
@@ -137,7 +137,7 @@ for(const [yy,s] of [[110,1],[-10,-1]]){const g=new THREE.Group();const post=new
 const sbc=document.createElement('canvas');sbc.width=512;sbc.height=192;
 const sbt=new THREE.CanvasTexture(sbc);sbt.colorSpace=THREE.SRGBColorSpace;
 for(const [zz,ry] of [[SCZ-SB-sDepth-2,0],[SCZ+SB+sDepth+2,Math.PI]]){const fr=new THREE.Mesh(new THREE.BoxGeometry(38,15,1.5),lam(0x15182a));fr.position.set(0,26,zz);fr.rotation.y=ry;scene.add(fr);
- const sc2=new THREE.Mesh(new THREE.PlaneGeometry(36,13.5),new THREE.MeshBasicMaterial({map:sbt}));sc2.position.set(0,26,zz+(ry?-0.8:0.8));sc2.rotation.y=ry;scene.add(sc2)}
+ const sc2=new THREE.Mesh(new THREE.PlaneGeometry(36,13.5),new THREE.MeshBasicMaterial({map:sbt}));sc2.position.set(0,13.5,zz+(ry?-0.8:0.8));sc2.rotation.y=ry;scene.add(sc2)}
 // sideline benches, team and staff (low-poly instanced)
 const benchMat=lam(0x3a4058);for(const s of[-1,1]){const bn=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.9,34),benchMat);bn.position.set(s*(HX+8),0.45,Z(50));scene.add(bn)}
 const SLN=70;const slBody=new THREE.InstancedMesh(new THREE.BoxGeometry(0.9,1.5,0.55),lam(0xffffff),SLN),slHead=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.42,0),lam(0xffffff),SLN);
