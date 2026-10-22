@@ -171,7 +171,7 @@ function poseOf(p){const P=S.P,line=p.role==='OL'||p.role==='DL';
  if(p.dive>0)return P.dive;if(p.fallen>0)return P.fall;
  if(G.st==='presnap')return line?P.stance:p.role==='QB'?P.hold:P.idle;
  if(G.celeb&&p.team===0&&G.st==='result')return P.celeb;
- if(p.throwT>0)return P.throw+Math.max(0,Math.min(4,Math.floor((0.5-p.throwT)/0.1)));if(p.catchT>0)return p.catchT>0.25?P.catch1:P.catch2;if(p.eng)return P.block;
+ if(p.throwT>0)return P.throw+Math.max(0,Math.min(4,Math.floor((1-p.throwT/(p.throwDur||0.5))*5)));if(p.catchT>0)return p.catchT>0.25?P.catch1:P.catch2;if(p.eng)return P.block;
  const hb=p===G.carrier&&(!G.ball||G.ball.caught)&&!(G.pend);const mv=Math.hypot(p.vx,p.vy)>0.6;const ph=Math.floor(p.anim/0.55)%4;
  if(hb)return mv?P.hrun+ph:P.hold;if(mv)return P.run+ph;return P.idle}
 function crouchOf(pose){const P=S.P;return pose===P.stance?3:pose===P.block?1:(pose>=P.throw&&pose<P.throw+5)?[1,2,2,2,1][pose-P.throw]:pose===P.celeb?-2:0}
