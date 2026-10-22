@@ -186,7 +186,7 @@ const N=14,S=window.SPR;
 const shadow=new THREE.InstancedMesh(new THREE.PlaneGeometry(2.1,2.1),new THREE.MeshBasicMaterial({map:softTex,transparent:true,opacity:.75,depthWrite:false}),N*2);scene.add(shadow);
 const ring=new THREE.Mesh(new THREE.RingGeometry(1.4,1.85,24),new THREE.MeshBasicMaterial({color:0x8a5cff,transparent:true,opacity:.85}));ring.rotation.x=-Math.PI/2;ring.position.y=.04;scene.add(ring);const sh=new THREE.Shape();for(let i=0;i<10;i++){const r=i%2?.32:.75,a=i/10*Math.PI*2-Math.PI/2;i?sh.lineTo(Math.cos(a)*r,Math.sin(a)*r):sh.moveTo(Math.cos(a)*r,Math.sin(a)*r)}const star=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshBasicMaterial({color:0xffd23f,side:THREE.DoubleSide}));star.rotation.x=-Math.PI/2;star.position.y=.05;scene.add(star);
 const ball=new THREE.Mesh(new THREE.SphereGeometry(.28,10,6),lam(0x8a4a1f));ball.scale.set(1.8,1.8,2.8);scene.add(ball);
-const VB={x:0.93,top:0.68,bot:0.92,cap:4,capKo:4.5};let SPK=1;window.VB=VB;const _cv=new THREE.Vector3();
+const VB={spk:1.4,x:0.93,top:0.68,bot:0.92,cap:4,capKo:4.5};let SPK=1;window.VB=VB;const _cv=new THREE.Vector3();
 function inView(x,y){for(const h of[0.05,2.9]){_cv.set(Xw(x),h,Z(y)).project(cam);if(_cv.z>=1||Math.abs(_cv.x)>VB.x||_cv.y>VB.top||_cv.y<-VB.bot)return false}return true}
 function clampView(){cam.updateMatrixWorld();const lx=clook.x+HX,ly=-clook.z;for(const q of G.players){if(inView(q.x,q.y))continue;let lo=0,hi=1;for(let i=0;i<14;i++){const m=(lo+hi)/2;if(inView(lx+(q.x-lx)*m,ly+(q.y-ly)*m))lo=m;else hi=m}const nx=lx+(q.x-lx)*lo,ny=ly+(q.y-ly)*lo;const dx=nx-q.x,dy=ny-q.y,l=Math.hypot(dx,dy)||1;const vn=(q.vx*dx+q.vy*dy)/l;if(vn<0){q.vx-=vn*dx/l;q.vy-=vn*dy/l}q.x=nx;q.y=ny;q._clamped=(q._clamped||0)+1}}
 window.__inView=inView;
@@ -242,7 +242,7 @@ function animOf(p,dt){p._qbUp=false;const line=p.role==='OL'||p.role==='DL';cons
  if(p._cut>0&&sp>3){o.pose=N_.cut;o.roll=(p._cutd||1)*0.14;return o}
  if(sp>7.4){o.pose=(car?N_.scarry0:N_.sprint0)+Math.floor(p.anim/0.7)%4;return o}
  o.pose=(car?N_.carry0:N_.run0)+Math.floor(p.anim/0.42)%6;return o}
-function updatePlayers(){SPK+=(Math.min(2.1,1+0.85*(fitK-1))-SPK)*0.2;window.__SPK=SPK;ball.scale.set(1.8*SPK,1.8*SPK,2.8*SPK);ensureAtlas();const now=performance.now();const dt=window.__hold?1/30:Math.min(0.05,(now-animT)/1000);animT=now;const cnt=[0,0],nc=[0,0];camUp.set(0,1,0).applyQuaternion(cam.quaternion);camBk.set(0,0,1).applyQuaternion(cam.quaternion);
+function updatePlayers(){SPK+=(VB.spk*Math.max(1,Math.min(2.7,1+1.15*(fitK-1)))-SPK)*0.2;window.__SPK=SPK;ball.scale.set(1.8*SPK,1.8*SPK,2.8*SPK);ensureAtlas();const now=performance.now();const dt=window.__hold?1/30:Math.min(0.05,(now-animT)/1000);animT=now;const cnt=[0,0],nc=[0,0];camUp.set(0,1,0).applyQuaternion(cam.quaternion);camBk.set(0,0,1).applyQuaternion(cam.quaternion);
  G.players.forEach((p,si)=>{const sp=Math.hypot(p.vx,p.vy);let fx=p.vx,fy=p.vy;
   if(p.throwT>0&&p.throwDir){fx=p.throwDir.x;fy=p.throwDir.y}else if(p.eng&&p.blk){fx=p.blk.x-p.x;fy=p.blk.y-p.y}
   else if(sp<0.4||G.st==='presnap'){fx=0;fy=p.team===0?1:-1}
@@ -274,7 +274,7 @@ function buildRoutes(){routeGrp.clear();(G.routes||[]).forEach((r,ri)=>{const pt
 // projection for 2D overlay
 const pv=new THREE.Vector3();
 window.PROJ=(x,y,h=1)=>{pv.set(Xw(x),h,Z(y)).project(cam);return[(pv.x+1)/2*W,(1-pv.y)/2*H]};
-const cpos=new THREE.Vector3(0,17,0),clook=new THREE.Vector3();let camX=0,camZ=1,camFy,fitK=1,fgC=null;const _fv=new THREE.Vector3();window.__cam=()=>cam;const cl3=(v,a,b)=>Math.max(a,Math.min(b,v));
+const cpos=new THREE.Vector3(0,17,0),clook=new THREE.Vector3();let camX=0,camZ=1,camFy,camAdj=0,fitK=1,fgC=null;const _fv=new THREE.Vector3();window.__cam=()=>cam;const cl3=(v,a,b)=>Math.max(a,Math.min(b,v));
 window.R3D=()=>{const st=G.st;if(window.MENU_ST?window.MENU_ST(st)||st==='vs':(st==='title'||st==='team')){ren.domElement.style.visibility='hidden';return}ren.domElement.style.visibility='visible';
  paintSB();const fk=G.home+'-'+G.away;if(fk!==fieldKey){fieldKey=fk;paintField();ftex.needsUpdate=true;restyleStadium();paintSideline();setDay(window.__forceDay!==undefined?window.__forceDay:Math.random()<0.35)}
  {const now=performance.now(),dt=Math.min(0.05,(now-(window.__lt||now))/1000);window.__lt=now;const big=G.celeb||(G.banner&&G.banner.a<2&&/TOUCHDOWN|FIRST DOWN|GOOD!|INTERCEPT/.test(G.banner.t+' '+G.banner.sub));const tc=big?1:0;cCheer.value+=(tc-cCheer.value)*0.06;if(G.celeb&&!window.__fwDone){window.__fwDone=true;window.__fireworks()}if(!G.celeb)window.__fwDone=false;fwStep(window.__hold?1/30:dt);SL.update(now/1000,cCheer.value)}if(ledMat.map)ledMat.map.offset.x=(performance.now()/1000*0.02)%1;
@@ -297,18 +297,19 @@ window.R3D=()=>{const st=G.st;if(window.MENU_ST?window.MENU_ST(st)||st==='vs':(s
   if(G.play&&G.play.t==='pass'&&!(b2&&b2.caught)&&(G.st==='presnap'||G.carrier===G.qb)){const sk=G.players.filter(q=>q.team===0&&(q.role==='WR'||q.role==='RB'||q.role==='QB'));const a=Math.min(...sk.map(q=>q.x)),bb=Math.max(...sk.map(q=>q.x));tX=Xw((a+bb)/2)}
   tX=0;const pre=G.st==='presnap';camX+=(tX-camX)*(pre?0.3:0.12);
   const zT=b2&&!b2.caught&&b2.tt==='bomb'?1.12:1;camZ+=(zT-camZ)*(pre?0.3:0.05)}
- {const CP=window.CAMP||(window.CAMP={h:45,pitch:62,fov:62});if(cam.fov!==CP.fov){cam.fov=CP.fov;cam.updateProjectionMatrix()}
+ {const CP=window.CAMP||(window.CAMP={h:45,pitch:55,fov:50});if(cam.fov!==CP.fov){cam.fov=CP.fov;cam.updateProjectionMatrix()}
   const c3=G.carrier,b3=G.ball,inAir=b3&&!b3.caught;const passMode=G.play&&G.play.t==='pass'&&(G.st==='presnap'||(c3===G.qb&&!G.qbRun));
   const koAir=inAir&&G.play&&G.play.t==='ko';const fyT=fgB?Math.max(G.los,Math.min(fgB.y,104)):koAir?(G.ball.y+c3.y)/2:inAir?(G.ball.y):(c3?c3.y:G.los);const ndc=fgB?-0.35:passMode?-0.55:koAir?0.05:inAir?-0.1:-0.3;
   const th=CP.pitch*Math.PI/180,al=th+Math.atan(-ndc*Math.tan(CP.fov*Math.PI/360));const back=CP.h/Math.tan(al);
-  camFy=camFy===undefined||(koAir&&G.ball.t<0.1)||G.st==='presnap'&&Math.abs(camFy-fyT)>30?fyT:camFy+(fyT-camFy)*(G.st==='presnap'?0.3:inAir?0.2:0.2);
+  const fyA=fyT+camAdj;camFy=camFy===undefined||(koAir&&G.ball.t<0.1)||G.st==='presnap'&&Math.abs(camFy-fyA)>30?fyA:camFy+(fyA-camFy)*(G.st==='presnap'?0.5:0.2);
   const pz=camFy-back,lz=pz+CP.h/Math.tan(th);
     const ex=CP.h*(fitK-1),ez=(Z(pz)-Z(lz))*(fitK-1);
   cpos.set(camX*(1-ov),(CP.h+ex)*(1-ov)+80*ov,(Z(pz)+ez)*(1-ov)+(Z(G.los+10)+8)*ov);cam.position.copy(cpos);
   if(on&&!ov&&G.players){cam.lookAt(camX,0,Z(lz));cam.updateMatrixWorld();let need=0;const ko=G.play&&G.play.t==='ko';
-   const chk=(x,y,h)=>{_fv.set(Xw(x),h,Z(y)).project(cam);if(_fv.z>=1)return;need=Math.max(need,Math.abs(_fv.x)/VB.x,_fv.y>0?_fv.y/VB.top:-_fv.y/VB.bot)};
+   let yT=-9,yB=9;const chk=(x,y,h,v)=>{_fv.set(Xw(x),h,Z(y)).project(cam);if(_fv.z>=1)return;need=Math.max(need,Math.abs(_fv.x)/VB.x);if(v!==0){yT=Math.max(yT,_fv.y);yB=Math.min(yB,_fv.y)}};
    let y0=1e9,y1=-1e9;for(const q of G.players){chk(q.x,q.y,0.05);chk(q.x,q.y,2.9*SPK);y0=Math.min(y0,q.y);y1=Math.max(y1,q.y)}if(G.ball&&!G.ball.caught){chk(G.ball.x,G.ball.y,0.3);y0=Math.min(y0,G.ball.y);y1=Math.max(y1,G.ball.y)}
-   {const fy=G.ball&&!G.ball.caught?G.ball.y:G.carrier?G.carrier.y:G.los;const yy=y0-0.5;chk(-0.3,yy,0.05);chk(FW+0.3,yy,0.05)}
-   window.__fit={fitK,need};const cap=ko?VB.capKo:VB.cap;const tgt=Math.min(cap,Math.max(1,fitK*need*1.05));fitK+=(tgt-fitK)*(G.st==='presnap'||(ko&&G.ball&&G.ball.t<0.1)?1:tgt>fitK?0.5:0.03)}if(G.shake>0){cam.position.x+=(Math.random()-.5)*G.shake*2;cam.position.y+=(Math.random()-.5)*G.shake*2}
+   {const fy=G.ball&&!G.ball.caught?G.ball.y:G.carrier?G.carrier.y:G.los;const yy=y0-0.5;chk(-0.3,yy,0.05,0);chk(FW+0.3,yy,0.05,0)}
+   {const T=VB.top*0.97,Bt=VB.bot*0.97;_fv.set(0,0,Z(camFy)).project(cam);const n0=_fv.y;_fv.set(0,0,Z(camFy+10)).project(cam);const ypn=10/Math.max(0.01,_fv.y-n0);const a=yT-T,b=yB+Bt;let s;if(a<=b){s=Math.max(a,Math.min(b,-camAdj/ypn))}else{s=(a+b)/2;need=Math.max(need,(yT-yB)/(T+Bt))}const pre=G.st==='presnap'||(ko&&G.ball&&G.ball.t<0.1);camAdj+=s*ypn*(pre?1:0.35);camAdj=Math.max(-40,Math.min(40,camAdj))}
+   const cap=ko?VB.capKo:VB.cap;const tgt=Math.min(cap,Math.max(0.3,fitK*need*(ko&&G.ball&&G.ball.t<0.15?1.1:1.04)));fitK+=(tgt-fitK)*(G.st==='presnap'||(ko&&G.ball&&G.ball.t<0.1)?1:tgt>fitK?0.25:0.04);if(ko&&G.ball&&G.ball.t<0.1){const ex2=CP.h*(fitK-1),ez2=(Z(pz)-Z(lz))*(fitK-1);cpos.set(camX,CP.h+ex2,Z(pz)+ez2);cam.position.copy(cpos)}}if(G.shake>0){cam.position.x+=(Math.random()-.5)*G.shake*2;cam.position.y+=(Math.random()-.5)*G.shake*2}
   clook.set(camX*(1-ov),0,Z(lz)*(1-ov)+Z(G.los+10)*ov)}cam.lookAt(clook);if(false&&fgB&&G.fg){const f=G.fg;const fly=f.ph==='fly'||G.st==='result';const by=fly?Math.min(fgB.y,100):f.y0;const tgt=fly?[Xw(fgB.x)*0.6,Math.min(9,Math.max(3,fgB.z*0.5+2)),Math.min(by-16,86),Xw(fgB.x)*0.4,Math.max(4,fgB.z*0.6),110]:[Xw(f.x0)+0.5,10,f.y0-17,0,6,111];fgC=fgC&&fly?fgC.map((v,i)=>v+(tgt[i]-v)*0.12):tgt;cam.position.set(fgC[0],fgC[1],Z(fgC[2]));cam.lookAt(fgC[3],fgC[4],Z(fgC[5]))}else fgC=null;if(window.__clampOn&&on&&!ov&&!fgB&&(st==='live'||st==='result')&&G.players)clampView();if(window.__camOv){const o=window.__camOv;cam.position.set(...o.p);cam.lookAt(...o.l)}
  if(!window.__camOnly)ren.render(scene,cam)};
