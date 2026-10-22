@@ -181,8 +181,8 @@ function updatePlayers(){ensureAtlas();const cnt=[0,0],nc=[0,0];camUp.set(0,1,0)
   else if(sp<0.4||G.st==='presnap'){fx=0;fy=p.team===0?1:-1}
   const l=Math.hypot(fx,fy)||1;const k=p.throwT>0?1:.25;p.fdx=(p.fdx??0)*(1-k)+fx/l*k;p.fdy=(p.fdy??(p.team?-1:1))*(1-k)+fy/l*k;
   const a=Math.atan2(p.fdx,p.fdy),aa=Math.abs(a)*180/Math.PI;const dir=aa<22.5?4:aa<67.5?3:aa<112.5?2:aa<157.5?1:0;const mir=a<0?-1:1;
-  const pose=poseOf(p);const line=(p.role==='OL'||p.role==='DL')?1:0;const T=TM[p.team],i=cnt[p.team]++;
-  const s=3.5*(line?1.15:1);sc.set(s*mir,s,1);pm.compose(v3.set(Xw(p.x),0.02,Z(p.y)),cam.quaternion,sc);T.m.setMatrixAt(i,pm);
+  let pose=poseOf(p);let hy=0.02,sq=0;if(p.dive>0){p._dm=Math.max(p._dm||0,p.dive);const k=1-p.dive/p._dm;if(k<0.15)pose=S.P.stance;else hy+=Math.sin(Math.min(1,(k-0.15)/0.85)*Math.PI)*0.8}else p._dm=0;if(p===G.carrier&&G.juke>0)sq=G.jukeCut?0.1:0.16;const line=(p.role==='OL'||p.role==='DL')?1:0;const T=TM[p.team],i=cnt[p.team]++;
+  const s=3.5*(line?1.15:1);sc.set(s*mir*(1+sq),s*(1-sq),1);pm.compose(v3.set(Xw(p.x),hy,Z(p.y)),cam.quaternion,sc);T.m.setMatrixAt(i,pm);
   T.uo.setXY(i,(dir*S.POSES+pose)*CU,1-((p.skin*2+line)+1)*CV);
   const P=S.P;const noNum=dir===2||pose===P.dive||pose===P.fall||((dir<=1)&&(pose===P.hold||(pose>=P.hrun&&pose<P.hrun+4)||pose===P.catch2||pose===P.throw));
   if(!noNum){const Nm=NM[p.team],j=nc[p.team]++;const y0=1+crouchOf(pose);const hpx=24-(y0+11.5);const u=s/24;
