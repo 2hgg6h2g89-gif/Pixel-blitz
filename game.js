@@ -265,8 +265,8 @@ function defend(d,dt){if(d.dive>0)return;
  if(G.snapT<0.25)return;if(G.play.t!=='pass'&&G.snapT<1.3)sp*=d.role==='DL'?0.45:0.6;
  // pursuit
  const pursue=!G.passer||c.role!=='QB'||d.role==='DL'||(d.role==='LB'&&d.blitz)||(c.y>G.los-0.5);
- if(inAir){const b=G.ball;if(b.t>0.3+(3-G.diff)*0.12&&Math.hypot(d.x-b.tx,d.y-b.ty)<6)return steer(d,b.tx,b.ty,sp*(0.82+G.diff*0.06),dt)}
- if(d.role==='CB'&&!pursue&&d.man){return steer(d,d.man.x+(d.man.vx*0.3),d.man.y+DIFFS[G.diff].cov+d.man.vy*0.2,sp*0.97,dt)}
+ if(inAir){const b=G.ball;if(b.t>Math.max(0.3+(3-G.diff)*0.12,b.T*(0.62-G.diff*0.06))&&Math.hypot(d.x-b.tx,d.y-b.ty)<6)return steer(d,b.tx,b.ty,sp*(0.82+G.diff*0.06),dt)}
+ if(d.role==='CB'&&!pursue&&d.man){return steer(d,d.man.x+(d.man.x<FIELDW/2?-1:1)*(1.2+DIFFS[G.diff].cov*0.3)+d.man.vx*0.2,d.man.y+DIFFS[G.diff].cov*0.45,sp*0.95,dt)}
  if(d.role==='S'&&!pursue){const wrs=G.players.filter(q=>q.role==='WR');let deep=wrs.reduce((a,b)=>a.y>b.y?a:b);return steer(d,cl((deep.x+FIELDW/2)/2+(d.x<FIELDW/2?-3:3),6,FIELDW-6),Math.max(deep.y+5,G.los+Math.max(13,G.togo+5)),sp*0.8,dt)}
  if(d.role==='LB'&&!pursue&&d.spy){return steer(d,cl(c.x,4,FIELDW-4),G.los+3.5,sp*0.7,dt)}
  if(d.role==='LB'&&!pursue){return steer(d,cl(c.x+(d.x<FIELDW/2?-5:5),4,FIELDW-4),G.los+Math.min(G.togo,8)+1,sp*0.6,dt)}
@@ -283,7 +283,7 @@ function tgtAngle(w){return slotAngles().get(w)??-Math.PI/2}
 function tgtAngle0(w){const q=scr(G.qb.x,G.qb.y,1),s=scr(w.x,w.y,1);return Math.atan2(s[1]-q[1],s[0]-q[0])}
 function stickRead(p){const dx=p.x-STK.x,dy=p.y-STK.y,d=Math.hypot(dx,dy);if(d<16||!G.qb)return{};if(dy>d*0.7)return{tuck:true};const a=Math.atan2(dy,dx);let best=null,bd=0.9;for(const w of targets()){if(w===G.rb)continue;let da=Math.abs(((tgtAngle(w)-a)+Math.PI*3)%(Math.PI*2)-Math.PI);if(da<bd){bd=da;best=w}}return{w:best}}
 function holdType(ht){return ht<0.28?'bullet':ht<0.75?'lob':'bomb'}
-function flightT(d,ty){return ty==='bullet'?0.08+d/80:ty==='bomb'?0.4+d/32:0.2+d/46}
+function flightT(d,ty){return ty==='bullet'?0.15+d/24:ty==='bomb'?0.6+d/28:0.3+d/20}
 function arcH(d,ty){return ty==='bullet'?0.35+d*0.025:ty==='bomb'?3.5+d*0.22:1.6+d*0.13}
 function canHand(){return passerPhase()&&!G.tuck&&!G.pend&&!G.handed&&G.snapT<2.6&&G.qb.y<G.los&&dist(G.qb,G.rb)<6}
 function handoff(){G.carrier=G.rb;G.rb.hasBall=1;G.qb.hasBall=0;G.handed=true;G.passer=false;G.thrown=false;G.runHinted=false;G.players.forEach(d=>{if(d.role==='DL'&&!d.shed)d.shedT=G.snapT/0.7+rnd(0.9,1.5)*DIFFS[G.diff].shed});say('HANDOFF!',0.8);dust(G.rb.x,G.rb.y,6)}

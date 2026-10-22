@@ -222,11 +222,11 @@ window.R3D=()=>{const st=G.st;if(st==='title'||st==='team'){ren.domElement.style
   let tX=0;if(xs.length){const mn=Math.min(...xs),mx=Math.max(...xs);tX=Xw((mn+mx)/2)*0.62}
   const pre=G.st==='presnap';camX+=(tX-camX)*(pre?0.3:0.12);
   const zT=b2&&!b2.caught&&b2.tt==='bomb'?1.12:1;camZ+=(zT-camZ)*(pre?0.3:0.05)}
- {const CP=window.CAMP||(window.CAMP={h:52,pitch:62,fov:62});if(cam.fov!==CP.fov){cam.fov=CP.fov;cam.updateProjectionMatrix()}
+ {const CP=window.CAMP||(window.CAMP={h:45,pitch:62,fov:62});if(cam.fov!==CP.fov){cam.fov=CP.fov;cam.updateProjectionMatrix()}
   const c3=G.carrier,b3=G.ball,inAir=b3&&!b3.caught;const passMode=G.play&&G.play.t==='pass'&&(G.st==='presnap'||(c3===G.qb&&!G.qbRun));
   const fyT=inAir?(G.ball.y):(c3?c3.y:G.los);const ndc=passMode?-0.55:inAir?-0.1:-0.3;
   const th=CP.pitch*Math.PI/180,al=th+Math.atan(-ndc*Math.tan(CP.fov*Math.PI/360));const back=CP.h/Math.tan(al);
-  camFy=camFy===undefined||G.st==='presnap'&&Math.abs(camFy-fyT)>30?fyT:camFy+(fyT-camFy)*(G.st==='presnap'?0.3:inAir?0.12:0.2);
+  camFy=camFy===undefined||G.st==='presnap'&&Math.abs(camFy-fyT)>30?fyT:camFy+(fyT-camFy)*(G.st==='presnap'?0.3:inAir?0.2:0.2);
   const pz=camFy-back,lz=pz+CP.h/Math.tan(th);
   cpos.set(camX*(1-ov),CP.h*(1-ov)+80*ov,Z(pz)*(1-ov)+(Z(G.los+10)+8)*ov);cam.position.copy(cpos);if(G.shake>0){cam.position.x+=(Math.random()-.5)*G.shake*2;cam.position.y+=(Math.random()-.5)*G.shake*2}
   clook.set(camX*(1-ov),0,Z(lz)*(1-ov)+Z(G.los+10)*ov)}cam.lookAt(clook);if(window.__camOv){const o=window.__camOv;cam.position.set(...o.p);cam.lookAt(...o.l)}
