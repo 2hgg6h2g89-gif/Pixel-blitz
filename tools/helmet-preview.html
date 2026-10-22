@@ -1,0 +1,8 @@
+<!doctype html><html><body style="margin:0;background:#141a3a"><canvas id="c"></canvas>
+<script src="../helmets.js"></script><script>
+const T=[{a:'NCY',c1:'#e8344e',c2:'#ffd23f',h:'#ffd23f'},{a:'IHR',c1:'#1f6fd6',c2:'#ffffff',h:'#d9e3ef'},{a:'DSK',c1:'#ff8a1f',c2:'#2a1450',h:'#2a1450'},{a:'GLY',c1:'#e9f6ff',c2:'#16a07a',h:'#16a07a'}];
+const c=document.getElementById('c'),d=devicePixelRatio;c.width=390*d;c.height=844*d;c.style.width='390px';c.style.height='844px';const g=c.getContext('2d');g.scale(d,d);
+g.fillStyle='#fff';g.font='800 14px Arial';g.fillText('HELMETS - ZOOM',20,24);
+T.forEach((t,i)=>{HELM.drawHelmet(g,110,110+i*150,170,t,false,i);HELM.drawHelmet(g,300,110+i*150,90,t,true,i);HELM.drawHelmet(g,300,180+i*150,50,t,false,i);
+ g.save();g.translate(360,180+i*150);g.scale(.5,.5);HELM.emblem(g,HELM.EMB[i],t.c1,'#111');g.restore()});
+</script></body></html>
