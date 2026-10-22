@@ -55,7 +55,7 @@ const _u=update;update=function(dt){
   if(!used)keep.push(t)}IN.taps.length=0;keep.forEach(t=>IN.taps.push(t));if(G.st!=='presnap')return}
  _u(dt)};
 // draw
-function arcBtn(b,label,sub,fill,stroke,on){const pr=pressed(b.x,b.y,b.w,b.h);const o=pr?2:0;pill(b.x,b.y+3,b.w,b.h,'rgba(0,0,0,.45)');pill(b.x,b.y+o,b.w,b.h,fill,stroke);txt(label,b.x+b.w/2,b.y+o+(sub?b.h/2-8:b.h/2),label.length>11?12:15,'#fff','center',false);if(sub)txt(sub,b.x+b.w/2,b.y+o+b.h/2+12,10,'#ffe9a8','center',false)}
+function arcBtn(b,label,sub,fill,stroke,on){btn(b.x,b.y,b.w,b.h,label,fill,stroke,label.length>11?13:16,sub)}
 function v2a(v){return Math.PI+(v+20)/140*Math.PI}
 function drawMeter(){const f=G.fg,c=MC;X.save();
  X.beginPath();X.arc(c.x,c.y,c.r+10,Math.PI,2*Math.PI);X.closePath();X.fillStyle='rgba(10,14,36,.88)';X.fill();X.lineWidth=3;X.strokeStyle='#4fa3ff';X.stroke();
