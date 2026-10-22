@@ -4,7 +4,7 @@ const wrap=document.getElementById('wrap');
 const ren=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});window.__ren=ren;
 ren.setPixelRatio(Math.min(devicePixelRatio||1,2));ren.domElement.id='c3';wrap.insertBefore(ren.domElement,wrap.firstChild);
 const scene=new THREE.Scene();
-const cam=new THREE.PerspectiveCamera(84,W/H,0.5,600);
+const cam=new THREE.PerspectiveCamera(84,W/H,2,700);
 function resize(){const r=wrap.getBoundingClientRect();ren.setSize(r.width,r.height,false);}
 addEventListener('resize',resize);resize();
 // sky
@@ -18,34 +18,36 @@ const sun=new THREE.DirectionalLight(0xffffff,1.6);sun.position.set(-30,60,30);s
 const Z=y=>-y, Xw=x=>x-HX;
 const lam=c=>new THREE.MeshLambertMaterial({color:c});
 // field texture
-const PX=20,fc=document.createElement('canvas');fc.width=Math.round(FW*PX);fc.height=120*PX;const f=fc.getContext('2d');
+const PX=10,fc=document.createElement('canvas');fc.width=Math.round(FW*PX);fc.height=120*PX;const f=fc.getContext('2d');
 const T=window.TEAMS,home=()=>T[G.home],away=()=>T[G.away];
 function paintField(){const W2=fc.width;
  for(let yd=0;yd<100;yd+=5){f.fillStyle=(yd/5)%2?'#2a8237':'#1f672b';f.fillRect(0,(110-yd-5)*PX,W2,5*PX)}
- {let s=1234567;const R=()=>(s=(s*16807)%2147483647)/2147483647;for(let i=0;i<70000;i++){const x=R()*W2,y=(10+R()*100)*PX,v=R();f.fillStyle=v<.5?'rgba(20,70,25,.16)':v<.85?'rgba(140,220,120,.12)':'rgba(255,255,220,.10)';f.fillRect(x|0,y|0,1+(R()*2|0),2+(R()*3|0))}
+ {let s=1234567;const R=()=>(s=(s*16807)%2147483647)/2147483647;for(let i=0;i<9000;i++){const x=R()*W2|0,y=(10+R()*100)*PX|0,v=R();f.fillStyle=v<.55?'#1a5a26':v<.9?'#3a9a44':'#4fae52';f.fillRect(x,y,1,v<.55?2:1)}
   for(let yd=0;yd<100;yd+=10){const y=(110-yd-10)*PX;const g=f.createLinearGradient(0,y,0,y+10*PX);g.addColorStop(0,'rgba(255,255,255,.035)');g.addColorStop(.5,'rgba(0,0,0,.03)');g.addColorStop(1,'rgba(255,255,255,.035)');f.fillStyle=g;f.fillRect(0,y,W2,10*PX)}}
  for(let x=0;x<FW;x+=FW/8){f.fillStyle='rgba(255,255,255,.035)';if(Math.round(x/(FW/8))%2)f.fillRect(x*PX,10*PX,FW/8*PX,100*PX)}
  const ez=(tm,y0,flip)=>{f.fillStyle=tm.c1;f.fillRect(0,y0,W2,10*PX);f.save();f.beginPath();f.rect(0,y0,W2,10*PX);f.clip();f.strokeStyle=HELM.mix(tm.c1,.82);f.lineWidth=PX*1.2;for(let x=-W2;x<W2*2;x+=PX*4){f.beginPath();f.moveTo(x,y0);f.lineTo(x+10*PX,y0+10*PX);f.stroke()}f.restore();
   f.save();f.translate(W2/2,y0+5*PX);if(flip)f.rotate(Math.PI);f.font=`900 ${5.2*PX}px "Arial Black", Arial`;f.textAlign='center';f.textBaseline='middle';f.lineWidth=PX*.7;f.strokeStyle=HELM.mix(tm.c1,.4);const nm=tm.nick||tm.n.split(' ')[1];f.strokeText(nm,0,PX*.3);f.fillStyle=tm.c2===tm.c1?'#fff':(Math.abs(parseInt(tm.c2.slice(1),16)-parseInt(tm.c1.slice(1),16))>0x303030?tm.c2:'#fff');f.fillText(nm,0,PX*.3);f.restore()};
  ez(away(),0,false);ez(home(),110*PX,false);
  f.fillStyle='#f4f8f2';
- for(let yd=0;yd<=100;yd+=5){const y=(110-yd)*PX;f.fillRect(0,y-2,W2,yd%50?4:6)}
- for(let yd=1;yd<100;yd++){if(yd%5==0)continue;const y=(110-yd)*PX;for(const hx of[1,22.9,29.4,FW-2.6])f.fillRect(hx*PX,y-1.5,1.4*PX,3)}
+ for(let yd=0;yd<=100;yd+=5){const y=(110-yd)*PX;f.fillRect(0,y-1,W2,yd%50&&yd%100?2:3)}f.fillRect(0,0,W2,2);f.fillRect(0,120*PX-2,W2,2);
+ for(let yd=1;yd<100;yd++){if(yd%5==0)continue;const y=(110-yd)*PX;for(const hx of[1,22.9,29.4,FW-2.6])f.fillRect(Math.round(hx*PX),y-1,Math.round(1.2*PX),2)}
  f.font=`700 ${2.6*PX}px "Arial Black", Arial`;f.textAlign='center';f.textBaseline='middle';
  for(let yd=10;yd<100;yd+=10){const n=yd<=50?yd:100-yd,y=(110-yd)*PX;
   for(const [hx,r] of [[9,Math.PI/2],[FW-9,-Math.PI/2]]){f.save();f.translate(hx*PX,y);f.rotate(r);f.fillText(String(n),0,0);f.restore()}}
  // midfield logo: home emblem in a ring
  f.save();f.translate(W2/2,60*PX);f.beginPath();f.arc(0,0,4.2*PX,0,7);f.fillStyle='rgba(16,20,48,.88)';f.fill();f.lineWidth=PX*.5;f.strokeStyle=home().c1;f.stroke();f.lineWidth=PX*.18;f.strokeStyle='#fff';f.beginPath();f.arc(0,0,3.6*PX,0,7);f.stroke();
  f.rotate(Math.PI);f.scale(PX*.15,PX*.15);HELM.emblem(f,HELM.EMB[G.home],home().c1,'#0c0f20');f.restore();
- f.fillStyle='#fff';f.fillRect(0,0,PX*.5,fc.height);f.fillRect(W2-PX*.5,0,PX*.5,fc.height);
-}
+ f.fillStyle='#f4f8f2';f.fillRect(0,0,4,fc.height);f.fillRect(W2-4,0,4,fc.height);quantField()}
+function quantField(){const id=f.getImageData(0,0,fc.width,fc.height),d=id.data;const pal=[[0x1a,0x5a,0x26],[0x1f,0x67,0x2b],[0x2a,0x82,0x37],[0x3a,0x9a,0x44],[0x4f,0xae,0x52],[0xf4,0xf8,0xf2],[0x12,0x16,0x30]];
+ for(const tm of [home(),away()])for(const c of [tm.c1,tm.c2,HELM.mix(tm.c1,.82),HELM.mix(tm.c1,.4)]){const n=parseInt(String(c).replace('#','').slice(0,6),16);if(!isNaN(n))pal.push([n>>16&255,n>>8&255,n&255])}
+ const cache=new Map();for(let i=0;i<d.length;i+=4){const k=(d[i]>>2)<<12|(d[i+1]>>2)<<6|(d[i+2]>>2);let c=cache.get(k);if(!c){let bd=1e9;for(const p of pal){const e=(p[0]-d[i])**2*0.3+(p[1]-d[i+1])**2*0.59+(p[2]-d[i+2])**2*0.11;if(e<bd){bd=e;c=p}}cache.set(k,c)}d[i]=c[0];d[i+1]=c[1];d[i+2]=c[2];d[i+3]=255}f.putImageData(id,0,0)}
 
 let IS_DAY=false;function setDay(d){IS_DAY=d;scene.background=d?skyDay:skyNight;scene.fog.color.set(d?0xbcd8f5:0x1a1438);HEMI.intensity=d?2.1:1.5;GLOWS.forEach(g=>g.visible=!d);if(STARS)STARS.visible=!d;pool.visible=!d;sun.intensity=d?2.4:1.6}window.__setDay=setDay;
 let fieldKey=G.home+'-'+G.away;paintField();
-const ftex=new THREE.CanvasTexture(fc);ftex.colorSpace=THREE.SRGBColorSpace;ftex.anisotropy=8;
-const field=new THREE.Mesh(new THREE.PlaneGeometry(FW,120),new THREE.MeshLambertMaterial({map:ftex}));field.rotation.x=-Math.PI/2;field.position.set(0,0,Z(50));scene.add(field);
-const apron=new THREE.Mesh(new THREE.PlaneGeometry(90,160),lam(0x2e8a36));apron.rotation.x=-Math.PI/2;apron.position.set(0,-0.02,Z(50));scene.add(apron);
-const border=new THREE.Mesh(new THREE.PlaneGeometry(FW+3,123),lam(0xffffff));border.rotation.x=-Math.PI/2;border.position.set(0,-0.01,Z(50));scene.add(border);
+const ftex=new THREE.CanvasTexture(fc);ftex.colorSpace=THREE.SRGBColorSpace;ftex.anisotropy=8;ftex.magFilter=THREE.NearestFilter;ftex.minFilter=THREE.LinearMipmapLinearFilter;
+const field=new THREE.Mesh(new THREE.PlaneGeometry(FW,120),new THREE.MeshLambertMaterial({map:ftex,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1}));field.renderOrder=-2;field.rotation.x=-Math.PI/2;field.position.set(0,0,Z(50));scene.add(field);
+const apron=new THREE.Mesh(new THREE.PlaneGeometry(90,160),lam(0x2e8a36));apron.rotation.x=-Math.PI/2;apron.position.set(0,-0.12,Z(50));apron.renderOrder=-4;scene.add(apron);
+const border=new THREE.Mesh(new THREE.PlaneGeometry(FW+3,123),lam(0xffffff));border.rotation.x=-Math.PI/2;border.position.set(0,-0.06,Z(50));border.renderOrder=-3;scene.add(border);
 // ===== stadium: enclosed bowl (original design) =====
 function rnd(a,b){return a+Math.random()*(b-a)}
 const DECKS=[];let crowdOff=false;
@@ -191,7 +193,7 @@ function inView(x,y){for(const h of[0.05,2.9]){_cv.set(Xw(x),h,Z(y)).project(cam
 function clampView(){cam.updateMatrixWorld();const lx=clook.x+HX,ly=-clook.z;for(const q of G.players){if(inView(q.x,q.y))continue;let lo=0,hi=1;for(let i=0;i<14;i++){const m=(lo+hi)/2;if(inView(lx+(q.x-lx)*m,ly+(q.y-ly)*m))lo=m;else hi=m}const nx=lx+(q.x-lx)*lo,ny=ly+(q.y-ly)*lo;const dx=nx-q.x,dy=ny-q.y,l=Math.hypot(dx,dy)||1;const vn=(q.vx*dx+q.vy*dy)/l;if(vn<0){q.vx-=vn*dx/l;q.vy-=vn*dy/l}q.x=nx;q.y=ny;q._clamped=(q._clamped||0)+1}}
 window.__inView=inView;
 const camR=new THREE.Vector3(),v3b=new THREE.Vector3(),v3c=new THREE.Vector3();const ballSh=new THREE.Mesh(new THREE.CircleGeometry(.5,14),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.45,depthWrite:false}));ballSh.rotation.x=-Math.PI/2;ballSh.renderOrder=2;scene.add(ballSh);
-{const pg=new THREE.BoxGeometry(.35,.9,.35),py=new THREE.InstancedMesh(pg,new THREE.MeshBasicMaterial({color:0xff3b1f}),8);let i=0;const M=new THREE.Matrix4();for(const y of[10,0,110,120])for(const x of[0,FW]){M.makeTranslation(Xw(x)+(x?0.2:-0.2),.45,Z(y));py.setMatrixAt(i++,M)}scene.add(py)}
+{const pg=new THREE.BoxGeometry(.3,.6,.3),py=new THREE.InstancedMesh(pg,new THREE.MeshBasicMaterial({color:0xff3b1f}),8);let i=0;const M=new THREE.Matrix4();for(const y of[-10,0,100,110])for(const x of[0,FW]){M.makeTranslation(Xw(x)+(x?0.18:-0.18),.3,Z(y));py.setMatrixAt(i++,M)}scene.add(py)}
 const tgtMk=new THREE.Mesh(new THREE.RingGeometry(.6,.85,16),new THREE.MeshBasicMaterial({color:0xffe23f}));tgtMk.rotation.x=-Math.PI/2;tgtMk.position.y=.05;scene.add(tgtMk);
 const bgeo=new THREE.PlaneGeometry(1,1);bgeo.translate(0,.5,0);
 const CU=1/S.POSES,CV=1/(10*S.DIRS);
