@@ -23,7 +23,7 @@ function paintField(){const W2=fc.width;
  for(let yd=0;yd<100;yd+=5){f.fillStyle=(yd/5)%2?'#3fb548':'#37a540';f.fillRect(0,(110-yd-5)*PX,W2,5*PX)}
  for(let x=0;x<FW;x+=FW/8){f.fillStyle='rgba(255,255,255,.035)';if(Math.round(x/(FW/8))%2)f.fillRect(x*PX,10*PX,FW/8*PX,100*PX)}
  const ez=(tm,y0,flip)=>{f.fillStyle=tm.c1;f.fillRect(0,y0,W2,10*PX);f.save();f.beginPath();f.rect(0,y0,W2,10*PX);f.clip();f.strokeStyle=HELM.mix(tm.c1,.82);f.lineWidth=PX*1.2;for(let x=-W2;x<W2*2;x+=PX*4){f.beginPath();f.moveTo(x,y0);f.lineTo(x+10*PX,y0+10*PX);f.stroke()}f.restore();
-  f.save();f.translate(W2/2,y0+5*PX);if(flip)f.rotate(Math.PI);f.font=`900 ${5.2*PX}px "Arial Black", Arial`;f.textAlign='center';f.textBaseline='middle';f.lineWidth=PX*.7;f.strokeStyle=HELM.mix(tm.c1,.4);const nm=tm.n.split(' ')[1];f.strokeText(nm,0,PX*.3);f.fillStyle=tm.c2===tm.c1?'#fff':(Math.abs(parseInt(tm.c2.slice(1),16)-parseInt(tm.c1.slice(1),16))>0x303030?tm.c2:'#fff');f.fillText(nm,0,PX*.3);f.restore()};
+  f.save();f.translate(W2/2,y0+5*PX);if(flip)f.rotate(Math.PI);f.font=`900 ${5.2*PX}px "Arial Black", Arial`;f.textAlign='center';f.textBaseline='middle';f.lineWidth=PX*.7;f.strokeStyle=HELM.mix(tm.c1,.4);const nm=tm.nick||tm.n.split(' ')[1];f.strokeText(nm,0,PX*.3);f.fillStyle=tm.c2===tm.c1?'#fff':(Math.abs(parseInt(tm.c2.slice(1),16)-parseInt(tm.c1.slice(1),16))>0x303030?tm.c2:'#fff');f.fillText(nm,0,PX*.3);f.restore()};
  ez(away(),0,true);ez(home(),110*PX,false);
  f.fillStyle='#f4f8f2';
  for(let yd=0;yd<=100;yd+=5){const y=(110-yd)*PX;f.fillRect(0,y-2,W2,yd%50?4:6)}
@@ -78,7 +78,7 @@ const cvs=(w,h,fn)=>{const c=document.createElement('canvas');c.width=w;c.height
 let wallTex,ledTex;
 function paintWall(){wallTex=cvs(512,64,(g,w,h)=>{const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,home().c1);gr.addColorStop(1,HELM.mix(home().c1,.55));g.fillStyle=gr;g.fillRect(0,0,w,h);
  g.fillStyle='rgba(255,255,255,.12)';for(let x=0;x<w;x+=32){g.beginPath();g.moveTo(x,h);g.lineTo(x+16,0);g.lineTo(x+24,0);g.lineTo(x+8,h);g.fill()}
- g.font='900 30px "Arial Black",Arial';g.textAlign='center';g.textBaseline='middle';g.fillStyle='#fff';g.fillText('PIXEL BLITZ',w*.3,h/2+2);g.fillText(home().n.split(' ')[1],w*.78,h/2+2);g.fillStyle='#fff';g.fillRect(0,0,w,3)});
+ g.font='900 30px "Arial Black",Arial';g.textAlign='center';g.textBaseline='middle';g.fillStyle='#fff';g.fillText('PIXEL BLITZ',w*.3,h/2+2);g.fillText(home().nick||home().n.split(' ')[1],w*.78,h/2+2);g.fillStyle='#fff';g.fillRect(0,0,w,3)});
  ledTex=cvs(1024,32,(g,w,h)=>{const segs=[[home().c1,'GO '+home().a],['#0c0f20','BLITZ NIGHT'],[away().c1,away().n],['#ffd23f','MAKE SOME NOISE'],[home().c2,'PIXEL BLITZ']];const sw=w/segs.length;
   segs.forEach((s,i)=>{g.fillStyle=s[0];g.fillRect(i*sw,0,sw,h);g.font='900 20px Arial';g.textAlign='center';g.textBaseline='middle';const lum=parseInt(s[0].slice(1,3),16)*.3+parseInt(s[0].slice(3,5),16)*.59+parseInt(s[0].slice(5,7),16)*.11;g.fillStyle=lum>150?'#141a3a':'#fff';g.fillText(s[1],i*sw+sw/2,h/2+1)});
   g.fillStyle='rgba(0,0,0,.25)';for(let x=0;x<w;x+=3)g.fillRect(x,0,1,h)})}
@@ -204,7 +204,7 @@ function buildRoutes(){routeGrp.clear();(G.routes||[]).forEach((r,ri)=>{const pt
 const pv=new THREE.Vector3();
 window.PROJ=(x,y,h=1)=>{pv.set(Xw(x),h,Z(y)).project(cam);return[(pv.x+1)/2*W,(1-pv.y)/2*H]};
 const cpos=new THREE.Vector3(0,17,0),clook=new THREE.Vector3();let camX=0,camZ=1,camFy,fitK=1,fgC=null;const _fv=new THREE.Vector3();window.__cam=()=>cam;const cl3=(v,a,b)=>Math.max(a,Math.min(b,v));
-window.R3D=()=>{const st=G.st;if(st==='title'||st==='team'){ren.domElement.style.visibility='hidden';return}ren.domElement.style.visibility='visible';
+window.R3D=()=>{const st=G.st;if(window.MENU_ST?window.MENU_ST(st)||st==='vs':(st==='title'||st==='team')){ren.domElement.style.visibility='hidden';return}ren.domElement.style.visibility='visible';
  paintSB();const fk=G.home+'-'+G.away;if(fk!==fieldKey){fieldKey=fk;paintField();ftex.needsUpdate=true;restyleStadium()}if(ledMat.map)ledMat.map.offset.x=(performance.now()/1000*0.02)%1;
  const on=st==='live'||st==='result'||st==='presnap'||st==='fg'||st==='patpick';const fgB=(st==='fg'||st==='result'&&G.fgDone)&&G.fgBall;
  cam.updateMatrixWorld();if(on)updatePlayers();TM.forEach(T=>T.m.visible=on);NM.forEach(T=>T.m.visible=on);cU.value=performance.now()/1000;shadow.visible=on;

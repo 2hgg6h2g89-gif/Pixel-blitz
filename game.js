@@ -314,7 +314,7 @@ function drawField(){
  // end zones
  const tc=TEAMS[G.home],ac=TEAMS[G.away];
  rect(0,sy(110),W,sy(100)-sy(110),'#7a1e5a');rect(0,sy(0),W,sy(-10)-sy(0),'#1e3c7a');
- X.save();txt(tc.n.split(' ')[1],W/2,(sy(110)+sy(100))/2,30,PAL.yel);X.restore();
+ X.save();txt(tc.nick||tc.n.split(' ')[1],W/2,(sy(110)+sy(100))/2,30,PAL.yel);X.restore();
  for(let y=0;y<=100;y+=5){const py=sy(y);if(py<-10||py>H+10)continue;rect(ox,py,FIELDW*PPY,y%10?1:2,PAL.line);
   for(const hx of [ox+18*PPY,ox+35*PPY])rect(hx-3,py,6,1,PAL.line);
   if(y%10===0&&y>0&&y<100){const n=y<=50?y:100-y;txt(String(n),ox+8*PPY,py-10,16,'rgba(233,245,225,.75)','center',false);txt(String(n),ox+45*PPY,py-10,16,'rgba(233,245,225,.75)','center',false)}}

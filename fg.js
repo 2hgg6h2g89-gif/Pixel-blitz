@@ -16,7 +16,7 @@ function startFG(pat){const cx=FIELDW/2;if(pat)G.los=98;const L=G.los,P=[];
  [-5,-2.6,-0.8,0.8,2.6,5].forEach((o,i)=>P.push(mk(1,'DL',cx+o,L+1.4,[90,94,97,92,99,95][i])));P.push(mk(1,'LB',cx-4,L+4,50));P.push(mk(1,'LB',cx+4,L+4,54));
  G.players=P;G.qb=hold;G.rb=kk;G.carrier=null;G.ball=null;G.routes=[];G.routeVer=(G.routeVer||0)+1;G.play={t:'fg',n:'FIELD GOAL'};G.cam=L;G.ovT=0;G.audOpen=false;
  G.fg={pat,ph:'ready',n:0,pow:0,acc:null,aim:0,wind:windFor(),t:0,kk,x0:cx,y0:L-7,kx0:kk.x,ky0:kk.y,res:null};G.fgBall={x:cx,y:L-7,z:0.2};G.st='fg';G.celeb=false;
- hint('fg','TAP KICK TO START THE METER|TAP AGAIN TO SET POWER|TAP AT THE GREEN LINE FOR ACCURACY');}
+ window.__nameTeam&&__nameTeam();hint('fg','TAP KICK TO START THE METER|TAP AGAIN TO SET POWER|TAP AT THE GREEN LINE FOR ACCURACY');}
 window.startFG=startFG;
 function spd(){return 95*[0.8,1,1.2,1.4][G.diff]}
 function range(pow){return 32+0.3*Math.min(pow,100)+0.45*Math.max(0,pow-100)}
