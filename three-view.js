@@ -156,7 +156,7 @@ scene.add(slBody);scene.add(slHead);
 const los=new THREE.Mesh(new THREE.PlaneGeometry(FW,.35),new THREE.MeshBasicMaterial({color:0x2f6bff}));los.rotation.x=-Math.PI/2;los.position.y=.03;scene.add(los);
 const fd=new THREE.Mesh(new THREE.PlaneGeometry(FW,.35),new THREE.MeshBasicMaterial({color:0xffe23f}));fd.rotation.x=-Math.PI/2;fd.position.y=.03;scene.add(fd);
 // ===== v16 sidelines: benches, team, coaches, cameramen (instanced) =====
-const SL={};{const bodyG=new THREE.BoxGeometry(0.7,1.5,0.45),headG=new THREE.SphereGeometry(0.28,8,6),benchG=new THREE.BoxGeometry(8,0.5,0.9),camG=new THREE.BoxGeometry(0.5,0.4,0.9),triG=new THREE.CylinderGeometry(0.05,0.05,1.5,4);
+const SL={};{const bodyG=new THREE.CapsuleGeometry(0.33,0.84,2,6),headG=new THREE.SphereGeometry(0.29,8,6),benchG=new THREE.BoxGeometry(8,0.5,0.9),camG=new THREE.BoxGeometry(0.5,0.4,0.9),triG=new THREE.CylinderGeometry(0.05,0.05,1.5,4);
  const N=120;SL.body=new THREE.InstancedMesh(bodyG,new THREE.MeshLambertMaterial(),N);SL.head=new THREE.InstancedMesh(headG,new THREE.MeshLambertMaterial(),N);SL.bench=new THREE.InstancedMesh(benchG,new THREE.MeshLambertMaterial(),12);SL.cam=new THREE.InstancedMesh(camG,new THREE.MeshLambertMaterial({color:0x15161c}),8);SL.tri=new THREE.InstancedMesh(triG,new THREE.MeshLambertMaterial({color:0x2a2c34}),8);
  [SL.body,SL.head,SL.bench,SL.cam,SL.tri].forEach(m=>scene.add(m));SL.ppl=[];
  const sx=FW/2+5.5;let nb=0,np=0,nc=0;const M=new THREE.Matrix4(),Q=new THREE.Quaternion(),V=new THREE.Vector3(),S1=new THREE.Vector3(1,1,1);
@@ -188,7 +188,7 @@ const ring=new THREE.Mesh(new THREE.RingGeometry(1.4,1.85,24),new THREE.MeshBasi
 const ball=new THREE.Mesh(new THREE.SphereGeometry(.28,10,6),lam(0x8a4a1f));ball.scale.set(1.8,1.8,2.8);scene.add(ball);
 const tgtMk=new THREE.Mesh(new THREE.RingGeometry(.6,.85,16),new THREE.MeshBasicMaterial({color:0xffe23f}));tgtMk.rotation.x=-Math.PI/2;tgtMk.position.y=.05;scene.add(tgtMk);
 const bgeo=new THREE.PlaneGeometry(1,1);bgeo.translate(0,.5,0);
-const CU=1/(S.DIRS*S.POSES),CV=1/10;
+const CU=1/S.POSES,CV=1/(10*S.DIRS);
 function mkTeamMesh(){const tex=new THREE.CanvasTexture(document.createElement('canvas'));
  const mat=new THREE.MeshBasicMaterial({map:tex,alphaTest:.5,side:THREE.DoubleSide});
  mat.onBeforeCompile=sh=>{sh.vertexShader='attribute vec2 uvOff;\n'+sh.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\n vMapUv = vMapUv*vec2('+CU.toFixed(8)+','+CV.toFixed(8)+') + uvOff;')};
@@ -201,26 +201,52 @@ function mkNumMesh(){const mat=new THREE.MeshBasicMaterial({map:new THREE.Canvas
 const NM=[mkNumMesh(),mkNumMesh()];const camUp=new THREE.Vector3(),camBk=new THREE.Vector3();window.__atlases=[];
 let atlasKey='';function ensureAtlas(){const k=G.home+'-'+G.away;if(k===atlasKey)return;atlasKey=k;[home(),away()].forEach((t,i)=>{const c=S.buildAtlas(t);window.__atlases[i]=c;const tx=new THREE.CanvasTexture(c);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;tx.generateMipmaps=false;tx.colorSpace=THREE.SRGBColorSpace;TM[i].mat.map=tx;TM[i].mat.needsUpdate=true;const nc=S.buildNumbers(t);const nt=new THREE.CanvasTexture(nc);nt.magFilter=nt.minFilter=THREE.NearestFilter;nt.generateMipmaps=false;nt.colorSpace=THREE.SRGBColorSpace;NM[i].mat.map=nt;NM[i].mat.needsUpdate=true})}
 const pm=new THREE.Matrix4(),v3=new THREE.Vector3(),sc=new THREE.Vector3();
-function poseOf(p){const P=S.P,line=p.role==='OL'||p.role==='DL';
- if(p.dive>0)return P.dive;if(p.fallen>0)return P.fall;
- if(G.st==='presnap')return line?P.stance:p.role==='QB'?P.hold:P.idle;
- if(G.celeb&&p.team===0&&G.st==='result')return P.celeb;
- if(p.throwT>0)return P.throw+Math.max(0,Math.min(4,Math.floor((1-p.throwT/(p.throwDur||0.5))*5)));if(p.catchT>0)return p.catchT>0.25?P.catch1:P.catch2;if(p.eng)return P.block;
- const hb=p===G.carrier&&(!G.ball||G.ball.caught)&&!(G.pend);const mv=Math.hypot(p.vx,p.vy)>0.6;const ph=Math.floor(p.anim/0.55)%4;
- if(hb)return mv?P.hrun+ph:P.hold;if(mv)return P.run+ph;return P.idle}
-function crouchOf(pose){const P=S.P;return pose===P.stance?3:pose===P.block?1:(pose>=P.throw&&pose<P.throw+5)?[1,2,2,2,1][pose-P.throw]:pose===P.celeb?-2:0}
-function updatePlayers(){ensureAtlas();const cnt=[0,0],nc=[0,0];camUp.set(0,1,0).applyQuaternion(cam.quaternion);camBk.set(0,0,1).applyQuaternion(cam.quaternion);
+// ===== v17 animation state machine: pose + roll + squash + lift, eased per player =====
+const N_=S.P;let animT=performance.now();const qR=new THREE.Quaternion(),qC=new THREE.Quaternion(),zAx=new THREE.Vector3(0,0,1);
+const ang=(a)=>{while(a>Math.PI)a-=2*Math.PI;while(a<-Math.PI)a+=2*Math.PI;return a};
+function animOf(p,dt){const line=p.role==='OL'||p.role==='DL';const sp=Math.hypot(p.vx,p.vy);const o={pose:N_.idle0,roll:0,sy:1,lift:0,face:null};
+ const sxv=()=>{const a=PROJ(p.x+p.vx*0.1+0.001,p.y+p.vy*0.1,1),b=PROJ(p.x,p.y,1);return[a[0]-b[0],a[1]-b[1]]};
+ if(sp>3){const h=Math.atan2(p.vy,p.vx);if(p._hd!==undefined){const d=ang(h-p._hd);if(Math.abs(d)>0.12){p._cut=0.22;p._cutd=Math.sign(d)}}p._hd=h}else p._hd=undefined;if(p._cut>0)p._cut-=dt;
+ if(p.dive>0){p._dm=Math.max(p._dm||0,p.dive);const k=1-p.dive/p._dm;
+  if(k<0.18){o.pose=N_.dive0;return o}
+  const v=sxv(),horiz=Math.abs(v[0])>Math.abs(v[1])*0.8;o.pose=(p===G.carrier&&G.dcatch)||(G.ball&&!G.ball.caught&&G.ball.tgt===p)?N_.dcatch:N_.dive1;
+  const kk=Math.min(1,(k-0.18)/0.82);o.lift=Math.sin(kk*Math.PI)*0.9;if(horiz){o.roll=-(v[0]>0?1:-1)*Math.PI/2*Math.min(1,kk*3)}else{o.sy=1-0.4*Math.min(1,kk*3)}return o}
+ p._dm=0;
+ if(p.fallen>0){if(!(p._fm>0)||p.fallen>p._fm+0.01){p._fm=p.fallen;const v=sxv();p._rd=(v[0]>=0?1:-1)}const e=p._fm-p.fallen,rd=p._rd||1;
+  if(p.tackler&&e<0.2){o.pose=N_.wrap;o.roll=-rd*0.5*(e/0.2);return o}
+  if(p.fallen<0.42&&p._fm>0.6){o.pose=p.fallen>0.2?N_.getup0:N_.getup1;o.roll=-rd*Math.PI/2*Math.max(0,(p.fallen-0.25)/0.17);return o}
+  if(e<0.2){o.pose=N_.fall0;const k=e/0.2;o.roll=-rd*Math.PI/2*k*k;return o}
+  o.pose=N_.down;o.roll=-rd*Math.PI/2;if(e<0.45)o.lift=Math.max(0,Math.sin((e-0.2)/0.25*Math.PI))*0.25;return o}
+ p._fm=0;if(!(p.fallen>0))p.tackler=false;
+ const ph=(p.num||0)*0.37;
+ if(G.st==='presnap'||(G.st==='fg'&&!(p.throwT>0)&&p.role!=='K')){if(line)o.pose=N_.stance;else if(p.role==='QB')o.pose=G.st==='fg'?N_.getup0:N_.hold;else if(p.role==='WR'||p.role==='CB'||p.role==='LB'||p.role==='S')o.pose=N_.ready;else o.pose=(Math.floor(G.t*1.3+ph)%2)?N_.idle1:N_.idle0;return o}
+ if(G.celeb&&p.team===0&&G.st==='result'){const t=((G.t*4+ph)%4)|0;if(p===G.carrier){const e=1.15-(G.resT||0);o.pose=e<0.2?N_.cel0:e<0.55?N_.cel3:[N_.cel1,N_.cel2][(G.t*3|0)%2]}else o.pose=[N_.cel0,N_.cel1,N_.cel1,N_.cel0][t];if(o.pose===N_.cel1)o.lift=0.3;return o}
+ if(p.throwT>0){const k=1-p.throwT/(p.throwDur||0.5);if(p.role==='K'){o.pose=N_.kick0+Math.min(2,Math.floor(k*3));return o}o.pose=N_.thr0+Math.max(0,Math.min(5,Math.floor(k*6)));return o}
+ if(p.catchT>0){o.pose=p.catchT>0.25?N_.catchUp:N_.catchTuck;return o}
+ if(p.eng){o.pose=N_.blk0+(Math.floor(G.t*5+ph)%3);return o}
+ const car=p===G.carrier&&(!G.ball||G.ball.caught)&&!G.pend;
+ if(car&&G.juke>0){const e=0.32-G.juke;o.pose=e<0.09?N_.jplant:e<0.19?N_.jfake:N_.jcut;o.roll=(G.jukeS||1)*(e<0.09?0:e<0.19?0.12:-0.18);return o}
+ if(sp<0.6){o.pose=car?N_.hold:(Math.floor(G.t*1.3+ph)%2?N_.idle1:N_.idle0);return o}
+ const fwd=p.team===0?1:-1;const back=(p.vy*fwd<-0.6*sp&&sp>0.8&&!car)||(p.role==='QB'&&car&&p.vy*fwd<-0.5*sp);
+ if(back){o.face=[0,fwd];const f=Math.floor(p.anim/0.38)%4;o.pose=(p.role==='QB'&&car?N_.drop0:N_.bp0)+f;return o}
+ if(car&&sp>3){let d=99;for(const q of G.players)if(q.team!==p.team&&!(q.fallen>0)){const dd=Math.hypot(q.x-p.x,q.y-p.y);if(dd<d)d=dd}if(d<1.9){o.pose=Math.floor(p.anim/0.5)%2?N_.stiff1:N_.stiff0;return o}}
+ if(p._cut>0&&sp>3){o.pose=N_.cut;o.roll=(p._cutd||1)*0.14;return o}
+ if(sp>7.4){o.pose=(car?N_.scarry0:N_.sprint0)+Math.floor(p.anim/0.7)%4;return o}
+ o.pose=(car?N_.carry0:N_.run0)+Math.floor(p.anim/0.42)%6;return o}
+function updatePlayers(){ensureAtlas();const now=performance.now();const dt=window.__hold?1/30:Math.min(0.05,(now-animT)/1000);animT=now;const cnt=[0,0],nc=[0,0];camUp.set(0,1,0).applyQuaternion(cam.quaternion);camBk.set(0,0,1).applyQuaternion(cam.quaternion);
  G.players.forEach((p,si)=>{const sp=Math.hypot(p.vx,p.vy);let fx=p.vx,fy=p.vy;
   if(p.throwT>0&&p.throwDir){fx=p.throwDir.x;fy=p.throwDir.y}else if(p.eng&&p.blk){fx=p.blk.x-p.x;fy=p.blk.y-p.y}
   else if(sp<0.4||G.st==='presnap'){fx=0;fy=p.team===0?1:-1}
+  const A=animOf(p,dt);if(A.face){fx=A.face[0];fy=A.face[1]}
   const l=Math.hypot(fx,fy)||1;const k=p.throwT>0?1:.25;p.fdx=(p.fdx??0)*(1-k)+fx/l*k;p.fdy=(p.fdy??(p.team?-1:1))*(1-k)+fy/l*k;
   const a=Math.atan2(p.fdx,p.fdy),aa=Math.abs(a)*180/Math.PI;const dir=aa<22.5?4:aa<67.5?3:aa<112.5?2:aa<157.5?1:0;const mir=a<0?-1:1;
-  let pose=poseOf(p);let hy=0.02,sq=0;if(p.dive>0){p._dm=Math.max(p._dm||0,p.dive);const k=1-p.dive/p._dm;if(k<0.15)pose=S.P.stance;else hy+=Math.sin(Math.min(1,(k-0.15)/0.85)*Math.PI)*0.8}else p._dm=0;if(p===G.carrier&&G.juke>0)sq=G.jukeCut?0.1:0.16;const line=(p.role==='OL'||p.role==='DL')?1:0;const T=TM[p.team],i=cnt[p.team]++;
-  const s=2.8*(line?1.18:1);sc.set(s*mir*(1+sq),s*(1-sq),1);pm.compose(v3.set(Xw(p.x),hy,Z(p.y)),cam.quaternion,sc);T.m.setMatrixAt(i,pm);
-  T.uo.setXY(i,(dir*S.POSES+pose)*CU,1-((p.skin*2+line)+1)*CV);
-  const P=S.P;const noNum=dir===2||pose===P.dive||pose===P.fall||((dir<=1)&&(pose===P.hold||(pose>=P.hrun&&pose<P.hrun+4)||pose===P.catch2||pose===P.throw));
-  if(!noNum){const Nm=NM[p.team],j=nc[p.team]++;const y0=1+crouchOf(pose);const hpx=24-(y0+11.5);const u=s/24;
-   v3.set(Xw(p.x),0.02,Z(p.y)).addScaledVector(camUp,hpx*u).addScaledVector(camBk,0.08);pm.compose(v3,cam.quaternion,sc.set(9*u*(line?1.05:0.95),7*u,1));Nm.m.setMatrixAt(j,pm);const n=Math.max(0,Math.min(99,p.num|0));Nm.uo.setXY(j,(n%10)*0.1,1-(Math.floor(n/10)+1)*0.1)}
+  const rk=Math.min(1,dt*18);p._r=(p._r||0)+(A.roll-(p._r||0))*rk;p._sy=(p._sy??1)+(A.sy-(p._sy??1))*rk;p._lf=(p._lf||0)+(A.lift-(p._lf||0))*Math.min(1,dt*22);
+  let sq=0;if(p===G.carrier&&G.juke>0)sq=G.jukeCut?0.06:0.1;const line=(p.role==='OL'||p.role==='DL')?1:0;const T=TM[p.team],i=cnt[p.team]++;const pose=A.pose;
+  const s=2.8*(line?1.18:1);sc.set(s*mir*(1+sq),s*(1-sq)*p._sy,1);qR.setFromAxisAngle(zAx,p._r);qC.copy(cam.quaternion).multiply(qR);pm.compose(v3.set(Xw(p.x),0.02+p._lf,Z(p.y)),qC,sc);T.m.setMatrixAt(i,pm);
+  T.uo.setXY(i,pose*CU,1-((dir*10+p.skin*2+line)+1)*CV);
+  const M=S.META[dir*S.POSES+pose]||{ty:9,cover:false};const noNum=dir===2||M.cover||Math.abs(p._r)>0.25||p._sy<0.9;
+  if(!noNum){const Nm=NM[p.team],j=nc[p.team]++;const hpx=24-(M.ty+3.5);const u=s/24;
+   v3.set(Xw(p.x),0.02+p._lf,Z(p.y)).addScaledVector(camUp,hpx*u).addScaledVector(camBk,0.08);pm.compose(v3,cam.quaternion,sc.set(9*u*(line?1.05:0.95),7*u,1));Nm.m.setMatrixAt(j,pm);const n=Math.max(0,Math.min(99,p.num|0));Nm.uo.setXY(j,(n%10)*0.1,1-(Math.floor(n/10)+1)*0.1)}
   m4.makeRotationX(-Math.PI/2);m4.setPosition(Xw(p.x),.02,Z(p.y));shadow.setMatrixAt(si,m4)});
  TM.forEach((T,k)=>{T.m.count=cnt[k];T.m.instanceMatrix.needsUpdate=true;T.uo.needsUpdate=true});NM.forEach((T,k)=>{T.m.count=nc[k];T.m.instanceMatrix.needsUpdate=true;T.uo.needsUpdate=true});shadow.count=G.players.length;shadow.instanceMatrix.needsUpdate=true}
 // route ribbons
