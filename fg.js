@@ -8,7 +8,7 @@ function k4Btns(){const y=160,g=6,ws=canFG()?[(W-24-2*g)/3,(W-24-2*g)/3,(W-24-2*
 function hit(b,t){return t&&t[0]>=b.x&&t[0]<=b.x+b.w&&t[1]>=b.y&&t[1]<=b.y+b.h}
 function patBtns(){const w=(W-36)/2,y=H-150;return[{k:'pat',x:12,y,w,h:64,l:'PAT KICK',s:'+1'},{k:'two',x:24+w,y,w,h:64,l:'GO FOR 2',s:'+2  FROM THE 2'}]}
 const AIMB={l:{x:16,y:H-96,w:60,h:60},r:{x:86,y:H-96,w:60,h:60}};
-const MC={x:W-100,y:H-178,r:76};const KB={x:W-170,y:H-92,w:156,h:60};
+const MC={x:W-82,y:H-168,r:62};const KB={x:W-170,y:H-92,w:156,h:60};
 function windFor(){const ranges=[[0,3],[0,6],[2,9],[3,12]][G.diff];const s=Math.round(rnd(ranges[0],ranges[1]));const a=Math.random()*Math.PI*2;return{s,a,x:Math.cos(a)*s,y:Math.sin(a)*s}}
 function startFG(pat){G.tuck=false;G.juke=0;const cx=FIELDW/2;if(pat)G.los=98;const L=G.los,P=[];
  for(let i=-3;i<=3;i++)P.push(mk(0,'OL',cx+i*2.2,L-1,[60,72,65,61,66,77,88][i+3]));
