@@ -53,7 +53,7 @@ function momentum(){const b=G.banner;if(b&&b!==lastB){lastB=b;const s=(b.t+' '+b
  mom*=0.9995;mom=Math.max(-1,Math.min(1,mom));return mom}
 window.__mom=()=>mom;
 let dispL=0.5,dispR=0.5,dmgL=0.5,dmgR=0.5;
-drawHUD2=function(){const h=TEAMS[G.home],a=TEAMS[G.away];gear(26,28);const m=momentum();
+drawHUD2=function(){const h=TEAMS[G.home],a=TEAMS[G.away];X.fillStyle='#000';X.fillRect(0,0,W,112);X.fillStyle='#ffd23f';X.fillRect(0,112,W,2);gear(26,28);const m=momentum();
  const y0=44,bh=42,cw=86,cx=W/2;
  // banners (parallelograms) left/right
  const side=(t,left,score)=>{X.save();const x0=left?6:cx+cw/2-6,x1=left?cx-cw/2+6:W-6;X.beginPath();if(left){X.moveTo(x0,y0);X.lineTo(x1,y0);X.lineTo(x1-12,y0+bh);X.lineTo(x0,y0+bh)}else{X.moveTo(x0,y0);X.lineTo(x1,y0);X.lineTo(x1,y0+bh);X.lineTo(x0+12,y0+bh)}X.closePath();
@@ -143,5 +143,10 @@ let pj=0,pd=false;const _u=update;update=function(dt){_u(dt);const c=G.carrier;i
 // render wrapper (outermost)
 const _r=render;render=function(){if(G.st==='title'&&!G.paused){X.setTransform(DPR,0,0,DPR,0,0);X.save();drawTitle();X.restore();return}
  if(G.st==='vs'){X.setTransform(DPR,0,0,DPR,0,0);X.save();drawVS();X.restore();return}
- _r()};
+ _r();if(G.st==='live'||G.st==='presnap'||G.st==='result'){X.setTransform(DPR,0,0,DPR,0,0);X.save();bottomStrip();drawPop();X.restore()}};
+function bottomStrip(){const c=(G.st==='live'&&G.carrier)||G.qb;if(!c)return;const y=H-20;X.fillStyle='rgba(0,0,0,.82)';X.fillRect(0,y,W,20);X.fillStyle='#ffd23f';X.fillRect(0,y,W,1);
+ const nm=(c.nm?(c.nm.split(' ').slice(-1)[0]):(c.role==='QB'?'QUARTERBACK':'PLAYER')).toUpperCase();X.font='900 12px "Courier New", monospace';X.textBaseline='middle';X.textAlign='left';X.fillStyle='#fff';X.fillText(nm,12,y+11);const w=X.measureText(nm).width;X.fillStyle='#ffd23f';X.fillText(c.role+'  #'+(c.num|0),20+w,y+11);
+ X.textAlign='right';X.fillStyle='#9fb3ff';X.fillText(c.team===0?TEAMS[G.home].nick||'':'',W-12,y+11)}
+function drawPop(){const p=G.pop;if(!p||p.t>0.9)return;const q=scr(p.x,p.y,4.2);const k=p.t/0.9,s=p.t<0.12?0.5+p.t/0.12*0.7:1.2-Math.min(0.2,(p.t-0.12)*0.6);X.save();X.globalAlpha=k>0.7?(1-k)/0.3:1;X.translate(q[0],q[1]-k*26);X.scale(s,s);arcTxt(p.s,0,0,22,GOLD,{sk:0.15,rim:'#fff'});X.restore()}
+const _u18=update;update=function(dt){_u18(dt);if(G.pop)G.pop.t+=dt;if(G.st==='presnap')G.pop=null};
 })();

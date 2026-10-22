@@ -21,7 +21,7 @@ const lam=c=>new THREE.MeshLambertMaterial({color:c});
 const PX=20,fc=document.createElement('canvas');fc.width=Math.round(FW*PX);fc.height=120*PX;const f=fc.getContext('2d');
 const T=window.TEAMS,home=()=>T[G.home],away=()=>T[G.away];
 function paintField(){const W2=fc.width;
- for(let yd=0;yd<100;yd+=5){f.fillStyle=(yd/5)%2?'#3fb548':'#35a23e';f.fillRect(0,(110-yd-5)*PX,W2,5*PX)}
+ for(let yd=0;yd<100;yd+=5){f.fillStyle=(yd/5)%2?'#2a8237':'#1f672b';f.fillRect(0,(110-yd-5)*PX,W2,5*PX)}
  {let s=1234567;const R=()=>(s=(s*16807)%2147483647)/2147483647;for(let i=0;i<70000;i++){const x=R()*W2,y=(10+R()*100)*PX,v=R();f.fillStyle=v<.5?'rgba(20,70,25,.16)':v<.85?'rgba(140,220,120,.12)':'rgba(255,255,220,.10)';f.fillRect(x|0,y|0,1+(R()*2|0),2+(R()*3|0))}
   for(let yd=0;yd<100;yd+=10){const y=(110-yd-10)*PX;const g=f.createLinearGradient(0,y,0,y+10*PX);g.addColorStop(0,'rgba(255,255,255,.035)');g.addColorStop(.5,'rgba(0,0,0,.03)');g.addColorStop(1,'rgba(255,255,255,.035)');f.fillStyle=g;f.fillRect(0,y,W2,10*PX)}}
  for(let x=0;x<FW;x+=FW/8){f.fillStyle='rgba(255,255,255,.035)';if(Math.round(x/(FW/8))%2)f.fillRect(x*PX,10*PX,FW/8*PX,100*PX)}
@@ -186,6 +186,8 @@ const N=14,S=window.SPR;
 const shadow=new THREE.InstancedMesh(new THREE.PlaneGeometry(2.1,2.1),new THREE.MeshBasicMaterial({map:softTex,transparent:true,opacity:.75,depthWrite:false}),N*2);scene.add(shadow);
 const ring=new THREE.Mesh(new THREE.RingGeometry(1.4,1.85,24),new THREE.MeshBasicMaterial({color:0x8a5cff,transparent:true,opacity:.85}));ring.rotation.x=-Math.PI/2;ring.position.y=.04;scene.add(ring);const sh=new THREE.Shape();for(let i=0;i<10;i++){const r=i%2?.32:.75,a=i/10*Math.PI*2-Math.PI/2;i?sh.lineTo(Math.cos(a)*r,Math.sin(a)*r):sh.moveTo(Math.cos(a)*r,Math.sin(a)*r)}const star=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshBasicMaterial({color:0xffd23f,side:THREE.DoubleSide}));star.rotation.x=-Math.PI/2;star.position.y=.05;scene.add(star);
 const ball=new THREE.Mesh(new THREE.SphereGeometry(.28,10,6),lam(0x8a4a1f));ball.scale.set(1.8,1.8,2.8);scene.add(ball);
+const ballSh=new THREE.Mesh(new THREE.CircleGeometry(.5,14),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.45,depthWrite:false}));ballSh.rotation.x=-Math.PI/2;ballSh.renderOrder=2;scene.add(ballSh);
+{const pg=new THREE.BoxGeometry(.35,.9,.35),py=new THREE.InstancedMesh(pg,new THREE.MeshBasicMaterial({color:0xff3b1f}),8);let i=0;const M=new THREE.Matrix4();for(const y of[10,0,110,120])for(const x of[0,FW]){M.makeTranslation(Xw(x)+(x?0.2:-0.2),.45,Z(y));py.setMatrixAt(i++,M)}scene.add(py)}
 const tgtMk=new THREE.Mesh(new THREE.RingGeometry(.6,.85,16),new THREE.MeshBasicMaterial({color:0xffe23f}));tgtMk.rotation.x=-Math.PI/2;tgtMk.position.y=.05;scene.add(tgtMk);
 const bgeo=new THREE.PlaneGeometry(1,1);bgeo.translate(0,.5,0);
 const CU=1/S.POSES,CV=1/(10*S.DIRS);
@@ -251,15 +253,15 @@ function updatePlayers(){ensureAtlas();const now=performance.now();const dt=wind
  TM.forEach((T,k)=>{T.m.count=cnt[k];T.m.instanceMatrix.needsUpdate=true;T.uo.needsUpdate=true});NM.forEach((T,k)=>{T.m.count=nc[k];T.m.instanceMatrix.needsUpdate=true;T.uo.needsUpdate=true});shadow.count=G.players.length;shadow.instanceMatrix.needsUpdate=true}
 // route ribbons
 const RCOL=[0xff2a2a,0xff8a1f,0xffd400,0x9a3cff];let routeGrp=new THREE.Group();scene.add(routeGrp);let routeVer=-1;
-function buildRoutes(){routeGrp.clear();(G.routes||[]).forEach((r,ri)=>{const pts=r.pts;const pos=[];const w=.2;
+function buildRoutes(){routeGrp.clear();(G.routes||[]).forEach((r,ri)=>{const pts=r.pts;const pos=[];const w=.1;
  for(let i=0;i<pts.length;i++){const a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)];let dx=b[0]-a[0],dy=b[1]-a[1];const l=Math.hypot(dx,dy)||1;const nx=-dy/l*w,ny=dx/l*w;
   pos.push(Xw(pts[i][0]+nx),.06,Z(pts[i][1]+ny),Xw(pts[i][0]-nx),.06,Z(pts[i][1]-ny))}
  const idx=[];for(let i=0;i<pts.length-1;i++){const a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);
- const mat=new THREE.MeshBasicMaterial({color:RCOL[(r.i??ri)%4],side:THREE.DoubleSide,transparent:true,opacity:.95,depthWrite:false});
+ const mat=new THREE.MeshBasicMaterial({color:new THREE.Color(RCOL[(r.i??ri)%4]).lerp(new THREE.Color(0xffffff),.6),side:THREE.DoubleSide,transparent:true,opacity:.95,depthWrite:false});
  const ul=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0x08102a,transparent:true,opacity:.35,depthWrite:false,side:THREE.DoubleSide}));ul.scale.set(1,1,1);ul.position.set(.12,-.01,.12);routeGrp.add(ul);routeGrp.add(new THREE.Mesh(g,mat));
  {const dot=new THREE.Mesh(new THREE.CircleGeometry(.45,14),mat);dot.rotation.x=-Math.PI/2;dot.position.set(Xw(pts[0][0]),.07,Z(pts[0][1]));routeGrp.add(dot)}
- const e2=pts[pts.length-1],e1=pts[pts.length-2];const ah=new THREE.Mesh(new THREE.ConeGeometry(.45,1.1,3),mat);ah.position.set(Xw(e2[0]),.1,Z(e2[1]));ah.rotation.x=-Math.PI/2;ah.rotation.z=-Math.atan2(e2[0]-e1[0],e2[1]-e1[1]);ah.scale.z=.1;routeGrp.add(ah)})}
+ const e2=pts[pts.length-1],e1=pts[pts.length-2];const ah=new THREE.Mesh(new THREE.ConeGeometry(.5,1.2,3),mat);ah.position.set(Xw(e2[0]),.1,Z(e2[1]));ah.rotation.x=-Math.PI/2;ah.rotation.z=-Math.atan2(e2[0]-e1[0],e2[1]-e1[1]);ah.scale.z=.1;routeGrp.add(ah)})}
 // projection for 2D overlay
 const pv=new THREE.Vector3();
 window.PROJ=(x,y,h=1)=>{pv.set(Xw(x),h,Z(y)).project(cam);return[(pv.x+1)/2*W,(1-pv.y)/2*H]};
@@ -274,7 +276,7 @@ window.R3D=()=>{const st=G.st;if(window.MENU_ST?window.MENU_ST(st)||st==='vs':(s
  los.position.z=Z(G.los);fd.position.z=Z(Math.min(G.los+G.togo,100));fd.visible=G.los+G.togo<100;
  const c=G.carrier;ring.visible=on&&!!c;star.visible=ring.visible;if(c){ring.position.set(Xw(c.x),.04,Z(c.y));star.position.set(Xw(c.x),.05,Z(c.y));star.rotation.z=G.t*2}
  const b=G.ball;ball.visible=on&&!!b&&!b.caught;tgtMk.visible=false;if(fgB){ball.visible=true;ball.position.set(Xw(fgB.x),fgB.z+0.3,Z(fgB.y));ball.rotation.x=-(G.t*14)}
- if(b&&!b.caught){{const kk=Math.min(1,b.t/b.T);ball.position.set(Xw(b.x),(b.h0||1.6)*(1-kk)+1.6*kk+b.z*0.9,Z(b.y))}ball.rotation.y=Math.atan2(-(b.tx-b.x0),(b.ty-b.y0));ball.rotation.x=-.5;ball.rotation.z=(b.t||0)*28;tgtMk.visible=true;tgtMk.position.set(Xw(b.tx),.05,Z(b.ty))}
+ ballSh.visible=false;if(b&&!b.caught){{const kk=Math.min(1,b.t/b.T);ball.position.set(Xw(b.x),(b.h0||1.6)*(1-kk)+1.6*kk+b.z*0.9,Z(b.y))}ball.rotation.y=Math.atan2(-(b.tx-b.x0),(b.ty-b.y0));ball.rotation.x=-.5;ball.rotation.z=(b.t||0)*28;tgtMk.visible=true;tgtMk.position.set(Xw(b.tx),.05,Z(b.ty));{const hz=ball.position.y;ballSh.visible=true;ballSh.position.set(Xw(b.x),.07,Z(b.y));const s=Math.max(.8,1.7-hz*0.05);ballSh.scale.set(s,s*0.8,1);ballSh.material.opacity=Math.max(.3,.6-hz*0.02)}}
  else if(c){const a=(c.face||0);ball.position.set(Xw(c.x)+Math.cos(a)*.55,1.25,Z(c.y)-Math.sin(a)*.55);ball.rotation.set(0,a,0)}
  let ov=G.st==='presnap'&&G.ovT>0?Math.min(1,G.ovT/0.6):0;ov=ov*ov*(3-2*ov);
  {const xs=[];const c2=G.carrier,b2=G.ball;
