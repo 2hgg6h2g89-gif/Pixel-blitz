@@ -233,7 +233,7 @@ function mkNumMesh(){const mat=new THREE.MeshBasicMaterial({map:new THREE.Canvas
  mat.onBeforeCompile=sh=>{sh.vertexShader='attribute vec2 uvOff;\n'+sh.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\n vMapUv = vMapUv*vec2('+SU.toFixed(8)+',1.0) + uvOff;')};
  const m=new THREE.InstancedMesh(ngeo,mat,N);m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);const uo=new THREE.InstancedBufferAttribute(new Float32Array(N*2),2);uo.setUsage(THREE.DynamicDrawUsage);m.geometry=ngeo.clone();m.geometry.setAttribute('uvOff',uo);m.frustumCulled=false;scene.add(m);return{m,mat,uo,cv:null,tex:null}}
 const NM=[mkNumMesh(),mkNumMesh()];NM.forEach(n=>n.m.renderOrder=3);const camUp=new THREE.Vector3(),camBk=new THREE.Vector3();window.__atlases=[];
-let atlasKey='';function ensureAtlas(){const k=G.home+'-'+G.away+'-v34';if(k===atlasKey)return;atlasKey=k;[home(),away()].forEach((t,i)=>{const c=S.buildAtlas(t,i?G.away:G.home);window.__atlases[i]=c;const tx=new THREE.CanvasTexture(c);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;tx.generateMipmaps=false;tx.colorSpace=THREE.SRGBColorSpace;TM[i].mat.map=tx;TM[i].mat.needsUpdate=true;const nc=S.buildNumbers(t);const nt=new THREE.CanvasTexture(nc);nt.magFilter=nt.minFilter=THREE.NearestFilter;nt.generateMipmaps=false;nt.flipY=true;nt.colorSpace=THREE.SRGBColorSpace;NM[i].mat.map=nt;NM[i].cv=nc;NM[i].tex=nt;NM[i].mat.needsUpdate=true})}
+let atlasKey='';function ensureAtlas(){const k=G.home+'-'+G.away+'-v35';if(k===atlasKey)return;atlasKey=k;[home(),away()].forEach((t,i)=>{const c=S.buildAtlas(t,i?G.away:G.home);window.__atlases[i]=c;const tx=new THREE.CanvasTexture(c);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;tx.generateMipmaps=false;tx.colorSpace=THREE.SRGBColorSpace;TM[i].mat.map=tx;TM[i].mat.needsUpdate=true;const nc=S.buildNumbers(t);const nt=new THREE.CanvasTexture(nc);nt.magFilter=nt.minFilter=THREE.NearestFilter;nt.generateMipmaps=false;nt.flipY=true;nt.colorSpace=THREE.SRGBColorSpace;NM[i].mat.map=nt;NM[i].cv=nc;NM[i].tex=nt;NM[i].mat.needsUpdate=true})}
 const pm=new THREE.Matrix4(),v3=new THREE.Vector3(),sc=new THREE.Vector3(),bUp=new THREE.Vector3(),bOut=new THREE.Vector3();
 // ===== v17 animation state machine: pose + roll + squash + lift, eased per player =====
 const N_=S.P;let animT=performance.now();const qR=new THREE.Quaternion(),qC=new THREE.Quaternion(),zAx=new THREE.Vector3(0,0,1);
@@ -288,17 +288,17 @@ function updatePlayers(){SPK+=(SPKT-SPK)*0.25;window.__SPK=SPK;{const bs=Math.ma
   const M=S.META[dir*S.POSES+pose]||S.META[dir*S.POSES+N_.idle0]||{ty:9};p._ny=p._ny===undefined?M.ty:p._ny+(M.ty-p._ny)*Math.min(1,dt*14);
   // Billboard local axes (includes roll). Body origin is the feet.
   bUp.set(0,1,0).applyQuaternion(qC);bOut.set(0,0,1).applyQuaternion(qC);
-  const sY=s*(p._sy||1);
-  const helmPx=Math.max(1,Math.min(8,(p._ny||9)-8));
+  const sY=s*(1-sq)*(p._sy||1);
+  const helmPx=Math.max(0,Math.min(18,(p._ny||9)-8));
   v3b.set(Xw(p.x),0.02+p._lf,Z(p.y)).addScaledVector(bUp,((24-helmPx)/24)*sY);
   v3b.project(cam);p._hx=(v3b.x+1)/2*W;p._hy=(1-v3b.y)/2*H;
-  // Mid-upper back: torso top is _ny, number center two pixels down. Not above the helmet.
+  // Number quad shares the sprite axes (qC / bUp). Center is three pixels under the shoulder line, so it stays on the upper back and cannot clear the helmet.
   const noNum=p.fallen>0.3||p.dive>0.2||Math.abs(p._r)>1.35||p._sy<0.4;
   if(!noNum&&nc[p.team]<S.NSLOT){const Nm=NM[p.team],j=nc[p.team]++;
-   const backPx=Math.max(4,Math.min(18,(p._ny||9)+2));
+   const backPx=Math.max(6,Math.min(16,(p._ny||9)+3));
    const frac=(24-backPx)/24;
-   const nh=0.22*sY,nw=0.32*s*(line?1.08:1);
-   v3.set(Xw(p.x),0.02+p._lf,Z(p.y)).addScaledVector(bUp,frac*sY).addScaledVector(bOut,0.05);
+   const nh=(4.5/24)*sY,nw=(7.5/24)*s*(line?1.06:1);
+   v3.set(Xw(p.x),0.02+p._lf,Z(p.y)).addScaledVector(bUp,frac*sY).addScaledVector(bOut,0.025);
    pm.compose(v3,qC,sc.set(nw,nh,1));Nm.m.setMatrixAt(j,pm);
    const n=Math.max(0,Math.min(99,p.num|0));
    if(S.paintNumber(Nm.cv,j,n)&&Nm.tex)Nm.tex.needsUpdate=true;

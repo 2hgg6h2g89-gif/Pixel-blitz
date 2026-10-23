@@ -360,7 +360,7 @@ function handoffMetrics(){const h=16;X.save();X.font=HFONT;const tw=Math.ceil(X.
 function handoffGeom(){const {w,h}=handoffMetrics(),rb=G.rb,m=4;
  // Helmet screen point is written by the billboard (same quaternion as the sprite). No dodge, no side offset.
  let cx,top;if(rb&&rb._hx!=null){cx=rb._hx;top=rb._hy}else{const s=scr(rb.x,rb.y,2.4);cx=s[0];top=s[1]-18}
- let x=Math.round(cx-w/2),y=Math.round(top-h-2);
+ let x=Math.round(cx-w/2),y=Math.round(top-h);
  x=cl(x,m,W-m-w);y=cl(y,m,H-m-h);
  return{x,y,w,h}}
 function handoffHit(px,py,g){const s=3;return px>=g.x-s&&px<=g.x+g.w+s&&py>=g.y-s&&py<=g.y+g.h+s}

@@ -88,16 +88,14 @@ function fig(g,t,skin,line,dir,name,ti){const s=D[name];
    if(bl==='chest'&&!back){r(cx-3,ty+2,6,2,SK);ballAt(cx-1,ty+1,false)}else if(bl==='up')ballAt(cx-1,Math.min(a[1],b[1])-2,false);else if(bl==='r')ballAt(b[0]-1,b[1]-1,false);else if(bl==='l')ballAt(a[0]-1,a[1]-1,false)};
   if(up)after.push(go);else go()}
  // ---- helmet (matches scoreboard pixel side-helm style)
- const hx0=side?cx+Math.round(ln):cx;const clr=(x,y)=>g.clearRect(x,y,1,1);const MKD='#1a1a22';
+ const hx0=side?cx+Math.round(ln):cx;const clr=(x,y)=>g.clearRect(x,y,1,1);const MKD='#141414',GL='#3a3a3a';
  if(side){const cx=hx0;r(cx-4,y0,9,8,H);r(cx-5,y0+2,1,4,H);clr(cx-4,y0);clr(cx+4,y0);r(cx-4,y0+7,9,1,H2);r(cx+3,y0+1,1,6,H2);
-  r(cx-3,y0+1,3,1,HL);r(cx-2,y0,2,1,'#ffffff');r(cx-4,y0+6,2,1,H2);r(cx-3,y0+5,2,2,H2);
-  // Neutral visor glass + cage. No center stripe, no team-colored front bar.
-  r(cx+3,y0+2,4,4,'#2c3138');r(cx+3,y0+2,4,1,'#d5d8de');r(cx+4,y0+3,3,1,'#1c2026');r(cx+3,y0+5,4,1,'#121418');
-  r(cx+5,y0+2,2,1,MKD);r(cx+5,y0+4,2,1,MKD);r(cx+5,y0+6,2,1,MKD);r(cx+7,y0+2,1,5,MKD);r(cx+4,y0+6,3,1,MKD);paintMark(cx-4,y0+2)}
+  r(cx-3,y0+1,3,1,HL);r(cx-2,y0,2,1,'#ffffff');r(cx-1,y0+5,2,2,'#121212');
+  r(cx+3,y0+2,4,4,MKD);r(cx+3,y0+2,4,1,GL);r(cx+5,y0+3,2,1,MKD);r(cx+5,y0+5,2,1,MKD);r(cx+7,y0+2,1,5,MKD);r(cx+4,y0+6,3,1,MKD);paintMark(cx-4,y0+2)}
  else if(back){r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-1,y0,2,1,HL);r(cx-4,y0+1,2,1,HL);paintMark(cx-2,y0+2)}
  else{const o=diag?2:0,fw=6-(diag?1:0);r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-1+o,y0,2,1,HL);r(cx-4+o,y0+1,1,1,HL);r(cx-3+o,y0+1,1,1,'#ffffff');
   paintMark(cx-2,y0+1);
-  r(cx-3+o,y0+3,fw,4,'#2c3138');r(cx-3+o,y0+3,fw,1,'#d5d8de');r(cx-3+o,y0+4,fw,1,MKD);r(cx-3+o,y0+6,fw,1,MKD);r(cx+o,y0+4,1,3,MKD)}
+  r(cx-3+o,y0+3,fw,4,MKD);r(cx-3+o,y0+3,fw,1,GL);r(cx-3+o,y0+4,fw,1,MKD);r(cx-3+o,y0+6,fw,1,MKD);r(cx+o,y0+4,1,3,MKD)}
  after.forEach(f=>f());
  return {ty,cover:!side&&(fs.ball==='chest'||(A[0][1]>0&&A[0][1]<4&&fs.A&&fs.A[0][0]<0))}}
 function outline(c,W,Hh,col){const g=c.getContext('2d',{willReadFrequently:true}),d=g.getImageData(0,0,W,Hh),a=d.data;
