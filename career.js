@@ -15,10 +15,21 @@ function name(){return FIRST[ri(0,FIRST.length-1)]+' '+LAST[ri(0,LAST.length-1)]
 function salFor(ovr,yrs){return Math.max(1,Math.round((ovr-60)*0.25+(ovr>88?4:ovr>82?1.5:0)))}
 function pid(){return 'p'+Math.random().toString(36).slice(2,9)}
 
+function enrichPlayer(p){
+  if(p.mor==null)p.mor=ri(55,95);
+  if(p.cond==null)p.cond=ri(70,100);
+  if(p.pot==null)p.pot=Math.min(5,Math.max(1,Math.round((p.ovr-70)/6+rnd(0,1.5))));
+  if(p.xp==null)p.xp=ri(0,80);
+  if(p.lvl==null)p.lvl=Math.max(1,Math.round((p.ovr-60)/8));
+  if(!p.attr){const b=p.ovr;
+    p.attr={spd:cl(b+ri(-8,8),50,99),str:cl(b+ri(-10,8),50,99),cat:cl(b+ri(-12,10),45,99),sta:cl(b+ri(-6,10),55,99)}}
+  return p;
+}
+function enrichRoster(R){(R||[]).forEach(enrichPlayer);return R}
 function mkPlayer(pos,ovr,age){
   ovr=Math.round(ovr);age=age||ri(21,28);
   const yrs=ri(1,4);const sal=Math.max(1,Math.round((ovr-60)*0.25+(ovr>88?4:ovr>82?1.5:0)));
-  return{id:pid(),nm:name(),pos,ovr,age,yrs,sal,yLeft:yrs}
+  return enrichPlayer({id:pid(),nm:name(),pos,ovr,age,yrs,sal,yLeft:yrs})
 }
 function blankRoster(teamOvr){
   const R=[];
@@ -35,12 +46,19 @@ function teamOvr(R){if(!R||!R.length)return 70;const q=R.filter(p=>p.pos==='QB')
   return Math.round(avg*0.7+(q?q.ovr:75)*0.3)}
 
 function saveC(){try{localStorage.setItem(CKEY,JSON.stringify(C))}catch(e){}}
-function loadC(){try{C=JSON.parse(localStorage.getItem(CKEY)||'null')}catch(e){C=null}return C}
+function loadC(){try{C=JSON.parse(localStorage.getItem(CKEY)||'null')}catch(e){C=null}
+  if(C){if(C.credits==null)C.credits=10;if(C.fans==null)C.fans=20;if(C.morale==null)C.morale=70;
+    if(C.stadium==null)C.stadium=2;if(C.training==null)C.training=3;if(C.rehab==null)C.rehab=2;
+    if(!C.oc)C.oc={nm:'Vance',stars:2,mood:1};if(!C.dc)C.dc={nm:'Holt',stars:1,mood:0};
+    (C.rosters||[]).forEach(enrichRoster);C.v=3}return C}
 function clearC(){C=null;localStorage.removeItem(CKEY)}
 
 function initCareer(team,diff){
   const rosters=TEAMS.map((t,i)=>blankRoster(t.rat+(i===team?1:0)));
-  C={v:2,team,diff,year:1,phase:'reg',rosters,fa:[],draft:null,tradeLog:[],cap:CAP};
+  C={v:3,team,diff,year:1,phase:'reg',rosters,fa:[],draft:null,tradeLog:[],cap:CAP,
+    credits:12,fans:18,morale:72,stadium:2,training:3,rehab:2,
+    oc:{nm:name().split(' ')[1],stars:2,mood:1},dc:{nm:name().split(' ')[1],stars:1,mood:0}};
+  enrichRoster(rosters[team]);
   // seed FA
   for(let i=0;i<40;i++)C.fa.push(mkPlayer(POS[ri(0,POS.length-1)],rnd(68,88),ri(24,32)));
   // sync arcade season
@@ -192,6 +210,25 @@ function newCareerYear(){
   applyRatings();saveC();G.st='chub';ui.msg='YEAR '+C.year;ui.msgT=2;
 }
 
+function offDefStars(){
+  const R=myRoster();if(!R.length)return[2,2];
+  const off=R.filter(p=>'QB RB WR TE OL'.includes(p.pos));
+  const def=R.filter(p=>'DL LB CB S'.includes(p.pos));
+  const avg=a=>a.length?a.reduce((s,p)=>s+p.ovr,0)/a.length:75;
+  const toS=v=>Math.max(0.5,Math.min(5,Math.round((v-68)/5*2)/2));
+  return[toS(avg(off)+(C.oc?C.oc.stars:0)),toS(avg(def)+(C.dc?C.dc.stars:0))];
+}
+function drawStars(x,y,n,col,max){max=max||5;for(let i=0;i<max;i++){
+  const f=Math.max(0,Math.min(1,n-i));X.fillStyle=f>0.6?col:(f>0.1?mixStar(col):'#2a2a40');
+  // tiny 5-point via rect diamond
+  X.fillRect(x+i*14,y-3,10,6);if(f>0.6){X.fillStyle='#fff';X.globalAlpha=.35;X.fillRect(x+i*14+2,y-2,4,2);X.globalAlpha=1}
+}}
+function mixStar(c){return c}
+function meter(x,y,w,h,pct,fill,bg){pill(x,y,w,h,bg||'rgba(10,12,28,.9)','#3a2a6a');
+  const pw=Math.max(2,Math.round((w-4)*Math.max(0,Math.min(1,pct))));
+  X.fillStyle=fill;X.fillRect(x+2,y+2,pw,h-4)}
+function segMeter(x,y,w,h,lvl,max,fill){max=max||10;pill(x,y,w,h,'rgba(10,12,28,.9)','#3a2a6a');
+  const sw=(w-6)/max;for(let i=0;i<max;i++){X.fillStyle=i<lvl?fill:'#1a1a30';X.fillRect(x+3+i*sw,y+3,sw-2,h-6)}}
 // ---------- UI HELPERS ----------
 function bg(){const g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b0a26');g.addColorStop(1,'#1a0f33');X.fillStyle=g;X.fillRect(0,0,W,H)}
 function hdr(s){txt(s,W/2,56,22,PAL.yel)}
@@ -199,39 +236,154 @@ function back(to){btn(12,40,90,40,'< BACK','#2b3a7a','#8fc4ff',13);ui._back=to}
 function toast(){if(ui.msgT>0){pill(40,H-90,W-80,36,'rgba(14,20,48,.95)',PAL.yel);txt(ui.msg,W/2,H-72,13,PAL.yel)}}
 
 function drawCHub(){
-  bg();const t=TEAMS[C.team];hdr('COACH HUB');txt('YEAR '+C.year+'  ·  '+t.city+' '+t.nick,W/2,84,12,PAL.cy,'center',false);
-  HELM.drawHelmet(X,70,150,70,t,false,C.team);
-  if(HELM.drawLogo)HELM.drawLogo(X,W-70,150,50,C.team,t.c2,'#000');
-  const S=window.__season&&window.__season.get();
-  const rec=S? (S.rec[C.team].w+'-'+S.rec[C.team].l+'-'+S.rec[C.team].t):'0-0-0';
-  txt('RECORD '+rec,160,130,16,'#fff','left',false);
-  txt('TEAM OVR '+TEAMS[C.team].rat,160,154,13,PAL.cy,'left',false);
-  txt('CAP '+salaryUsed()+' / '+C.cap,160,176,12,salaryUsed()>C.cap?'#ff6a7a':'#5dff8a','left',false);
+  bg();const t=TEAMS[C.team];const S=window.__season&&window.__season.get();
+  // top bar: credits + year
+  pill(12,28,72,28,'rgba(18,10,36,.95)',PAL.yel);txt(C.credits+' CC',48,42,12,PAL.yel,'center',false);
+  pill(W-84,28,72,28,'rgba(18,10,36,.95)','#4fa3ff');txt('Y'+C.year,W-48,42,12,'#8fc4ff','center',false);
+  txt('PIXEL BLITZ',W/2,36,14,PAL.yel);txt(t.city+' '+t.nick,W/2,56,11,'#c9d4ff','center',false);
+  // schedule strip
+  const wk=S?S.week:0;const phase=S?S.phase:'reg';
+  pill(12,72,W-24,56,'#1a1450',PAL.yel);
+  txt(phase==='reg'?('WEEK '+(wk+1)+' OF 17'):phase==='po'?'PLAYOFFS':'OFFSEASON',W/2,88,11,PAL.yel,'center',false);
+  // mini strip of next 3 games
+  if(S&&S.sched){for(let i=0;i<3;i++){const w=wk+i;if(w>=17||!S.sched[w])continue;
+    const g=S.sched[w].find(p=>p.includes(C.team));if(!g)continue;
+    const opp=g[0]===C.team?g[1]:g[0],home=g[0]===C.team;
+    const x=28+i*120;txt('W'+(w+1)+(home?' vs ':' @ ')+TEAMS[opp].a,x,112,10,i===0?PAL.yel:'#9fb3ff','left',false)}}
+  // division standings panel
+  const di=(window.divOf||(t=>t%4))(C.team);
+  const conf=(window.confOf||(t=>0))(C.team);
+  const divTeams=(window.DIVS&&window.DIVS[conf]?window.DIVS[conf][di]:null)||[C.team,(C.team+1)%32,(C.team+2)%32,(C.team+3)%32];
+  const sorted=divTeams.slice().sort((a,b)=>{if(!S||!S.rec)return 0;const pa=S.rec[a],pb=S.rec[b];return (pb.w-pa.w)||(pb.pf-pa.pf)});
+  pill(12,140,W*0.52-18,168,'rgba(18,10,36,.92)','#4a3a8a');
+  const dname=(window.DIVN?window.DIVN[di]:'DIV');
+  txt((window.CABR?window.CABR[conf]:'CONF')+' '+dname,12+(W*0.52-18)/2,158,11,PAL.yel,'center',false);
+  txt('W  L  T',12+W*0.52-50,158,9,'#9fb3ff','right',false);
+  sorted.forEach((ti,i)=>{const y=178+i*30;const me=ti===C.team;if(me)rect(18,y-12,W*0.52-30,26,'rgba(255,210,63,.18)');
+    rect(20,y-6,5,14,TEAMS[ti].c1);txt(TEAMS[ti].a,30,y,12,me?PAL.yel:'#fff','left',false);
+    const r=S&&S.rec?S.rec[ti]:{w:0,l:0,t:0};txt(r.w+'  '+r.l+'  '+r.t,12+W*0.52-22,y,11,'#c9d4ff','right',false)});
+  // fans + morale + O/D
+  const [os,ds]=offDefStars();
+  pill(W*0.52+6,140,W*0.48-18,52,'rgba(18,10,36,.92)','#4fa3ff');
+  txt('FANS  '+Math.round(C.fans)+'%',W*0.52+16,158,11,PAL.cy,'left',false);
+  meter(W*0.52+16,168,W*0.48-40,14,C.fans/100,'#ffd23f');
+  pill(W*0.52+6,200,W*0.48-18,48,'rgba(18,10,36,.92)','#3a2a6a');
+  txt('MORALE',W*0.52+16,218,10,'#9fb3ff','left',false);txt(Math.round(C.morale)+'%',W-28,218,12,C.morale>70?'#5dff8a':C.morale>45?PAL.yel:'#ff6a7a','right',false);
+  meter(W*0.52+16,228,W*0.48-40,10,C.morale/100,C.morale>70?'#5dff8a':'#ffd23f');
+  pill(W*0.52+6,256,W*0.48-18,52,'rgba(18,10,36,.92)','#3a2a6a');
+  txt('OFF',W*0.52+16,274,10,'#8fc4ff','left',false);drawStars(W*0.52+48,274,os,'#4fa3ff');
+  txt('DEF',W*0.52+16,294,10,'#ff6a7a','left',false);drawStars(W*0.52+48,294,ds,'#e8344e');
+  // next game banner
   const g=S&&window.__season.myGame&&window.__season.myGame();
-  let playLab='PLAY GAME',sub=C.phase;
-  if(S){if(S.phase==='reg')sub='WEEK '+(S.week+1)+' / 17';else if(S.phase==='po')sub='PLAYOFFS';else if(S.phase==='done'){playLab='START DRAFT';sub='SEASON COMPLETE'}}
-  if(C.phase==='draft'){playLab='CONTINUE DRAFT';sub='DRAFT IN PROGRESS'}
-  if(C.phase==='fa'){playLab='FREE AGENTS';sub='OFFSEASON'}
-  if(C.phase==='resign'){playLab='CONTRACTS';sub='OFFSEASON'}
-  pill(20,210,W-40,70,'rgba(18,10,36,.92)','#4fa3ff');txt(sub,W/2,235,13,PAL.yel);txt(g&&S&&S.phase!=='done'?('NEXT: VS '+TEAMS[g.opp].a):'BUILD YOUR DYNASTY',W/2,258,12,'#c9d4ff');
-  btn(20,300,W-40,56,playLab,'#ff4f7a','#ffd0dc',18);
-  const labs=[['ROSTER','croster'],['CONTRACTS','ccontract'],['FREE AGENTS','cfa'],['TRADES','ctrade']];
-  labs.forEach((L,i)=>{const x=20+(i%2)*((W-50)/2+10),y=370+Math.floor(i/2)*70;btn(x,y,(W-50)/2,56,L[0],'#1f6fd6','#8fc4ff',14)});
-  btn(20,520,W-40,48,'STANDINGS / SCHEDULE','#3a2a6a','#c9d4ff',13);
-  if(S&&S.phase==='done'&&C.phase==='reg')btn(20,580,W-40,48,'ENTER OFFSEASON (DRAFT)','#c8102e','#fff',13);
-  if(C.phase==='fa'||C.phase==='resign')btn(20,580,W-40,48,'START YEAR '+(C.year+1),'#2fd35f','#0a2a14',14);
-  btn(W/2-90,772,180,36,'QUIT CAREER','#3a2a6a','#8a7ab0',11);
+  let playLab='CONTINUE',sub='BUILD YOUR DYNASTY';
+  if(C.phase==='draft'){playLab='DRAFT';sub='DRAFT IN PROGRESS'}
+  else if(C.phase==='fa'){playLab='FREE AGENTS';sub='OFFSEASON'}
+  else if(C.phase==='resign'){playLab='CONTRACTS';sub='OFFSEASON'}
+  else if(S&&S.phase==='done'){playLab='START DRAFT';sub='SEASON COMPLETE'}
+  else if(g){sub=(g.atHome?'HOME':'AWAY')+' VS '+TEAMS[g.opp].city+' '+TEAMS[g.opp].nick;playLab='PLAY GAME'}
+  pill(12,320,W-24,54,'rgba(18,10,36,.92)',PAL.pink);
+  txt(sub,W/2,340,12,PAL.yel,'center',false);
+  txt('OVR '+TEAMS[C.team].rat+'   CAP '+salaryUsed()+'/'+C.cap+'   REC '+(S?S.rec[C.team].w+'-'+S.rec[C.team].l+'-'+S.rec[C.team].t:'0-0-0'),W/2,360,10,'#c9d4ff','center',false);
+  // bottom nav
+  const nav=[['OFFICE','cfront'],['ROSTER','croster'],['PLAY','_play']];
+  nav.forEach((L,i)=>{const x=12+i*((W-32)/3+4),bw=(W-32)/3;
+    btn(x,400,bw,56,L[0],i===2?'#ff4f7a':'#1f6fd6',i===2?'#ffd0dc':'#8fc4ff',i===2?16:12)});
+  // secondary row
+  [['FA','cfa'],['TRADES','ctrade'],['CONTRACTS','ccontract'],['STANDINGS','standings']].forEach((L,i)=>{
+    const x=12+i*((W-36)/4+4);btn(x,470,(W-36)/4,44,L[0],'#2b3a7a','#c9d4ff',11)});
+  // tip + settings (tap-hold wrench)
+  txt('TIP: UPGRADE TRAINING TO BOOST DEVELOPMENT',W/2,540,9,'#8a7ab0','center',false);
+  // wrench
+  pill(16,H-56,44,40,'#1a1450','#8a93b8');txt('SET',38,H-36,10,'#fff','center',false);
+  if(ui.holdHint){pill(70,H-56,200,40,'rgba(14,20,48,.95)',PAL.pink);txt('TAP HERE TO RESET CAREER',170,H-36,10,PAL.pink,'center',false)}
+  btn(W-140,H-56,124,40,'QUIT','#3a2a6a','#8a7ab0',12);
+  toast();
+}
+
+function drawCFront(){
+  bg();hdr('FRONT OFFICE');back('chub');
+  pill(12,84,90,28,'rgba(18,10,36,.95)',PAL.yel);txt(C.credits+' CC',57,98,12,PAL.yel,'center',false);
+  // salary cap
+  pill(12,124,W-24,48,'rgba(18,10,36,.92)','#4fa3ff');
+  txt('SALARY CAP  '+salaryUsed()+' / '+C.cap,24,142,12,'#fff','left',false);
+  meter(24,152,W-48,12,salaryUsed()/C.cap,salaryUsed()>C.cap?'#ff6a7a':'#ffd23f');
+  // facilities
+  const fac=[['STADIUM','stadium',3],['TRAINING','training',4],['REHAB','rehab',3]];
+  fac.forEach((F,i)=>{const y=188+i*70;
+    pill(12,y,W-100,60,'rgba(18,10,36,.92)','#3a2a6a');
+    txt(F[0]+'  Lv '+C[F[1]],24,y+22,13,PAL.yel,'left',false);
+    segMeter(24,y+34,W-140,14,C[F[1]],10,'#ffd23f');
+    const cost=F[2]+C[F[1]];btn(W-80,y+8,68,44,'+'+cost+'cc',C.credits>=cost?'#2fd35f':'#3a2a6a','#fff',12);
+  });
+  // coordinators
+  pill(12,410,W-24,150,'rgba(18,10,36,.92)','#4a3a8a');
+  txt('COORDINATORS',W/2,428,12,PAL.yel,'center',false);
+  [['OC',C.oc,'#4fa3ff'],['DC',C.dc,'#e8344e']].forEach((S,i)=>{
+    const x=24+i*((W-60)/2+12);pill(x,444,(W-60)/2,100,'#120a24',S[2]);
+    txt(S[0]+'  '+S[1].nm,x+(W-60)/4,468,13,'#fff','center',false);
+    drawStars(x+20,492,S[1].stars,S[2]);
+    txt(S[1].mood>0?'GOOD':S[1].mood<0?'LOW':'OK',x+(W-60)/4,520,11,S[1].mood>0?'#5dff8a':'#ffd23f','center',false);
+  });
+  const [os,ds]=offDefStars();
+  txt('OFFENSE',40,580,11,'#8fc4ff','left',false);drawStars(110,580,os,'#4fa3ff');
+  txt('DEFENSE',40,600,11,'#ff6a7a','left',false);drawStars(110,600,ds,'#e8344e');
+  pill(W/2,568,W/2-24,48,'rgba(18,10,36,.92)','#3a2a6a');
+  txt('DRAFT PICKS',W*0.75,586,10,'#9fb3ff','center',false);
+  txt('1 · 1 · 2',W*0.75,606,14,PAL.yel,'center',false);
+  btn(16,H-70,(W-40)/2,48,'FREE AGENTS','#1f6fd6','#fff',13);
+  btn(24+(W-40)/2,H-70,(W-40)/2,48,'STAFF HIRES','#2b3a7a','#c9d4ff',13);
   toast();
 }
 
 function drawCRoster(){
   bg();hdr('ROSTER');back('chub');
-  txt('OVR '+TEAMS[C.team].rat+'   CAP '+salaryUsed()+'/'+C.cap,W/2,84,12,PAL.cy);
+  meter(16,84,W-32,14,salaryUsed()/C.cap,salaryUsed()>C.cap?'#ff6a7a':'#ffd23f');
+  txt('CAP '+salaryUsed()+'/'+C.cap+'   MORALE '+Math.round(C.morale)+'%',W/2,78,10,PAL.cy,'center',false);
+  const [os,ds]=offDefStars();
+  txt('O',20,112,10,'#8fc4ff','left',false);drawStars(36,112,os,'#4fa3ff',5);
+  txt('D',W/2+10,112,10,'#ff6a7a','left',false);drawStars(W/2+26,112,ds,'#e8344e',5);
   const R=myRoster().slice().sort((a,b)=>b.ovr-a.ovr);
-  R.forEach((p,i)=>{const y=110+i*34-ui.scroll;if(y<100||y>H-40)return;
-    pill(12,y,W-24,30,'rgba(18,10,36,.9)',p.pos==='QB'?PAL.yel:'#3a2a6a');
-    txt(p.pos,28,y+15,11,PAL.yel,'left',false);txt(p.nm,70,y+15,12,'#fff','left',false);
-    txt(String(p.ovr),W-100,y+15,13,'#fff','center',false);txt('$'+p.sal+'/'+p.yLeft+'y',W-36,y+15,10,'#9fb3ff','right',false)});
+  const cols=2,cw=(W-28)/cols,ch=72;
+  R.forEach((p,i)=>{const col=i%cols,row=Math.floor(i/cols);const x=12+col*cw,y=130+row*ch-ui.scroll;
+    if(y<120||y>H-30)return;
+    const on=i===ui.sel;pill(x,y,cw-6,ch-6,on?'#2a1450':'rgba(18,10,36,.92)',on?PAL.yel:TEAMS[C.team].c1);
+    txt(p.pos,x+10,y+18,11,PAL.yel,'left',false);txt(p.nm.split(' ').pop(),x+44,y+18,12,'#fff','left',false);
+    txt(String(p.ovr),x+cw-20,y+20,16,'#fff','right',false);
+    // mini stars = pot
+    drawStars(x+10,y+38,Math.min(5,p.pot||2),PAL.yel,5);
+    txt('M'+(p.mor|0)+' C'+(p.cond|0),x+10,y+56,10,p.cond>70?'#5dff8a':'#ffd23f','left',false);
+    txt('$'+p.sal+'/'+p.yLeft+'y',x+cw-14,y+56,9,'#9fb3ff','right',false);
+  });
+  toast();
+}
+
+function drawCPlayer(){
+  bg();const R=myRoster().slice().sort((a,b)=>b.ovr-a.ovr);const p=R[ui.sel];back('croster');
+  if(!p){txt('NO PLAYER',W/2,300,18,PAL.pink);return}
+  enrichPlayer(p);
+  hdr(p.nm);txt(p.pos+'  ·  AGE '+p.age,W/2,84,12,PAL.cy,'center',false);
+  // big rating
+  pill(W/2-50,100,100,70,'#120a24',PAL.yel);txt(String(p.ovr),W/2,140,36,PAL.yel,'center',false);
+  txt('OVR',W/2,160,10,'#9fb3ff','center',false);
+  // contract / morale / condition / value
+  const rows=[['CONTRACT',p.yLeft+' YR  $'+p.sal+'/YR'],['MORALE',Math.round(p.mor)+'%'],['CONDITION',Math.round(p.cond)+'%'],['VALUE','$'+(Math.round(p.ovr*p.pot*0.4))]];
+  rows.forEach((r,i)=>{const y=186+i*36;pill(16,y,W-32,32,'rgba(18,10,36,.9)','#3a2a6a');
+    txt(r[0],28,y+16,11,'#9fb3ff','left',false);txt(r[1],W-28,y+16,13,'#fff','right',false)});
+  // potential + XP
+  pill(16,340,W-32,70,'rgba(18,10,36,.92)','#4a3a8a');
+  txt('POTENTIAL',28,360,11,PAL.yel,'left',false);drawStars(120,360,p.pot,PAL.yel);
+  txt('LEVEL '+p.lvl,28,390,11,'#c9d4ff','left',false);
+  meter(110,382,W-150,14,(p.xp%100)/100,'#4fa3ff');
+  // attrs
+  pill(16,424,W-32,140,'rgba(18,10,36,.92)','#3a2a6a');
+  txt('ATTRIBUTES',W/2,442,12,PAL.yel,'center',false);
+  [['CATCHING',p.attr.cat,'#4fa3ff'],['STRENGTH',p.attr.str,'#e8344e'],['SPEED',p.attr.spd,'#ffd23f'],['STAMINA',p.attr.sta,'#5dff8a']].forEach((a,i)=>{
+    const y=458+i*26;txt(a[0],28,y+8,10,'#c9d4ff','left',false);
+    meter(120,y,W-160,12,a[1]/100,a[2]);txt(String(a[1]|0),W-28,y+8,10,'#fff','right',false);
+  });
+  // actions
+  [['BENCH','#2b3a7a'],['STATS','#1f6fd6'],['MEETING','#2fd35f'],['TRADE','#ff4f7a']].forEach((A,i)=>{
+    const x=12+i*((W-28)/4+4);btn(x,H-70,(W-28)/4,48,A[0],A[1],'#fff',11)});
   toast();
 }
 
@@ -300,7 +452,7 @@ function drawCTeamPick(){
 }
 
 // ---------- INPUT ----------
-const CMENU=['cteam','chub','croster','cdraft','cfa','ccontract','ctrade'];
+const CMENU=['cteam','chub','croster','cplayer','cfront','cdraft','cfa','ccontract','ctrade'];
 function hit(t,x,y,w,h){return t&&t[0]>=x&&t[0]<=x+w&&t[1]>=y&&t[1]<=y+h}
 
 function careerTap(t){
@@ -312,8 +464,16 @@ function careerTap(t){
     return;
   }
   if(G.st==='chub'){
-    if(hit(t,W/2-90,772,180,36)){clearC();G.career=false;G.st='modesel';return}
-    if(hit(t,20,300,W-40,56)){
+    // quit
+    if(hit(t,W-140,H-56,124,40)){clearC();G.career=false;G.st='modesel';return}
+    // wrench tap shows hint; long-press handled in tick via ui.hold
+    if(hit(t,16,H-56,44,40)){ui.holdHint=true;ui.holdHintT=0;return}
+    if(ui.holdHint&&hit(t,70,H-56,200,40)){clearC();G.career=false;G.st='modesel';return}
+    // bottom nav
+    const bw=(W-32)/3;
+    if(hit(t,12,400,bw,56)){G.st='cfront';return}
+    if(hit(t,12+bw+4,400,bw,56)){ui.scroll=0;G.st='croster';return}
+    if(hit(t,12+2*(bw+4),400,bw,56)){
       if(C.phase==='draft'){G.st='cdraft';advanceDraftAI();return}
       if(C.phase==='fa'){G.st='cfa';return}
       if(C.phase==='resign'){G.st='ccontract';return}
@@ -322,20 +482,37 @@ function careerTap(t){
       if(window.startMyGame){G.career=true;window.startMyGame()}
       return;
     }
-    if(hit(t,20,370,(W-50)/2,56)){ui.scroll=0;G.st='croster';return}
-    if(hit(t,30+(W-50)/2,370,(W-50)/2,56)){openContracts();return}
-    if(hit(t,20,440,(W-50)/2,56)){openFA();return}
-    if(hit(t,30+(W-50)/2,440,(W-50)/2,56)){openTrades();return}
-    if(hit(t,20,520,W-40,48)){G.st='standings';return}
-    if(hit(t,20,580,W-40,48)){
-      if(C.phase==='fa'||C.phase==='resign'){newCareerYear();return}
-      const S=window.__season&&window.__season.get();
-      if(S&&S.phase==='done'){finishCareerSeason();return}
-    }
+    const sw=(W-36)/4;
+    if(hit(t,12,470,sw,44)){openFA();return}
+    if(hit(t,12+(sw+4),470,sw,44)){openTrades();return}
+    if(hit(t,12+2*(sw+4),470,sw,44)){openContracts();return}
+    if(hit(t,12+3*(sw+4),470,sw,44)){G.st='standings';return}
     return;
   }
   if(hit(t,12,40,90,40)&&G.st!=='chub'&&G.st!=='cteam'){G.st='chub';return}
-  if(G.st==='croster'){return}
+  if(G.st==='croster'){
+    const R=myRoster().slice().sort((a,b)=>b.ovr-a.ovr);const cols=2,cw=(W-28)/cols,ch=72;
+    R.forEach((p,i)=>{const col=i%cols,row=Math.floor(i/cols);const x=12+col*cw,y=130+row*ch-ui.scroll;
+      if(hit(t,x,y,cw-6,ch-6)){ui.sel=i;G.st='cplayer'}});
+    return}
+  if(G.st==='cplayer'){
+    const R=myRoster().slice().sort((a,b)=>b.ovr-a.ovr);const p=R[ui.sel];
+    if(hit(t,12,H-70,(W-28)/4,48)){ui.msg='BENCHED';ui.msgT=1.2;if(p)p.mor=Math.max(20,p.mor-8);saveC();return}
+    if(hit(t,12+((W-28)/4+4),H-70,(W-28)/4,48)){ui.msg='STATS SOON';ui.msgT=1;return}
+    if(hit(t,12+2*((W-28)/4+4),H-70,(W-28)/4,48)){if(p){p.mor=Math.min(99,p.mor+10);C.credits=Math.max(0,C.credits-1);C.morale=Math.min(99,C.morale+2);ui.msg='MEETING +MORALE';ui.msgT=1.4;saveC()}return}
+    if(hit(t,12+3*((W-28)/4+4),H-70,(W-28)/4,48)){openTrades();return}
+    return}
+  if(G.st==='cfront'){
+    const fac=[['stadium',3],['training',4],['rehab',3]];
+    fac.forEach((F,i)=>{const y=188+i*70;const cost=F[1]+C[F[0]];
+      if(hit(t,W-80,y+8,68,44)){if(C.credits<cost){ui.msg='NEED CREDITS';ui.msgT=1.2;return}
+        if(C[F[0]]>=10){ui.msg='MAXED';ui.msgT=1;return}
+        C.credits-=cost;C[F[0]]++;if(F[0]==='stadium')C.fans=Math.min(99,C.fans+4);if(F[0]==='training')C.morale=Math.min(99,C.morale+3);ui.msg=F[0].toUpperCase()+' UP';ui.msgT=1.2;saveC()}});
+    if(hit(t,16,H-70,(W-40)/2,48)){openFA();return}
+    if(hit(t,24+(W-40)/2,H-70,(W-40)/2,48)){
+      if(C.credits<5){ui.msg='NEED 5 CC';ui.msgT=1.2;return}
+      C.credits-=5;const who=Math.random()<0.5?'oc':'dc';C[who]={nm:name().split(' ')[1],stars:Math.min(5,(C[who].stars||1)+1),mood:1};ui.msg='HIRED '+who.toUpperCase();ui.msgT=1.4;saveC();return}
+    return}
   if(G.st==='cdraft'){
     const D=C.draft;if(!D)return;
     if(D.order[D.pick]!==C.team){if(hit(t,80,400,W-160,50)){advanceDraftAI();return}return}
@@ -378,6 +555,8 @@ function careerDraw(){
   if(G.st==='cteam')drawCTeamPick();
   else if(G.st==='chub')drawCHub();
   else if(G.st==='croster')drawCRoster();
+  else if(G.st==='cplayer')drawCPlayer();
+  else if(G.st==='cfront')drawCFront();
   else if(G.st==='cdraft')drawCDraft();
   else if(G.st==='cfa')drawCFA();
   else if(G.st==='ccontract')drawCContract();
@@ -385,7 +564,9 @@ function careerDraw(){
 }
 
 // hooks
-function careerTick(dt){if(ui.msgT>0)ui.msgT=Math.max(0,ui.msgT-dt)}
+function careerTick(dt){if(ui.msgT>0)ui.msgT=Math.max(0,ui.msgT-dt);
+  if(ui.holdHint){ui.holdHintT=(ui.holdHintT||0)+dt;if(ui.holdHintT>3.5){ui.holdHint=false;ui.holdHintT=0}}
+}
 window.__career={
   CMENU,load:loadC,save:saveC,get:()=>C,init:initCareer,clear:clearC,
   applyFieldOvr,applyRatings,tap:careerTap,draw:careerDraw,tick:careerTick,

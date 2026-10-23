@@ -63,7 +63,7 @@ function nameTeam(){if(!G.season||!G.players)return;const h=G.home,a=G.away;cons
   p.nm=nm(p.team?a:h,key)})}
 window.__nameTeam=nameTeam;['setupPlay','startKickoff'].forEach(f=>{const o=window[f];if(!o)return;window[f]=function(){const r=o.apply(this,arguments);nameTeam();return r}});
 // ---------- update / screens ----------
-const MENU=['modesel','team','hub','standings','schedule','bracket','career','cteam','chub','croster','cdraft','cfa','ccontract','ctrade'];window.MENU_ST=st=>st==='title'||MENU.includes(st)||(window.__career&&window.__career.CMENU.includes(st));
+const MENU=['modesel','team','hub','standings','schedule','bracket','career','cteam','chub','croster','cplayer','cfront','cdraft','cfa','ccontract','ctrade'];window.MENU_ST=st=>st==='title'||MENU.includes(st)||(window.__career&&window.__career.CMENU.includes(st));
 let sel=0,tab=0,scroll=0,teamDiff=1;
 function hitR(t,x,y,w,h){return t&&t[0]>=x&&t[0]<=x+w&&t[1]>=y&&t[1]<=y+h}
 function gridPos(i){const cols=4,cw=(W-24)/cols,rh=54;return[12+(i%cols)*cw,136+Math.floor(i/cols)*rh,cw-6,rh-6]}
@@ -78,8 +78,8 @@ const _u=update;update=function(dt){
  if(G.otFlag&&G.st==='result'){G.otFlag=false}
  _u(dt)};
 function menuTap(t){const[x,y]=t;
- if(G.st==='modesel'){if(hitR(t,40,300,W-80,90)){G.career=false;load();if(S&&S.v===1)G.st='hub';else{sel=0;G.st='team'}return}
-  if(hitR(t,40,420,W-80,90)){G.career=true;load();const C=window.__career&&window.__career.load();if(C&&C.v>=2){G.st='chub';window.__career.applyRatings();if(!S||!S.v){window.__season.newSeason(C.team,C.diff||1);const Ss=window.__season.get();if(Ss){Ss.career=true;Ss.year=C.year||1;window.__season.save()}}}else G.st='cteam';return}return}
+ if(G.st==='modesel'){if(hitR(t,40,270,W-80,84)){G.career=false;load();if(S&&S.v===1)G.st='hub';else{sel=0;G.st='team'}return}
+  if(hitR(t,40,410,W-80,84)){G.career=true;load();const C=window.__career&&window.__career.load();if(C&&C.v>=2){G.st='chub';window.__career.applyRatings();if(!S||!S.v){window.__season.newSeason(C.team,C.diff||1);const Ss=window.__season.get();if(Ss){Ss.career=true;Ss.year=C.year||1;window.__season.save()}}}else G.st='cteam';return}return}
  if(G.st==='career'){if(hitR(t,40,700,W-80,56)){G.career=false;G.st='modesel'}return}
  if(G.st==='team'){for(let i=0;i<32;i++){const[a,b,w,h]=gridPos(i);if(hitR(t,a,b,w,h)){sel=i;return}}
   const bw=(W-32)/4;for(let i=0;i<4;i++)if(hitR(t,16+i*bw,690,bw,40)){teamDiff=i;return}
@@ -97,13 +97,14 @@ function bg(){const g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b0a26'
 function hdr(s){txt(s,W/2,62,24,PAL.yel)}
 function back(){btn(12,40,90,40,'< BACK','#2b3a7a','#8fc4ff',13)}
 function recStr(t){const r=S.rec[t];return r.w+'-'+r.l+(r.t?'-'+r.t:'')}
-function drawModeSel(){bg();
- if(window.arcTxt){arcTxt('PIXEL BLITZ',W/2,110,34,['#fffbe0','#ffe14f','#e8a10a'],{sk:0.12,px:true})}else txt('PIXEL BLITZ',W/2,110,28,PAL.yel);
- txt('CHOOSE YOUR PATH',W/2,148,13,PAL.cy,'center',false);
- btn(36,280,W-72,88,'ARCADE','#1f6fd6','#8fc4ff',24);txt('PRESET TEAM  ·  INSTANT GRIDIRON',W/2,345,11,'#c9d4ff','center',false);
- btn(36,400,W-72,88,'CAREER','#c8102e','#ffd0d6',24);txt('COACH  ·  DRAFT  ·  CONTRACTS  ·  TRADES',W/2,465,11,'#ffd0d6','center',false);
- pill(40,540,W-80,56,'rgba(18,10,36,.9)','#3a2a6a');txt('ORIGINAL TEAMS  ·  NO LICENSED MARKS',W/2,568,11,'#9fb3ff','center',false)}
-function drawCareer(){bg();hdr('CAREER MODE');txt('RESUME OR START FROM MODE SELECT',W/2,120,13,PAL.cy,'center',false);
+function drawModeSel(){bg();txt('PIXEL BLITZ',W/2,120,28,PAL.yel);txt('CHOOSE YOUR PATH',W/2,160,14,PAL.cy,'center',false);
+ btn(40,270,W-80,84,'ARCADE','#1f6fd6','#fff',26);txt('PICK A TEAM  ·  PLAY NOW',W/2,372,12,'#c9d4ff','center',false);
+ btn(40,410,W-80,84,'CAREER','#c8102e','#fff',26);txt('COACH  ·  DRAFT  ·  BUILD YOUR DYNASTY',W/2,512,12,'#ffd0d6','center',false);
+ txt('DRAFT · CONTRACTS · FREE AGENTS · TRADES',W/2,580,11,'#8a93b8','center',false)}
+function drawCareer(){bg();hdr('CAREER MODE');txt('YOU ARE THE COACH',W/2,120,16,PAL.cy,'center',false);
+ txt('DRAFT  ·  CONTRACTS  ·  FREE AGENTS  ·  TRADES',W/2,160,11,'#9fb3ff','center',false);
+ box(30,220,W-60,280,'#120a24',PAL.yel);
+ txt('CAREER IS LIVE',W/2,300,22,PAL.yel);txt('Use Career on the mode select screen.',W/2,340,13,PAL.txt);txt('Draft · contracts · free agents · trades.',W/2,370,13,PAL.txt);
  btn(40,700,W-80,56,'BACK TO MODES','#2b3a7a','#8fc4ff',16)}
 function drawTeam(){bg();txt('PICK YOUR TEAM',W/2,60,24,PAL.yel);txt('32 TEAMS  -  17 GAMES  -  PLAYOFFS',W/2,92,11,PAL.cy,'center',false);txt('TAP A HELMET',W/2,118,10,'#9fb3ff','center',false);
  for(let i=0;i<32;i++){const[a,b,w,h]=gridPos(i);const on=i===sel;pill(a,b,w,h,on?'#2a1450':'rgba(18,10,36,.9)',on?PAL.yel:TEAMS[i].c1);HELM.drawHelmet(X,a+w/2,b+19,30,TEAMS[i],false,i);txt(TEAMS[i].a,a+w/2,b+h-9,11,on?PAL.yel:'#fff','center',false)}
@@ -149,5 +150,6 @@ const _r=render;render=function(){if(MENU.includes(G.st)||G.st==='vs'||(G.st==='
  if(G.st==='final'&&G.season){X.save();X.setTransform(DPR,0,0,DPR,0,0);rect(40,540,W-80,40,'#120a24');txt('TAP TO CONTINUE THE SEASON',W/2,560,13,PAL.cy);X.restore()}};
 // carrier-change callouts with roster names
 let prevC=null;const _u2=update;update=function(dt){_u2(dt);if(!G.season)return;const c=G.carrier;if(G.st==='live'&&c&&c!==prevC&&prevC&&c.nm&&c.team===0){const how=c.role==='WR'?'CATCH BY ':c.role==='RB'&&G.play&&G.play.t!=='ko'?'HANDOFF TO ':'';if(how)say(how+last(c.nm),1.1)}prevC=G.st==='live'?c:null};
+window.DIVS=DIVS;window.DIVN=DIVN;window.CABR=CABR;window.confOf=confOf;window.divOf=divOf;
 window.__season={get:()=>S,load,save,newSeason,finishWeek,startPlayoffs,playRound,seeds,myGame,sim:simGame};
 })();
