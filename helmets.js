@@ -49,35 +49,45 @@ const SHELL_B64='KCgnACgoJwAoKCcAKCgnACgoJwAoKCcAKCgnACgoJwAoKCcAKCgnACgoJwAoKCc
 const ROLE_B64='AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAQEBAQEBAQEBAQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgEBAQEBAQEEBAQEBAQEBAQEAQEBAQEBAQEBAQEBAQEBAQEBAQEDAwMDAwMDAwMDAwIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAQEBAQEEBAACAgICAgICAgICAQQBAQEBAQEBAQEBAQEBAQEBAQEDAwMDAwMDAwMDAwMCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAAQAAgEAAAABAQEBAQICAgIBBAEBAQEBAQEBAQEBAQEBAQEDAwMDAwMDAwMDAwMDAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQEEAAIAAAQEBAEBAQQEBAEBAQEBBAEBAQEBAQEBAQEBAQEBAQEDAwMDAwMDAwMDAwMDAwMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQAAAgEEBAEBAQEBAQEBAQEEBAQBAQEBAQEBAQEBAQEBAQEBAQEDAwMDAwMDAwMDAwMDAwMCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBBAACAQQBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEDAwMDAwMDAwMDAwMDAwMDAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgEBAQEBAQAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEDAwMDAwMDAwMDAwMDAwMDAgMCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAQEBAQEAAgIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEDAwMDAwMDAwMDAwMDAwMCAwEDAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEAAAABAQEBAQEBAQEBAQEBAQEBAQAABAEBAQEBAQEBAQEBAQEBAQEDAwMDAwMDAwMDAwMDAwMCAQQEAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBAQEBAQEBAAIAAQEBAQEBAQEBAQEBAQEEAAACAAEBAQEBAQEBAQEBAQEBAQEDAwMDAwMDAwMDAwMDAwMCAQQEAQICAgICAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgIBAQEBAQEBBAACAQEEAQEBAQEBAQEBBAQBAgABAQEBAQEBAQEBAQEBAQEBAQEDAwMDAwMDAwMDAwMDAwMCAQEBAgICAgAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgEBAQEBAQEBAQQAAAAAAAEBBAQEBAQEAAAAAAQBAQEBAQEBAQEBAQEBAQEBAQEDAwMDAwMDAwMDAwMDAwMCAgICAAAAAAICAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgEBAQEBAQEBAQEBAQEBAgACAgAAAAAAAAAABAEBAQEBAQEBAQEBAQEBAQEBAQEDAwMDAwMDAwMDAwMDAgICAAAAAAICAgICAgACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgIBAQEBAQEBAQEBAQQAAQEBAQEBAQEABAQEAQEBAQEBAQEBAQEBAQEBAgICAgICAgICAgICAgICAgICAAAAAAICAgICAAAAAAICAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBAQEBAQEBAQEBAQEBBAQEBAQEBAQEAQEBAQEBAQEBAQEBAQEBAQICAgICAgICAgICAgICAgICAAAAAgICAgICAAAAAAICAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAICAgIBAQEBAQEBAQEBAQEBAQEBAQEBAQICAQEBAQEBAQEBAQEBAgICAgICAgICAgICAgICAgIAAgICAgIAAAAAAAICAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAICAQICAQEBAQEBAQEBAQEBAQEBAQEBAgEBAQICAgICAgIBAQECAgICAgIAAAAAAAAAAAAAAAACAgIAAAAAAgICAAICAgICAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEEBAQBAQIBAQIBAQICAgICAAACAgICAgICAgICAgICAgAAAgIAAgICAgICAgICAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEBBAQEAQEBAQIBAQICAgICAAICAgIDAwMDAwICAgACAAIAAgACAgICAgICAgICAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgEBAgICAgICAAICAgEDAwMDAgICAgICAAICAgICAgICAgICAgICAgICAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQQEAQECAgICAAICAQEDAwMDAgICAgICAAICAgICAgICAgICAgICAgICAgAAAAAAAAAAAAAAAAAAAAAAAAAAAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAQQEBAQBAQICAAICAQEDAwMCAgICAgICAAICAgICAgICAgICAgICAwMDAgAAAAAAAAAAAAAAAAAAAAAAAAAAAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgICAQEBBAQEBAECAAICAgEDAwMCAgMDAgICAAICAgICAgICAgICAwMDAwMDAwAAAAAAAAAAAAAAAAAAAAAAAAAAAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgEEBAQCAAICAgEDAwICAwMDAwMCAgACAgMCAgICAgIDAwMDAwMDAwIAAAAAAAAAAAAAAAAAAAAAAAAAAAIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQICAgEBAgACAgIBAgIBAQEBAQEBAgACAgEBAQEBAQEBAQEBAQEBAQIAAAAAAAAAAAAAAAAAAAAAAAAAAAIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgICAQIAAAACAgIBAQEBAQEBAgACAQEBAQEBAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgICAgICAgAAAAIBAQEBAQEBAgACAQEBAQEBAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgICAgICAAACAQEBAQEBAgACAQEBAQEBAQEBAQEBAQEBAQEBAAAAAAAAAAAAAAAAAAAAAAAAAAIBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgIBAQAAAgEBAQEBAgAAAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAACAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQICAgICAQEBAQEBAQEBAQEBAgEBAQECAQEAAAIBAQEBAQIAAgEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAACAQEBAQEBAQEBAQEBAQEBAQEBAQICAgICAAAAAAICAgEBAQEBAQEBAgIBAQEBAgIBAgACAQEBAQIAAgEBAQEBAQEBAQEBAQEBAAACAgICAAAAAAAAAAAAAAAAAAAAAAACAQEBAQEBAQEBAQEBAQEBAQEBAgICAgIAAAAAAAAAAAIBAQEBAQEBAQIBAQEBAQICAgACAQEBAQIAAgEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEBAQEBAQEBAgICAgICAgAAAAAAAAACAQEBAQEBAQIBAQEBAQECAgACAQEBAQICAgIBAQECAAAAAgAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAICAgEBAQEBAQEBAQEBAQEBAQEBAgICAgICAAAAAAABAQEBAQEBAQIBAQEBAQECAgAAAgICAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBAQICAQEBAQEBAQEBAQEBAQEBAQECAgICAgICAgEBAQEBAQEBAQIBAQEBAQICAgAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAICAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQICAgICAQEBAQEBAQEBAQIBAQEBAgICAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAgEBAQIBAQECAgAAAAICAgIAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgICAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQIBAQIBAQECAAACAgIBAQIAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAQEBAgICAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIBAQIBAQIBAQIAAAICAgEBAQIAAAACAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAQUFAQEBAgIBAQEBAQEBAQEBAgICAQEBAQEBAQEBAQECAgEBAgIBAQIAAAIBAQEBAQIAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgUFBQUFBQUBAgIBAQEBAQECAQUFAgICAQEBAQEBAQEBAQECAgEBAQIAAAIBAQEBAQICAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEFBQUFBQUFBQECAgEBAQECAQUFBQUBAgIBAQEBAQEBAQICAQEBAgAAAgIBAQEBAgAAAAICAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBAQUBBQUFBQUFAQICAQECAgEFBQIAAAICAgEBAQEBAgIBAQECAgAAAgIBAQICAgICAAAAAgAAAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAgICAgICAgICAgICAgIBAQICAQIAAAEBAgICAQECAgEBAQECAgAAAgICAgAAAAAAAAICAgAAAAAAAAACAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAgEBAgAAAQUFBQECAgICAQEBAQEBAgIAAAACAgICAgIAAAAAAgAAAgICAgAAAAACAgICAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAQUFBQEAAAICAQIBAQEBAQICAgIAAAAAAAAAAAAAAgAAAgAAAAICAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgEBAQAAAgEFBQEBAgEBAQECAgICAgICAgIAAAAAAgIAAAIAAAAAAAACAgICAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgEBBQUFAQEBAQICAgICAgIBAQICAAAAAAIAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAQUFAQEBAQEBAQEBAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAQEBAQEBAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 function b64u8(s){const bin=atob(s),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u}
 const SHELL_RGBA=b64u8(SHELL_B64), ROLE=b64u8(ROLE_B64);
+const CLEAN=(()=>{
+  const W=SHELL_W,H=SHELL_H,role=new Uint8Array(W*H),A=SHELL_RGBA,R=ROLE;
+  const al=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&A[(y*W+x)*4+3]>=8;
+  const keep4=new Uint8Array(W*H);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const i=y*W+x;if(R[i]!==4||!al(x,y))continue;
+    let near=x>=48;
+    if(!near){for(let dy=-3;dy<=3&&!near;dy++)for(let dx=-3;dx<=3;dx++){const xx=x+dx,yy=y+dy;if(al(xx,yy)&&R[yy*W+xx]===3)near=true}}
+    if(!near&&y<26&&x>32)near=true;
+    if(near)keep4[i]=1;
+  }
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const i=y*W+x;if(!al(x,y))continue;
+    let edge=false;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]])if(!al(x+dx,y+dy))edge=true;
+    if(edge)role[i]=2;
+    else if(R[i]===3)role[i]=3;
+    else if(R[i]===5)role[i]=5;
+    else if(keep4[i])role[i]=4;
+    else role[i]=1;
+  }
+  return role;
+})();
 function pxHelm(t,ti,left){
   const c=document.createElement('canvas');c.width=SHELL_W;c.height=SHELL_H;const g=c.getContext('2d');
-  const img=g.createImageData(SHELL_W,SHELL_H),d=img.data;
-  const shell=hex(t.h), stripe=hex(t.c1===t.h?t.c2:t.c1);
-  const vHue=hex(best(t.h,[t.c2,t.c1,t.h,'#3fd0ff']));
-  const ref=[245,107,78]; const refL=.3*ref[0]+.59*ref[1]+.11*ref[2];
-  const role=SCRUB;
-  for(let i=0;i<SHELL_W*SHELL_H;i++){
-    const o=i*4,r0=SHELL_RGBA[o],g0=SHELL_RGBA[o+1],b0=SHELL_RGBA[o+2],a0=SHELL_RGBA[o+3];
-    if(a0<8){d[o+3]=0;continue}
-    const rl=role[i], L=.3*r0+.59*g0+.11*b0, shade=L/refL;
+  const img=g.createImageData(SHELL_W,SHELL_H),d=img.data,shell=hex(t.h),role=CLEAN;
+  for(let y=0;y<SHELL_H;y++)for(let x=0;x<SHELL_W;x++){
+    const i=y*SHELL_W+x,o=i*4,rl=role[i];
+    if(!rl){d[o+3]=0;continue}
+    const gx=(x-34)/20,gy=(y-16)/9,gloss=Math.max(0,1-gx*gx-gy*gy);
+    const k=Math.max(0.28,Math.min(1.55,1.08-y/SHELL_H*0.58+(1-x/SHELL_W)*0.1+gloss*0.42));
     let r,gc,b;
-    if(rl===2){r=gc=b=Math.max(8,Math.min(40,L*0.35));}
-    else if(rl===4){r=gc=b=Math.min(255,L*1.05);}
-    else if(rl===5){r=Math.min(255,220*shade);gc=Math.min(255,224*shade);b=Math.min(255,230*shade);}
+    if(rl===2){r=gc=b=14}
+    else if(rl===4){const m=Math.min(245,150+40*k);r=gc=b=m}
+    else if(rl===5){r=Math.min(255,200*k);gc=Math.min(255,206*k);b=Math.min(255,214*k)}
     else if(rl===3){
-      const k=Math.min(1.4,Math.max(0.25,shade));
-      r=Math.min(255,vHue[0]*k*(0.45+0.55*(b0/255)));
-      gc=Math.min(255,vHue[1]*k*(0.45+0.55*(g0/255)));
-      b=Math.min(255,vHue[2]*k*(0.55+0.5*(r0/255)));
-      if(L>200){r=Math.min(255,r+80);gc=Math.min(255,gc+90);b=Math.min(255,b+100)}
-    }
-    else {
-      const k=Math.min(1.55,Math.max(0.22,shade));
+      const m=Math.min(230,34*k+(y<30?48:0));
+      r=gc=b=m;
+    }else{
       r=Math.min(255,shell[0]*k);gc=Math.min(255,shell[1]*k);b=Math.min(255,shell[2]*k);
-      const x=i%SHELL_W,y=(i/SHELL_W)|0;
-      if(((ti|0)%3)!==2 && x>=46&&x<=50 && y>=8&&y<=52 && rl===1){
-        const sk=k*0.95;r=Math.min(255,stripe[0]*sk);gc=Math.min(255,stripe[1]*sk);b=Math.min(255,stripe[2]*sk);
-      }
     }
     d[o]=r|0;d[o+1]=gc|0;d[o+2]=b|0;d[o+3]=255;
   }
@@ -111,38 +121,38 @@ const SCRUB=(()=>{
 })();
 // 12x12 original marks. '#' primary, 'A' accent, '.' empty. Tied to nicknames, not league marks.
 const ART={
-hawk:['..######....','.##AAAA##...','#AA#AA#AA#..','#AA#AA#AA#..','#AAAAAAAA#..','.##AAAA##...','...####.....','...#AA#.....','...####.....','..#....#....','.##....##...','#........#..'],
-wing:['.....AA.....','....AAAA....','...AAAAAA...','..AAAAAAAA..','..AAA##AAA..','...AA##AA...','....AAAA....','.....AA.....','.....##.....','....####....','...######...','....####....'],
-rook:['......A#....','....AA##....','...AA#A#....','..AA#A.A#...','.AA#A...A#..','AA#A....A#..','AAAAAAAAA#..','.########...','############','.##########.','..########..','...######...'],
-horns:['#..........#','##........##','A##......##A','.##A....A##.','..##A..A##..','...######...','..##AAAA##..','..##A..A##..','..##AAAA##..','...######...','..###..###..','.##......##.'],
-paw:['......AAAA..','.....AAAAA..','....AAAAAA..','...AAAAAAAA.','..AAAAAAAAAA','.AAAAAAAAAA.','..AAAAAA....','...AAAAA....','....AAAA....','.....AAAA...','......AAA...','.......AA...'],
-claws:['..AA....AA..','..AA.#..AA..','..AA.#..AA..','#####.#####.','#####.#####.','############','############','.##......##.','.##..AA..##.','.##..AA..##.','############','############'],
-stripes:['A..A..A..A..','#A.#A.#A.#A.','############','.##########.','..A..A..A.A.','..########..','...######...','..########..','.##########.','############','..##....##..','.##########.'],
-spike:['####........','#####.......','######..AA..','#######.AA..','########AA..','#########A..','##########..','.#########..','..########..','...#######..','....######..','.....#####..'],
-lasso:['......AA....','.....AAAA...','....AAAAAA..','...AAA##AA..','..AAA####A..','.AAA######A.','AAA########A','############','.##########.','..########..','...######...','....####....'],
-horse:['...AA...AA..','..AAAA.AAAA.','.AAAAA.AAAAA','AA###A.A###A','#####A.A####','.##########.','..########..','...######...','....####....','...######...','..########..','.##########.'],
-talons:['..A....A....','A#A....A#A..','A########AA.','.A######A...','..A#AA#A....','..A#AA#A....','.A######A...','A########AA.','A#A....A#A..','..A....A....','...A..A.....','....AA......'],
-gear:['......A.....','.....AAA....','....AAAAA...','...AAAAAAA..','..AAA#AAAA..','.AAAA#AAAAA.','AAAAA#AAAAAA','.AAAA#AAAA..','..AAA#AAA...','...AA#AA....','...####.....','..######....'],
-star:['.....AA.....','....A##A....','...A#..#A...','..A#....#A..','.A########A.','...#....#...','..A#....#A..','.A########A.','...#....#...','...#....#...','..########..','.##########.'],
-shoe:['.....AA.....','....AAAA....','...AA..AA...','..AA....AA..','.AA......AA.','#AA......AA.','##AA....AA..','###AA..AA...','####AAAA....','#####AA.....','####AA......','###AA.......'],
-spots:['............','...AAA......','..AAAAA.....','..AAA..AAA..','.AAA....AAA.','##AA....AAA.','####AA...AA#','######AAAA##','.###########','..#########.','...#######..','....#####...'],
-crown:['############','.#.#.#.#.#.#','############','............','AA........AA','AA..####..AA','AA..#AA#..AA','AA..#AA#..AA','AA..####..AA','AA........AA','############','.#.#.#.#.#.#'],
-cutlass:['....AAAA....','...AAAAAA...','..AA.AA.AA..','..AA.AA.AA..','..AA....AA..','...AAAAAA...','....####....','....#AA#....','....####....','.....##.....','...######...','..########..'],
-bolt:['.......AAA..','.....AAAAA..','...AAAA.AA..','.AAAA...AA..','AAA.....AA..','AA......AA..','A......AAA..','AA....AAA...','.AA..AAA....','..AAAAA.....','...AAA......','....A.......'],
-ram:['.....AAA....','....AAAAA...','...AA##AA#..','..AAA##AAA#.','.AAAAAAAAA..','.AA.AAAA.AA.','.AAAAAAAAA..','.AAAAAAAAA..','..AAAAAAAA..','...AAAAAA...','....AAAA....','.....AA.....'],
-fin:['......AA....','....AAAAA...','..AAA.AAAA..','.AAA...AAAA.','#AAA....AAA#','AAAA....AAAA','.AAA...AAAA.','..AAA.AAAA..','....AAAAA...','......AA....','.......A....','......AA....'],
-axe:['...A....A...','..AAA..AAA..','.AAAAAAAAA..','############','AAAAAAAAAAAA','.AAAAAAAAA..','..AAAAAAAA..','...AAAAAA...','....AAAA....','.....AA.....','......A.....','............'],
-tricorn:['.....AA.....','....AAAA....','...AA##AA...','..AA#..#AA..','.AA#....#AA.','AA#..##..#AA','A#..####..#A','....#AA#....','....#AA#....','...##AA##...','..###AA###..','...######...'],
-halo:['.....AA.....','....AAAA....','...AAAAAA...','..AAA#AAA...','.AAAA#AAAA..','AAAAA#AAAAAA','....###.....','...#####....','..#######...','############','A.A.A.A.A.A.','.A...A...A..'],
-pillar:['....AAAA....','...AAAAAA...','..########..','..#......#..','..#.AAAA.#..','..#.AAAA.#..','..#......#..','..#.AAAA.#..','..#.AAAA.#..','..#......#..','.##########.','############'],
-rocket:['....AA......','...AAAA.....','..AA..AA....','.AA....AA...','AA..##..AA..','.AA.##.AA...','..AA##AA....','...AAAA.....','....##......','....##......','...####.....','..######....'],
-wings:['....AAAA....','...AAAAAA...','..AAA..AAA..','.AAA....AAA.','..AAA..AAA..','...AAAAAA...','....A##A....','.....##.....','....####....','....####....','...######...','..########..'],
-anvil:['..A......A..','.AAA....AAA.','AAAAA..AAAAA','############','#..######..#','#..........#','#..#....#..#','#..#....#..#','#..#....#..#','#..######..#','############','############'],
-pick:['.##########.','.#........#.','.#...AA...#.','.#..AAAA..#.','.#.AA..AA.#.','.#.AA..AA.#.','.#.AA..AA.#.','.#.AA..AA.#.','.#.AA..AA.#.','.#.AA..AA.#.','############','############'],
-osprey:['.....AAA....','....AAAAA...','...AA.A.AA..','..AA.AAA.AA.','..A.A.A.A.A.','A.A.AAA.A.AA','.A.A.A.A.A..','..A.AAA.A...','...A.A.A....','....AAA.....','.....A......','....AAA.....'],
-sail:['...AAAAAAAA.','.AAAAAAAAAAA','AAAAAAAAAAAA','.AAA####AAA.','..AA#AA#AA..','...A#AA#A...','....#AA#....','.....#A#....','......##....','.....##.....','....##......','...##.......'],
-peak:['......AAAA..','.....AAAAA..','......A.AA..','......A..A..','......A.....','......A.....','....AAA.....','...AAAAA....','..AAAAAAA...','...AAAAA....','....AAA.....','............'],
-wheel:['.....AA.....','....AAAA....','...AAAAAA...','..AAA##AAA..','.AAA####AAA.','AAA######AAA','############','#..#....#..#','#..#....#..#','#..#....#..#','############','############']
+hawk:['#A##A##A##A#','############','############','#A#......#A#','###......###','###......###','#A#......#A#','###......###','###......###','...#A##A#...','...######...','...######...'],
+wing:['...#A##A#...','...######...','...######...','#A##A##A##A#','############','############','#A##A##A##A#','############','############','...#A##A#...','...######...','...######...'],
+rook:['......#A##A#','......######','......######','...#A##A##A#','...#########','...#########','#A##A##A##A#','############','############','...#A#...#A#','...###...###','...###...###'],
+horns:['#A#......#A#','###......###','###......###','#A#......#A#','###......###','###......###','#A##A##A##A#','############','############','...#A##A#...','...######...','...######...'],
+paw:['......#A##A#','......######','......######','...#A##A#...','...######...','...######...','...#A##A#...','...######...','...######...','#A##A#......','######......','######......'],
+claws:['#A#...#A#...','###...###...','###...###...','#A#...#A#...','###...###...','###...###...','#A##A##A##A#','############','############','#A##A##A##A#','############','############'],
+stripes:['#A#...#A#...','###...###...','###...###...','#A##A##A##A#','############','############','...#A##A#...','...######...','...######...','#A##A##A##A#','############','############'],
+spike:['#A##A##A#...','#########...','#########...','#A##A##A#...','#########...','#########...','#A##A##A##A#','############','############','#A##A##A##A#','############','############'],
+lasso:['......#A#...','......###...','......###...','...#A##A#...','...######...','...######...','#A##A##A##A#','############','############','#A##A##A##A#','############','############'],
+horse:['#A#...#A#...','###...###...','###...###...','#A##A##A##A#','############','############','#A##A##A##A#','############','############','#A##A##A##A#','############','############'],
+talons:['...#A#...#A#','...###...###','...###...###','#A##A##A##A#','############','############','#A##A##A##A#','############','############','#A#...#A#...','###...###...','###...###...'],
+gear:['...#A##A#...','...######...','...######...','...#A##A#...','...######...','...######...','#A##A##A##A#','############','############','......#A#...','......###...','......###...'],
+star:['...#A##A#...','...######...','...######...','...#A##A#...','...######...','...######...','...#A##A#...','...######...','...######...','#A##A##A##A#','############','############'],
+shoe:['#A##A##A##A#','############','############','#A#...#A#...','###...###...','###...###...','...#A#...#A#','...###...###','...###...###','#A##A##A#...','#########...','#########...'],
+spots:['...#A##A#...','...######...','...######...','#A##A##A##A#','############','############','............','............','............','#A##A##A##A#','############','############'],
+crown:['#A##A##A##A#','############','############','#A#...#A#...','###...###...','###...###...','#A##A##A##A#','############','############','#A#...#A#...','###...###...','###...###...'],
+cutlass:['#A#...#A#...','###...###...','###...###...','...#A#...#A#','...###...###','...###...###','#A#...#A#...','###...###...','###...###...','#A##A##A##A#','############','############'],
+bolt:['#A##A#......','######......','######......','#A##A##A#...','#########...','#########...','...#A##A##A#','...#########','...#########','......#A##A#','......######','......######'],
+ram:['...#A##A#...','...######...','...######...','#A#......#A#','###......###','###......###','#A#......#A#','###......###','###......###','...#A##A#...','...######...','...######...'],
+fin:['#A#...#A#...','###...###...','###...###...','#A##A##A##A#','############','############','#A#...#A#...','###...###...','###...###...','...#A#...#A#','...###...###','...###...###'],
+axe:['............','............','............','...#A##A#...','...######...','...######...','#A##A##A##A#','############','############','...#A##A#...','...######...','...######...'],
+tricorn:['...#A##A#...','...######...','...######...','...#A##A#...','...######...','...######...','#A##A##A##A#','############','############','#A#......#A#','###......###','###......###'],
+halo:['......#A#...','......###...','......###...','...#A##A##A#','...#########','...#########','#A##A##A##A#','############','############','#A#...#A#...','###...###...','###...###...'],
+pillar:['...#A##A#...','...######...','...######...','...#A##A#...','...######...','...######...','...#A##A#...','...######...','...######...','...#A##A#...','...######...','...######...'],
+rocket:['#A#...#A#...','###...###...','###...###...','...#A##A#...','...######...','...######...','...#A##A#...','...######...','...######...','#A#...#A#...','###...###...','###...###...'],
+wings:['...#A##A#...','...######...','...######...','...#A##A#...','...######...','...######...','......#A#...','......###...','......###...','...#A##A#...','...######...','...######...'],
+anvil:['#A#......#A#','###......###','###......###','#A##A##A##A#','############','############','#A#......#A#','###......###','###......###','#A#......#A#','###......###','###......###'],
+pick:['#A##A##A##A#','############','############','#A#......#A#','###......###','###......###','#A#......#A#','###......###','###......###','#A##A##A##A#','############','############'],
+osprey:['#A#......#A#','###......###','###......###','...#A#......','...###......','...###......','......#A#...','......###...','......###...','#A#......#A#','###......###','###......###'],
+sail:['#A##A##A#...','#########...','#########...','...#A##A##A#','...#########','...#########','......#A#...','......###...','......###...','......#A#...','......###...','......###...'],
+peak:['......#A##A#','......######','......######','......#A##A#','......######','......######','...#A##A#...','...######...','...######...','...#A##A#...','...######...','...######...'],
+wheel:['...#A##A#...','...######...','...######...','#A##A##A##A#','############','############','#A##A##A##A#','############','############','#A#......#A#','###......###','###......###'],
 };
 function artRows(id){return ART[id]||ART.star}
 function cellsOf(id){const rows=artRows(id),out=[];for(let y=0;y<12;y++)for(let x=0;x<12;x++){const ch=rows[y][x];if(ch&&ch!=='.')out.push([x,y,ch])}return out}
@@ -181,7 +191,7 @@ function stampMark(d,role,t,ti){
 }
 const _helmCache=new Map();
 function drawHelmet(g,x,y,size,t,left,ti){
-  const key=(ti|0)+':'+(left?1:0)+':'+(t.h||'')+':'+(t.c1||'')+':'+(t.c2||'')+':v33logo';
+  const key=(ti|0)+':'+(left?1:0)+':'+(t.h||'')+':'+(t.c1||'')+':'+(t.c2||'')+':v34logo';
   let src=_helmCache.get(key);if(!src){src=pxHelm(t,ti,!!left);_helmCache.set(key,src)}
   const s=Math.max(12,Math.round(size));
   const dw=s,dh=Math.round(s*SHELL_H/SHELL_W);

@@ -60,7 +60,7 @@ function fig(g,t,skin,line,dir,name,ti){const s=D[name];
  const bw=line?11:8,cx=12;const fs=side?s:frontOf(s);
  const c=fs.c||0,j=fs.j||0,br=fs.br||0;const y0=1+c-j+br,ty=y0+8,py=ty+6,ly=py+2,fy=22-j;const ln=side?(s.ln||0):0;
  const paintMark=(ox,oy)=>{if(ti==null||!window.HELM||!HELM.glyph)return;const gl=HELM.glyph(ti),col=HELM.markCols(t);for(let yy=0;yy<4;yy++)for(let xx=0;xx<4;xx++){const v=gl[yy][xx];if(!v)continue;r(ox+xx,oy+yy,1,1,v===2?col.accent:col.fill)}};
- const J=t.c1,J2=shade(t.c1,.7),JL=shade(t.c1,1.2),H=t.h,HL=shade(t.h,1.45),H2=shade(t.h,.68),ST=lum(t.c1)-lum(t.h)>-40&&Math.abs(lum(t.c1)-lum(t.h))>40?t.c1:t.c2,
+ const J=t.c1,J2=shade(t.c1,.7),JL=shade(t.c1,1.2),H=t.h,HL=shade(t.h,1.45),H2=shade(t.h,.68),
   PN=t.p,PN2=shade(t.p,.75),SK=skin,SK2=shade(skin,.8),MK='#d4d8e0',MK2='#8a909c',SH='#1a1a1a',SO=t.c2;
  const ballAt=(x,y,v)=>{if(v){r(x,y,2,3,BALL);r(x,y+1,1,1,LACE)}else{r(x,y,3,2,BALL);r(x+1,y,1,1,LACE)}};
  const after=[];
@@ -90,14 +90,14 @@ function fig(g,t,skin,line,dir,name,ti){const s=D[name];
  // ---- helmet (matches scoreboard pixel side-helm style)
  const hx0=side?cx+Math.round(ln):cx;const clr=(x,y)=>g.clearRect(x,y,1,1);const MKD='#1a1a22';
  if(side){const cx=hx0;r(cx-4,y0,9,8,H);r(cx-5,y0+2,1,4,H);clr(cx-4,y0);clr(cx+4,y0);r(cx-4,y0+7,9,1,H2);r(cx+3,y0+1,1,6,H2);
-  r(cx-3,y0+1,3,1,HL);r(cx-2,y0,2,1,'#ffffff');r(cx-1,y0,2,7,ST);r(cx-4,y0+6,2,1,H2);r(cx-3,y0+5,2,2,H2);
-  // tinted visor glass + solid cage (sprite-scale Rivalries cue)
-  r(cx+3,y0+2,4,4,shade(ST,.45));r(cx+3,y0+2,4,1,'#d8f0ff');r(cx+4,y0+3,3,1,shade(ST,.3));r(cx+3,y0+5,4,1,shade(ST,.2));
-  r(cx+5,y0+2,2,1,MKD);r(cx+5,y0+4,2,1,MKD);r(cx+5,y0+6,2,1,MKD);r(cx+7,y0+2,1,5,MKD);r(cx+4,y0+6,3,1,MKD);paintMark(cx-5,y0+2)}
- else if(back){r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-1,y0,2,7,ST);r(cx-1,y0,2,1,HL);r(cx-4,y0+1,2,1,HL);paintMark(cx-5,y0+2)}
- else{const o=diag?2:0,fw=6-(diag?1:0);r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-1+o,y0,2,7,ST);r(cx-1+o,y0,2,1,HL);r(cx-4+o,y0+1,1,1,HL);r(cx-3+o,y0+1,1,1,'#ffffff');
-  paintMark(cx-5,y0+1);
-  r(cx-3+o,y0+3,fw,4,shade(ST,.35));r(cx-3+o,y0+3,fw,1,'#b8e0ff');r(cx-3+o,y0+4,fw,1,MKD);r(cx-3+o,y0+6,fw,1,MKD);r(cx+o,y0+4,1,3,MKD)}
+  r(cx-3,y0+1,3,1,HL);r(cx-2,y0,2,1,'#ffffff');r(cx-4,y0+6,2,1,H2);r(cx-3,y0+5,2,2,H2);
+  // Neutral visor glass + cage. No center stripe, no team-colored front bar.
+  r(cx+3,y0+2,4,4,'#2c3138');r(cx+3,y0+2,4,1,'#d5d8de');r(cx+4,y0+3,3,1,'#1c2026');r(cx+3,y0+5,4,1,'#121418');
+  r(cx+5,y0+2,2,1,MKD);r(cx+5,y0+4,2,1,MKD);r(cx+5,y0+6,2,1,MKD);r(cx+7,y0+2,1,5,MKD);r(cx+4,y0+6,3,1,MKD);paintMark(cx-4,y0+2)}
+ else if(back){r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-1,y0,2,1,HL);r(cx-4,y0+1,2,1,HL);paintMark(cx-2,y0+2)}
+ else{const o=diag?2:0,fw=6-(diag?1:0);r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-1+o,y0,2,1,HL);r(cx-4+o,y0+1,1,1,HL);r(cx-3+o,y0+1,1,1,'#ffffff');
+  paintMark(cx-2,y0+1);
+  r(cx-3+o,y0+3,fw,4,'#2c3138');r(cx-3+o,y0+3,fw,1,'#d5d8de');r(cx-3+o,y0+4,fw,1,MKD);r(cx-3+o,y0+6,fw,1,MKD);r(cx+o,y0+4,1,3,MKD)}
  after.forEach(f=>f());
  return {ty,cover:!side&&(fs.ball==='chest'||(A[0][1]>0&&A[0][1]<4&&fs.A&&fs.A[0][0]<0))}}
 function outline(c,W,Hh,col){const g=c.getContext('2d',{willReadFrequently:true}),d=g.getImageData(0,0,W,Hh),a=d.data;
@@ -114,17 +114,17 @@ function buildAtlas(t,ti){const at=document.createElement('canvas');at.width=CEL
   gb.clearRect(0,0,CELL,CELL);const m=fig(gb,t,SKIN[s],line,dir,NAMES[pose],ti);if(s===0&&line===0)META[dir*POSES+pose]=m;
   outline(B,CELL,CELL,OUT);ag.drawImage(B,pose*CELL,(dir*10+s*2+line)*CELL)}
  return at}
-// jersey numbers: 3x5 pixel digits, 10x10 grid of 9x7 cells
+// One slot per on-field player. Digits are painted into that slot so 72 can never sample as 77.
 const DG=['111101101101111','010110010010111','111001111100111','111001111001111','101101111001001','111100111001111','111100111101111','111001010010010','111101111101111','111101111001111'];
-function buildNumbers(t){const c=document.createElement('canvas');c.width=90;c.height=70;const g=c.getContext('2d',{willReadFrequently:true});
- // Always max-contrast digits so numbers never wash out on any jersey
- const fg=lum(t.c1)>130?'#101018':'#ffffff';
- const out=lum(t.c1)>130?'#ffffff':'#0a0a12';
- for(let n=0;n<100;n++){const ox=(n%10)*9,oy=Math.floor(n/10)*7;const s=String(n);const digs=s.length===1?[s]:[s[0],s[1]];const x0=s.length===1?ox+3:ox+1;
-  // outline pass then fill — locked readable digits
-  digs.forEach((d,k)=>{const b=DG[+d];for(let i=0;i<15;i++)if(b[i]==='1'){const px=x0+k*4+i%3,py=oy+1+Math.floor(i/3);
-   g.fillStyle=out;for(const[dx,dy]of[[0,0],[1,0],[-1,0],[0,1],[0,-1]])g.fillRect(px+dx,py+dy,1,1)}
-   for(let i=0;i<15;i++)if(b[i]==='1'){g.fillStyle=fg;g.fillRect(x0+k*4+i%3,oy+1+Math.floor(i/3),1,1)}})}
- return c}
-window.SPR={CELL,DIRS,POSES,P,NAMES,META,buildAtlas,buildNumbers};
+const NSLOT=14,NCW=18,NCH=12;
+function buildNumbers(t){const c=document.createElement('canvas');c.width=NCW*NSLOT;c.height=NCH;const g=c.getContext('2d',{willReadFrequently:true});
+ g.clearRect(0,0,c.width,c.height);c._g=g;c._last=new Array(NSLOT).fill(-1);
+ c._fg=lum(t.c1)>140?'#101018':'#ffffff';c._out=lum(t.c1)>140?'#ffffff':'#0a0a12';return c}
+function paintNumber(c,slot,n){if(!c||slot<0||slot>=NSLOT)return false;n=Math.max(0,Math.min(99,n|0));if(c._last[slot]===n)return false;c._last[slot]=n;
+ const g=c._g,ox=slot*NCW,fg=c._fg,out=c._out;g.clearRect(ox,0,NCW,NCH);
+ const s=String(n).padStart(2,'0'),dw=3,gap=1,total=dw*2+gap,x0=ox+Math.floor((NCW-total)/2),y0=Math.floor((NCH-5)/2);
+ for(let k=0;k<2;k++){const b=DG[+s[k]];for(let i=0;i<15;i++)if(b[i]==='1'){const px=x0+k*(dw+gap)+(i%3),py=y0+((i/3)|0);g.fillStyle=out;g.fillRect(px-1,py-1,3,3)}}
+ for(let k=0;k<2;k++){const b=DG[+s[k]];for(let i=0;i<15;i++)if(b[i]==='1'){g.fillStyle=fg;g.fillRect(x0+k*(dw+gap)+(i%3),y0+((i/3)|0),1,1)}}
+ return true}
+window.SPR={CELL,DIRS,POSES,P,NAMES,META,buildAtlas,buildNumbers,paintNumber,NSLOT,NCW};
 })();

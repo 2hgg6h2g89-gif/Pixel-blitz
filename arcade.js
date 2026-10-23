@@ -235,9 +235,7 @@ const _r=render;render=function(){if(G.st==='title'&&!G.paused){X.setTransform(D
  if(G.st==='vs'){X.setTransform(DPR,0,0,DPR,0,0);X.save();drawVS();X.restore();return}
  _r();if(G.st==='live'||G.st==='presnap'||G.st==='result'){X.setTransform(DPR,0,0,DPR,0,0);X.save();bottomStrip();drawPop();X.restore()}};
 function bottomStrip(){const c=(G.st==='live'&&G.carrier)||G.qb;if(!c)return;const y=H-20;X.fillStyle='rgba(0,0,0,.82)';X.fillRect(0,y,W,20);X.fillStyle='#ffd23f';X.fillRect(0,y,W,1);
- const nm=(c.nm?(c.nm.split(' ').slice(-1)[0]):(c.role==='QB'?'QUARTERBACK':'PLAYER')).toUpperCase();X.font='900 12px "Courier New", monospace';X.textBaseline='middle';X.textAlign='left';X.fillStyle='#fff';X.fillText(nm,12,y+11);const w=X.measureText(nm).width;X.fillStyle='#ffd23f';X.fillText(c.role+'  #'+(c.num|0),20+w,y+11);
- let right='';if(G.st==='live'&&G.carrier&&G.players){let best=null,bd=6.2;for(const q of G.players){if(q.team===G.carrier.team||q.fallen>0)continue;const d=Math.hypot(q.x-G.carrier.x,q.y-G.carrier.y);if(d<bd){bd=d;best=q}}if(best)right=(best.nm?best.nm.split(' ').slice(-1)[0]:best.role||'').toUpperCase()}
- if(right){const role=c.role+'  #'+(c.num|0);const leftEnd=20+w+X.measureText(role).width+12;X.textAlign='right';X.fillStyle='#9fb3ff';if(W-12-X.measureText(right).width>leftEnd)X.fillText(right,W-12,y+11)}}
+ const nm=(c.nm?(c.nm.split(' ').slice(-1)[0]):(c.role==='QB'?'QUARTERBACK':'PLAYER')).toUpperCase();X.font='900 12px "Courier New", monospace';X.textBaseline='middle';X.textAlign='left';X.fillStyle='#fff';X.fillText(nm,12,y+11);const w=X.measureText(nm).width;X.fillStyle='#ffd23f';X.fillText(c.role+'  #'+(c.num|0),20+w,y+11)}
 function drawPop(){const p=G.pop;if(!p||p.t>0.9)return;const q=scr(p.x,p.y,4.2);const k=p.t/0.9,s=p.t<0.12?0.5+p.t/0.12*0.7:1.2-Math.min(0.2,(p.t-0.12)*0.6);X.save();X.globalAlpha=k>0.7?(1-k)/0.3:1;X.translate(q[0],q[1]-k*26);X.scale(s,s);arcTxt(p.s,0,0,22,GOLD,{sk:0.15,rim:'#fff'});X.restore()}
 const _u18=update;update=function(dt){_u18(dt);if(G.pop)G.pop.t+=dt;if(G.st==='presnap')G.pop=null};
 })();
