@@ -97,10 +97,13 @@ function bg(){const g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b0a26'
 function hdr(s){txt(s,W/2,62,24,PAL.yel)}
 function back(){btn(12,40,90,40,'< BACK','#2b3a7a','#8fc4ff',13)}
 function recStr(t){const r=S.rec[t];return r.w+'-'+r.l+(r.t?'-'+r.t:'')}
-function drawModeSel(){bg();txt('PIXEL BLITZ',W/2,120,28,PAL.yel);txt('CHOOSE YOUR PATH',W/2,160,14,PAL.cy,'center',false);
- btn(40,270,W-80,84,'ARCADE','#1f6fd6','#fff',26);txt('PICK A TEAM  ·  PLAY NOW',W/2,372,12,'#c9d4ff','center',false);
- btn(40,410,W-80,84,'CAREER','#c8102e','#fff',26);txt('COACH  ·  DRAFT  ·  BUILD YOUR DYNASTY',W/2,512,12,'#ffd0d6','center',false);
- txt('DRAFT · CONTRACTS · FREE AGENTS · TRADES',W/2,580,11,'#8a93b8','center',false)}
+function drawModeSel(){bg();
+ uiTxt('PIXEL BLITZ',W/2,110,30,PAL.yel,'center');uiTxt('CHOOSE YOUR PATH',W/2,148,14,PAL.cy,'center',false);
+ btn(36,250,W-72,100,'ARCADE','#1f6fd6','#fff',28);
+ uiTxt('Pick a team and play now',W/2,372,13,'#c9d4ff','center',false);
+ btn(36,410,W-72,100,'CAREER','#c8102e','#fff',28);
+ uiTxt('Coach, draft, build a dynasty',W/2,532,13,'#ffd0d6','center',false);
+ uiTxt('Contracts  ·  Free Agents  ·  Trades',W/2,590,12,'#8a93b8','center',false)}
 function drawCareer(){bg();hdr('CAREER MODE');txt('YOU ARE THE COACH',W/2,120,16,PAL.cy,'center',false);
  txt('DRAFT  ·  CONTRACTS  ·  FREE AGENTS  ·  TRADES',W/2,160,11,'#9fb3ff','center',false);
  box(30,220,W-60,280,'#120a24',PAL.yel);
@@ -108,7 +111,7 @@ function drawCareer(){bg();hdr('CAREER MODE');txt('YOU ARE THE COACH',W/2,120,16
  btn(40,700,W-80,56,'BACK TO MODES','#2b3a7a','#8fc4ff',16)}
 function drawTeam(){bg();txt('PICK YOUR TEAM',W/2,60,24,PAL.yel);txt('32 TEAMS  -  17 GAMES  -  PLAYOFFS',W/2,92,11,PAL.cy,'center',false);txt('TAP A HELMET',W/2,118,10,'#9fb3ff','center',false);
  for(let i=0;i<32;i++){const[a,b,w,h]=gridPos(i);const on=i===sel;pill(a,b,w,h,on?'#2a1450':'rgba(18,10,36,.9)',on?PAL.yel:TEAMS[i].c1);HELM.drawHelmet(X,a+w/2,b+19,30,TEAMS[i],false,i);txt(TEAMS[i].a,a+w/2,b+h-9,11,on?PAL.yel:'#fff','center',false)}
- const t=TEAMS[sel];pill(16,602,W-32,72,'#120a24',t.c1);txt(t.city,W/2,622,13,'#c9d4ff','center',false);txt(t.nick,W/2,646,22,'#fff');txt('OVR '+t.rat+'   '+CABR[confOf(sel)]+' '+DIVN[divOf(sel)]+'   QB '+last(t.r.QB),W/2,664,10,PAL.cy,'center',false);
+ const t=TEAMS[sel];pill(16,602,W-32,72,'#120a24',t.c1);uiTxt(t.city,W/2,622,13,'#c9d4ff','center',false);uiTxt(t.nick,W/2,646,22,'#fff');txt('OVR '+t.rat+'   '+CABR[confOf(sel)]+' '+DIVN[divOf(sel)]+'   QB '+last(t.r.QB),W/2,664,10,PAL.cy,'center',false);
  const bw=(W-32)/4;DIFFS.forEach((d,i)=>{const x=16+i*bw;box(x+3,690,bw-6,40,teamDiff===i?PAL.pink:'#120a24',teamDiff===i?PAL.yel:'#5a4a8a');txt(d.n,x+bw/2,710,d.n.length>5?11:13,PAL.txt)});
  btn(40,750,W-80,56,'START SEASON','#ff4f7a','#ffd0dc',20)}
 function drawHub(){bg();const t=TEAMS[S.team];hdr(t.nick);txt(t.city,W/2,36,12,'#c9d4ff','center',false);
@@ -125,9 +128,18 @@ function drawHub(){bg();const t=TEAMS[S.team];hdr(t.nick);txt(t.city,W/2,36,12,'
  txt('PROGRESS SAVES AUTOMATICALLY',W/2,690,10,'#8a7ab0','center',false);btn(W/2-80,780,160,34,'NEW SEASON','#3a2a6a','#8a7ab0',11)}
 function drawStandings(){bg();hdr('STANDINGS');back();btn(W/2-150,92,148,34,'BLITZ','#'+(tab?'2b3a7a':'ff4f7a'),'#fff',13);btn(W/2+2,92,148,34,'PIXEL','#'+(tab?'ff4f7a':'2b3a7a'),'#fff',13);
  const sd=S.phase!=='reg'&&S.po?S.po.seeds[tab]:seeds(tab);
- DIVS[tab].forEach((d,di)=>{const y0=146+di*170;pill(12,y0,W-24,160,'rgba(18,10,36,.92)','#4a3a8a');txt(DIVN[di],28,y0+16,13,PAL.yel,'left',false);txt('W-L-T',W-130,y0+16,10,'#9fb3ff','center',false);txt('PF',W-80,y0+16,10,'#9fb3ff','center',false);txt('PA',W-40,y0+16,10,'#9fb3ff','center',false);
-  sortTeams(d).forEach((t,i)=>{const y=y0+40+i*31,me=t===S.team;if(me)rect(16,y-13,W-32,27,'rgba(255,79,163,.25)');rect(22,y-8,6,16,TEAMS[t].c1);const s=sd.indexOf(t);txt((s>=0?(s+1)+' ':'')+TEAMS[t].city+' '+TEAMS[t].nick,36,y,11,me?PAL.yel:'#fff','left',false);const r=S.rec[t];txt(r.w+'-'+r.l+'-'+r.t,W-130,y,12,'#fff','center',false);txt(String(r.pf),W-80,y,11,'#c9d4ff','center',false);txt(String(r.pa),W-40,y,11,'#c9d4ff','center',false)})});
- txt('NUMBER = CURRENT PLAYOFF SEED',W/2,H-24,10,'#8a7ab0','center',false)}
+ const nameW=W-168; // leave room for W-L-T + PF + PA columns
+ DIVS[tab].forEach((d,di)=>{const y0=146+di*170;pill(12,y0,W-24,160,'rgba(18,10,36,.92)','#4a3a8a');
+  uiTxt(DIVN[di],28,y0+16,13,PAL.yel,'left',false);
+  uiTxt('W-L-T',W-118,y0+16,10,'#9fb3ff','center',false);uiTxt('PF',W-70,y0+16,10,'#9fb3ff','center',false);uiTxt('PA',W-34,y0+16,10,'#9fb3ff','center',false);
+  sortTeams(d).forEach((ti,i)=>{const y=y0+40+i*31,me=ti===S.team;if(me)rect(16,y-13,W-32,27,'rgba(255,79,163,.25)');rect(22,y-8,6,16,TEAMS[ti].c1);
+   const s=sd.indexOf(ti);let nm=(s>=0?(s+1)+'. ':'')+TEAMS[ti].a+' '+TEAMS[ti].nick;
+   // truncate so never overlaps record column
+   X.font='800 12px "Trebuchet MS",Arial';while(X.measureText(nm).width>nameW-50&&nm.length>6)nm=nm.slice(0,-1);
+   if(nm.length<((s>=0?(s+1)+'. ':'')+TEAMS[ti].a+' '+TEAMS[ti].nick).length)nm=nm.replace(/\.?$/,'');
+   uiTxt(nm,36,y,12,me?PAL.yel:'#fff','left',false);
+   const r=S.rec[ti];uiTxt(r.w+'-'+r.l+'-'+r.t,W-118,y,12,'#fff','center',false);uiTxt(String(r.pf),W-70,y,11,'#c9d4ff','center',false);uiTxt(String(r.pa),W-34,y,11,'#c9d4ff','center',false)})});
+ uiTxt('Number = current playoff seed',W/2,H-24,11,'#8a7ab0','center',false)}
 function drawSchedule(){bg();hdr('SCHEDULE');back();for(let w=0;w<17;w++){const g=S.sched[w].find(p=>p.includes(S.team));const opp=g[0]===S.team?g[1]:g[0],home=g[0]===S.team;const y=112+w*40;const cur=w===S.week&&S.phase==='reg';
   pill(12,y,W-24,34,cur?'#2a1450':'rgba(18,10,36,.9)',cur?PAL.yel:'#3a2a6a');txt('WK '+(w+1),22,y+17,11,'#9fb3ff','left',false);rect(76,y+9,6,16,TEAMS[opp].c1);txt((home?'VS ':'AT ')+TEAMS[opp].city+' '+TEAMS[opp].nick,88,y+17,11,'#fff','left',false);
   const r=S.res[w]&&S.res[w].find(x=>x[0]===S.team||x[1]===S.team);if(r){const us=r[0]===S.team?r[2]:r[3],th=r[0]===S.team?r[3]:r[2];txt((us>th?'W ':us<th?'L ':'T ')+us+'-'+th,W-22,y+17,12,us>th?'#5dff8a':us<th?'#ff6a7a':'#fff','right',false)}else if(cur)txt('NEXT',W-22,y+17,11,PAL.yel,'right',false)}}

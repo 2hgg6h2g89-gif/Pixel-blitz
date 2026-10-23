@@ -194,7 +194,7 @@ function pxHelm(t,ti,left){
  return c}
 const _helmCache=new Map();
 function drawHelmet(g,x,y,size,t,left,ti){
- const key=(ti|0)+':'+(left?1:0)+':'+(t.h||'')+':'+(t.c1||'')+':'+(t.c2||'')+':v29';
+ const key=(ti|0)+':'+(left?1:0)+':'+(t.h||'')+':'+(t.c1||'')+':'+(t.c2||'')+':v30';
  let src=_helmCache.get(key);if(!src){src=pxHelm(t,ti,!!left);_helmCache.set(key,src)}
  const s=Math.max(12,Math.round(size));
  const dw=s,dh=Math.round(s*36/48);
