@@ -86,14 +86,14 @@ function fig(g,t,skin,line,dir,name){const s=D[name];
   const up=A[0][1]<0||A[1][1]<0;const go=()=>{const a=arm(A[0],L,-1,SK),b=arm(A[1],R,1,SK);const bl=fs.ball;
    if(bl==='chest'&&!back){r(cx-3,ty+2,6,2,SK);ballAt(cx-1,ty+1,false)}else if(bl==='up')ballAt(cx-1,Math.min(a[1],b[1])-2,false);else if(bl==='r')ballAt(b[0]-1,b[1]-1,false);else if(bl==='l')ballAt(a[0]-1,a[1]-1,false)};
   if(up)after.push(go);else go()}
- // ---- helmet
- const hx0=side?cx+Math.round(ln):cx;const clr=(x,y)=>g.clearRect(x,y,1,1);
+ // ---- helmet (matches scoreboard pixel side-helm style)
+ const hx0=side?cx+Math.round(ln):cx;const clr=(x,y)=>g.clearRect(x,y,1,1);const MKD='#1a1a22';
  if(side){const cx=hx0;r(cx-4,y0,9,8,H);r(cx-5,y0+2,1,4,H);clr(cx-4,y0);clr(cx+4,y0);r(cx-4,y0+7,9,1,H2);r(cx+3,y0+1,1,6,H2);
-  r(cx-3,y0,6,1,ST);r(cx-2,y0+1,2,1,HL);r(cx-1,y0+4,2,2,'#141220');r(cx-4,y0+6,2,1,H2);
-  r(cx+3,y0+3,2,3,SK);r(cx+5,y0+3,2,1,MK);r(cx+5,y0+5,2,1,MK);r(cx+7,y0+3,1,4,MK2);r(cx+4,y0+6,3,1,MK2)}
- else if(back){r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-1,y0,2,7,ST);r(cx-4,y0+1,2,1,HL);r(cx-5,y0+5,1,1,'#141220');r(cx+4,y0+5,1,1,'#141220')}
- else{const o=diag?2:0,fw=6-(diag?1:0);r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-1+o,y0,2,2,ST);r(cx-4+o,y0+1,1,1,HL);r(cx-3+o,y0+1,1,1,'#ffffff');
-  r(cx-3+o,y0+3,fw,4,SK);r(cx-3+o,y0+3,fw,1,SK2);r(cx-3+o,y0+4,fw,1,MK);r(cx-3+o,y0+6,fw,1,MK);r(cx+o,y0+4,1,3,MK2);if(diag)r(cx-4,y0+4,1,1,'#141220')}
+  r(cx-1,y0,2,7,ST);r(cx-1,y0,2,1,HL);r(cx-3,y0+1,2,1,HL);r(cx-2,y0+4,2,2,'#141220');r(cx-4,y0+6,2,1,H2);
+  r(cx+3,y0+3,2,3,SK);r(cx+5,y0+3,2,1,MKD);r(cx+5,y0+5,2,1,MKD);r(cx+7,y0+3,1,4,MKD);r(cx+4,y0+6,3,1,MKD)}
+ else if(back){r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-1,y0,2,7,ST);r(cx-1,y0,2,1,HL);r(cx-4,y0+1,2,1,HL);r(cx-5,y0+5,1,1,'#141220');r(cx+4,y0+5,1,1,'#141220')}
+ else{const o=diag?2:0,fw=6-(diag?1:0);r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-1+o,y0,2,7,ST);r(cx-1+o,y0,2,1,HL);r(cx-4+o,y0+1,1,1,HL);r(cx-3+o,y0+1,1,1,'#ffffff');
+  r(cx-3+o,y0+3,fw,4,SK);r(cx-3+o,y0+3,fw,1,SK2);r(cx-3+o,y0+4,fw,1,MKD);r(cx-3+o,y0+6,fw,1,MKD);r(cx+o,y0+4,1,3,MKD);if(diag)r(cx-4,y0+4,1,1,'#141220')}
  after.forEach(f=>f());
  return {ty,cover:!side&&(fs.ball==='chest'||(A[0][1]>0&&A[0][1]<4&&fs.A&&fs.A[0][0]<0))}}
 function outline(c,W,Hh,col){const g=c.getContext('2d',{willReadFrequently:true}),d=g.getImageData(0,0,W,Hh),a=d.data;

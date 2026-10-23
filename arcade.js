@@ -1,8 +1,69 @@
 // PIXEL BLITZ v16: original 90s arcade-fighter style UI (HUD, buttons, callouts, title, VS)
 (function(){
+
+// Pixel Blitz chunky arcade font (5x7 glyphs, italic skew on draw)
+const PXG={
+'A':[2, 5, 7, 5, 5],
+'B':[6, 5, 6, 5, 6],
+'C':[3, 4, 4, 4, 3],
+'D':[6, 5, 5, 5, 6],
+'E':[7, 4, 6, 4, 7],
+'F':[7, 4, 6, 4, 4],
+'G':[3, 4, 5, 5, 3],
+'H':[5, 5, 7, 5, 5],
+'I':[7, 2, 2, 2, 7],
+'J':[1, 1, 1, 5, 3],
+'K':[5, 5, 6, 5, 5],
+'L':[4, 4, 4, 4, 7],
+'M':[5, 7, 7, 5, 5],
+'N':[5, 7, 7, 5, 5],
+'O':[2, 5, 5, 5, 2],
+'P':[6, 5, 6, 4, 4],
+'Q':[2, 5, 5, 6, 3],
+'R':[6, 5, 6, 5, 5],
+'S':[3, 4, 2, 1, 6],
+'T':[7, 2, 2, 2, 2],
+'U':[5, 5, 5, 5, 2],
+'V':[5, 5, 5, 5, 2],
+'W':[5, 5, 7, 7, 5],
+'X':[5, 5, 2, 5, 5],
+'Y':[5, 5, 2, 2, 2],
+'Z':[7, 1, 2, 4, 7],
+'0':[2, 5, 5, 5, 2],
+'1':[2, 6, 2, 2, 7],
+'2':[6, 1, 2, 4, 7],
+'3':[7, 1, 6, 1, 7],
+'4':[5, 5, 7, 1, 1],
+'5':[7, 4, 6, 1, 6],
+'6':[3, 4, 6, 5, 2],
+'7':[7, 1, 2, 2, 2],
+'8':[2, 5, 2, 5, 2],
+'9':[2, 5, 3, 1, 6],
+'&':[2, 5, 2, 5, 3],
+'+':[0, 2, 7, 2, 0],
+'-':[0, 0, 7, 0, 0],
+'!':[2, 2, 2, 0, 2],
+'?':[2, 5, 1, 0, 2],
+'.':[0, 0, 0, 0, 2],
+"'":[2, 2, 0, 0, 0],
+' ':[0, 0, 0, 0, 0],
+':':[0, 2, 0, 2, 0],
+'#':[2, 7, 2, 7, 2],
+'/':[1, 1, 2, 4, 4],
+'<':[1, 2, 4, 2, 1],
+'>':[4, 2, 1, 2, 4]
+};
+function pxGlyph(ch){return PXG[ch]||PXG[ch.toUpperCase()]||PXG['?']}
+function pxText(g,s,x,y,scale,col,o){o=o||{};s=String(s);scale=Math.max(1,scale|0);const sk=o.sk||0;const gap=o.gap??1;
+ const gw=5+gap;let tw=0;for(const c of s)tw+=(c===' '?3:gw);tw-=gap;let cx=o.al==='left'?x:o.al==='right'?x-tw*scale:x-(tw*scale)/2;
+ g.save();g.imageSmoothingEnabled=false;g.fillStyle=col||'#fff';
+ if(o.out){g.fillStyle=o.out;for(let i=0;i<s.length;i++){const ch=s[i];if(ch===' '){cx+=3*scale;continue};const rows=pxGlyph(ch);for(let r=0;r<5;r++){let bits=rows[r]|0;for(let c=0;c<3;c++){if(bits&(4>>c)){const px=Math.round(cx+c*scale+r*sk*scale)-scale;const py=Math.round(y+(r-2)*scale)-scale;g.fillRect(px,py,scale*3,scale*3)}}}cx+=gw*scale}cx=o.al==='left'?x:o.al==='right'?x-tw*scale:x-(tw*scale)/2;g.fillStyle=col||'#fff'}
+ for(let i=0;i<s.length;i++){const ch=s[i];if(ch===' '){cx+=3*scale;continue};const rows=pxGlyph(ch);for(let r=0;r<5;r++){let bits=rows[r]|0;for(let c=0;c<3;c++){if(bits&(4>>c)){const px=Math.round(cx+c*scale+(o.it===false?0:r*sk*scale));const py=Math.round(y+(r-2)*scale);g.fillRect(px,py,scale,scale)}}}cx+=gw*scale}
+ g.restore();return tw*scale}
+window.pxText=pxText;
 const F=(s,it)=>`${it===false?'':'italic '}900 ${s}px "Arial Black", Impact, "Trebuchet MS", sans-serif`;
 // big outlined arcade lettering with vertical gradient fill
-function arcTxt(s,x,y,size,cols,o){o=o||{};X.save();X.font=F(size,o.it);X.textAlign=o.al||'center';X.textBaseline='middle';X.lineJoin='round';
+function arcTxt(s,x,y,size,cols,o){o=o||{};if(size<=18||o.px){const sc=Math.max(1,Math.round(size/7));pxText(X,s,x,y,sc,cols[0]||'#fff',{al:o.al||'center',out:o.out||'#0b0614',sk:o.sk||0.15,it:o.it});return}X.save();X.font=F(size,o.it);X.textAlign=o.al||'center';X.textBaseline='middle';X.lineJoin='round';
  if(o.sk){X.translate(x,y);X.transform(1,0,-o.sk,1,0,0);x=0;y=0}
  X.lineWidth=size*0.32;X.strokeStyle='rgba(0,0,0,.55)';X.strokeText(s,x+size*0.06,y+size*0.1);
  X.lineWidth=size*0.26;X.strokeStyle=o.out||'#12081e';X.strokeText(s,x,y);
@@ -125,7 +186,7 @@ function drawVS(){const t=TEAMS[G.home],o=TEAMS[G.away];const a=G.vsT||0;const k
  const panel=(tm,left)=>{X.save();X.beginPath();if(left){X.moveTo(-W*(1-e),0);X.lineTo(W*0.78-W*(1-e),0);X.lineTo(W*0.22-W*(1-e),H);X.lineTo(-W*(1-e),H)}else{X.moveTo(W+W*(1-e),0);X.lineTo(W*0.78+W*(1-e),0);X.lineTo(W*0.22+W*(1-e),H);X.lineTo(W+W*(1-e),H)}X.closePath();
   const g=X.createLinearGradient(0,left?0:H,0,left?H:0);g.addColorStop(0,HELM.mix(tm.c1,1.35));g.addColorStop(.6,tm.c1);g.addColorStop(1,HELM.mix(tm.c1,.35));X.fillStyle=g;X.fill();X.clip();
   X.fillStyle='rgba(255,255,255,.08)';for(let i=-20;i<40;i++){X.fillRect(i*24+((a*80)%24)*(left?1:-1),0,10,H)}
-  X.globalAlpha=0.16;X.translate(left?W*0.3:W*0.7,left?H*0.3:H*0.7);X.scale(4.5,4.5);HELM.emblem(X,HELM.EMB[left?G.home:G.away],tm.c2,'rgba(0,0,0,.6)');X.restore()};
+  X.globalAlpha=0.22;HELM.drawLogo(X,left?W*0.3:W*0.7,left?H*0.32:H*0.68,140,left?G.home:G.away,tm.c2,'rgba(0,0,0,.55)');X.restore()};
  panel(t,true);panel(o,false);
  // lightning crack on the diagonal
  if(a>0.3){X.save();X.strokeStyle='#fff';X.lineWidth=5;X.shadowColor='#9fe3ff';X.shadowBlur=18;X.beginPath();X.moveTo(W*0.78,0);for(let i=1;i<=12;i++){const f=i/12;X.lineTo(W*0.78+(W*0.22-W*0.78)*f+(i<12?Math.sin(i*7.3+a*30)*8:0),H*f)}X.stroke();X.restore()}

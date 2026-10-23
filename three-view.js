@@ -25,9 +25,23 @@ function paintField(){const W2=fc.width;
  {let s=1234567;const R=()=>(s=(s*16807)%2147483647)/2147483647;for(let i=0;i<23000;i++){const x=R()*W2|0,y=(10+R()*100)*PX|0,v=R();f.fillStyle=v<.55?'#1a5a26':v<.9?'#3a9a44':'#4fae52';f.fillRect(x,y,1,v<.55?2:1)}
   for(let yd=0;yd<100;yd+=10){const y=(110-yd-10)*PX;const g=f.createLinearGradient(0,y,0,y+10*PX);g.addColorStop(0,'rgba(255,255,255,.035)');g.addColorStop(.5,'rgba(0,0,0,.03)');g.addColorStop(1,'rgba(255,255,255,.035)');f.fillStyle=g;f.fillRect(0,y,W2,10*PX)}}
  for(let x=0;x<FW;x+=FW/8){f.fillStyle='rgba(255,255,255,.035)';if(Math.round(x/(FW/8))%2)f.fillRect(x*PX,10*PX,FW/8*PX,100*PX)}
- const ez=(tm,y0,flip)=>{f.fillStyle=tm.c1;f.fillRect(0,y0,W2,10*PX);f.save();f.beginPath();f.rect(0,y0,W2,10*PX);f.clip();f.strokeStyle=HELM.mix(tm.c1,.82);f.lineWidth=PX*1.2;for(let x=-W2;x<W2*2;x+=PX*4){f.beginPath();f.moveTo(x,y0);f.lineTo(x+10*PX,y0+10*PX);f.stroke()}f.restore();
-  f.save();f.translate(W2/2,y0+5*PX);if(flip)f.rotate(Math.PI);f.font=`900 ${5.2*PX}px "Arial Black", Arial`;f.textAlign='center';f.textBaseline='middle';f.lineWidth=PX*.7;f.strokeStyle=HELM.mix(tm.c1,.4);const nm=tm.nick||tm.n.split(' ')[1];f.strokeText(nm,0,PX*.3);f.fillStyle=tm.c2===tm.c1?'#fff':(Math.abs(parseInt(tm.c2.slice(1),16)-parseInt(tm.c1.slice(1),16))>0x303030?tm.c2:'#fff');f.fillText(nm,0,PX*.3);f.restore()};
- ez(away(),0,false);ez(home(),110*PX,false);
+ const ez=(tm,y0,flip,ti)=>{f.fillStyle=tm.c1;f.fillRect(0,y0,W2,10*PX);
+  f.save();f.beginPath();f.rect(0,y0,W2,10*PX);f.clip();
+  // pixel stripe pattern
+  const band=HELM.mix(tm.c1,.78);for(let x=0;x<W2;x+=PX*2){f.fillStyle=(Math.floor(x/(PX*2))%2)?band:HELM.mix(tm.c1,.92);f.fillRect(x,y0,PX*2,10*PX)}
+  // chevron hash accents
+  f.strokeStyle=HELM.mix(tm.c1,.55);f.lineWidth=Math.max(2,PX*.35);for(let x=-W2;x<W2*2;x+=PX*5){f.beginPath();f.moveTo(x,y0+PX);f.lineTo(x+8*PX,y0+9*PX);f.stroke()}
+  f.restore();
+  f.save();f.translate(W2/2,y0+5*PX);if(flip)f.rotate(Math.PI);
+  const nm=(tm.nick||tm.n.split(' ')[1]||'').toUpperCase();
+  const fill=tm.c2===tm.c1?'#fff':(Math.abs(parseInt(String(tm.c2).replace('#','').slice(0,6),16)-parseInt(String(tm.c1).replace('#','').slice(0,6),16))>0x303030?tm.c2:'#fff');
+  const sc=Math.max(3,Math.round(PX*0.55));
+  if(window.pxText){pxText(f,nm,0,0,sc,fill,{al:'center',out:HELM.mix(tm.c1,.35),sk:0.12})}
+  else{f.font=`900 ${5.2*PX}px "Arial Black", Arial`;f.textAlign='center';f.textBaseline='middle';f.lineWidth=PX*.7;f.strokeStyle=HELM.mix(tm.c1,.4);f.strokeText(nm,0,PX*.3);f.fillStyle=fill;f.fillText(nm,0,PX*.3)}
+  // team logos flanking wordmark
+  if(HELM.drawLogo){const ls=PX*3.2;HELM.drawLogo(f,-nm.length*sc*1.1,0,ls,ti,fill,HELM.mix(tm.c1,.3));HELM.drawLogo(f,nm.length*sc*1.1,0,ls,ti,fill,HELM.mix(tm.c1,.3))}
+  f.restore()};
+ ez(away(),0,false,G.away);ez(home(),110*PX,false,G.home);
  f.fillStyle='#f4f8f2';
  for(let yd=0;yd<=100;yd+=5){const y=(110-yd)*PX;f.fillRect(0,y-2,W2,yd%50&&yd%100?4:5)}f.fillRect(0,0,W2,4);f.fillRect(0,120*PX-4,W2,4);
  for(let yd=1;yd<100;yd++){if(yd%5==0)continue;const y=(110-yd)*PX;for(const hx of[1,22.9,29.4,FW-2.6])f.fillRect(Math.round(hx*PX),y-2,Math.round(1.2*PX),4)}
@@ -36,7 +50,7 @@ function paintField(){const W2=fc.width;
   for(const [hx,r] of [[9,Math.PI/2],[FW-9,-Math.PI/2]]){f.save();f.translate(hx*PX,y);f.rotate(r);f.fillText(String(n),0,0);f.restore()}}
  // midfield logo: home emblem in a ring
  f.save();f.translate(W2/2,60*PX);f.beginPath();f.arc(0,0,4.2*PX,0,7);f.fillStyle='rgba(16,20,48,.88)';f.fill();f.lineWidth=PX*.5;f.strokeStyle=home().c1;f.stroke();f.lineWidth=PX*.18;f.strokeStyle='#fff';f.beginPath();f.arc(0,0,3.6*PX,0,7);f.stroke();
- f.rotate(Math.PI);f.scale(PX*.15,PX*.15);HELM.emblem(f,HELM.EMB[G.home],home().c1,'#0c0f20');f.restore();
+ f.rotate(Math.PI);HELM.drawLogo(f,0,0,PX*5.5,G.home,home().c1,'#0c0f20');f.restore();
  f.fillStyle='#f4f8f2';f.fillRect(0,0,6,fc.height);f.fillRect(W2-6,0,6,fc.height);quantField();buildMips()}
 let _ftexReady=false;function buildMips(){if(!_ftexReady)return;const L=[fc];let c=fc;while(c.width>1||c.height>1){const n=document.createElement('canvas');n.width=Math.max(1,c.width>>1);n.height=Math.max(1,c.height>>1);const g=n.getContext('2d');g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(c,0,0,n.width,n.height);L.push(n);c=n}ftex.mipmaps=L;ftex.generateMipmaps=false;ftex.needsUpdate=true}
 function quantField(){const id=f.getImageData(0,0,fc.width,fc.height),d=id.data;const pal=[[0x1a,0x5a,0x26],[0x1f,0x67,0x2b],[0x2a,0x82,0x37],[0x3a,0x9a,0x44],[0x4f,0xae,0x52],[0xf4,0xf8,0xf2],[0x12,0x16,0x30]];
@@ -219,7 +233,7 @@ function animOf(p,dt){p._qbUp=false;const line=p.role==='OL'||p.role==='DL';cons
  if(p.dive>0){p._dm=Math.max(p._dm||0,p.dive);const k=1-p.dive/p._dm;
   if(k<0.18){o.pose=N_.dive0;return o}
   const v=sxv(),horiz=Math.abs(v[0])>Math.abs(v[1])*0.8;o.pose=(p===G.carrier&&G.dcatch)||(G.ball&&!G.ball.caught&&G.ball.tgt===p)?N_.dcatch:N_.dive1;
-  const kk=Math.min(1,(k-0.18)/0.82);o.lift=Math.sin(kk*Math.PI)*0.9;if(horiz){o.roll=-(v[0]>0?1:-1)*Math.PI/2*Math.min(1,kk*3)}else{o.sy=1-0.4*Math.min(1,kk*3)}return o}
+  const kk=Math.min(1,(k-0.18)/0.82);o.lift=Math.sin(kk*Math.PI)*1.15;if(horiz){o.roll=-(v[0]>0?1:-1)*Math.PI/2*Math.min(1,kk*3)}else{o.sy=1-0.4*Math.min(1,kk*3)}return o}
  p._dm=0;
  if(p.fallen>0){if(!(p._fm>0)||p.fallen>p._fm+0.01){p._fm=p.fallen;const v=sxv();p._rd=(v[0]>=0?1:-1)}const e=p._fm-p.fallen,rd=p._rd||1;
   if(p.tackler&&e<0.2){o.pose=N_.wrap;o.roll=-rd*0.5*(e/0.2);return o}
@@ -234,10 +248,10 @@ function animOf(p,dt){p._qbUp=false;const line=p.role==='OL'||p.role==='DL';cons
  if(p.reach>0&&!(p.fallen>0)&&!(p===G.carrier&&p.catchT>0)){const b=G.ball;if(b&&!b.caught&&b.T){const k=b.t/b.T;const bx=b.tx-b.x0,by=b.ty-b.y0;const away=(p.vx*bx+p.vy*by)>0.6*Math.hypot(bx,by)*Math.max(sp,0.01)&&sp>4;o.pose=away&&k>0.82?N_.oshld:k>0.9?N_.reach1:N_.reach0;if(!away)o.face=[b.x-p.x,b.y-p.y];o.lift=k>0.9?0.25:0;return o}o.pose=p.reach>0.15?N_.reach1:N_.react1;o.lift=Math.sin(Math.min(1,(0.45-p.reach)/0.45)*Math.PI)*0.5;return o}
  if(G.hoT!==undefined&&G.hoT<0.24&&G.st==='live'){if(p===G.qb&&G.hoT<0.1){o.pose=N_.hold;return o}if(p===G.rb&&G.hoT<0.24){o.pose=sp>0.35?N_.run0+Math.floor(p.anim/0.42)%6:N_.ready;return o}}
  if(p.throwT>0){const k=1-p.throwT/(p.throwDur||0.5);if(p.role==='K'){o.pose=N_.kick0+Math.min(2,Math.floor(k*3));return o}o.pose=N_.thr0+Math.max(p===G.qb&&G.ball&&!G.ball.caught?3:0,Math.min(5,Math.floor(k*6)));return o}
- if(p.catchT>0){o.pose=p.catchT>0.36?N_.catchUp:p.catchT>0.22?N_.secure:N_.catchTuck;return o}
+ if(p.catchT>0){o.pose=p.catchT>0.4?N_.catchUp:p.catchT>0.24?N_.secure:N_.catchTuck;return o}
  if(p.eng){o.pose=N_.blk0+(sp>1.2?Math.floor(p.anim/0.5)%3:(Math.floor(G.t*3+ph)%2)+1);return o}
  const car=p===G.carrier&&(!G.ball||G.ball.caught)&&!G.pend;
- if(car&&G.juke>0){const e=0.32-G.juke;o.pose=e<0.09?N_.jplant:e<0.19?N_.jfake:N_.jcut;o.roll=(G.jukeS||1)*(e<0.09?0:e<0.19?0.12:-0.18);return o}
+ if(car&&G.juke>0){const e=0.28-G.juke;o.pose=e<0.07?N_.jplant:e<0.16?N_.jfake:N_.jcut;o.roll=(G.jukeS||1)*(e<0.07?0:e<0.16?0.16:-0.22);o.lift=e<0.16?0.15:0;return o}
  if(car&&p===G.qb&&passerPhase()&&!G.tuck){p._qbUp=false;
   if(G.aim){o.pose=N_.thr1;if(G.aim.tx!==undefined)o.face=[G.aim.tx-p.x,G.aim.ty-p.y];return o}if(sp<0.35){o.pose=N_.hold;return o}const fw=p.team===0?1:-1;if(p.vy*fw<-0.5*sp){o.face=[0,fw];o.pose=N_.drop0+Math.floor(p.anim/0.38)%4;return o}{const n=Math.hypot(p.vx*0.35,fw);o.face=[p.vx*0.35/n,fw/n]}o.pose=N_.qrun0+Math.floor(p.anim/0.3)%6;return o}
  if(sp<0.35){o.pose=car?N_.catchTuck:(Math.floor(G.t*1.3+ph)%2?N_.idle1:N_.idle0);return o}
@@ -260,9 +274,16 @@ function updatePlayers(){SPK+=(SPKT-SPK)*0.25;window.__SPK=SPK;{const bs=Math.ma
   let sq=0;if(p===G.carrier&&G.juke>0)sq=G.jukeCut?0.06:0.1;const line=(p.role==='OL'||p.role==='DL')?1:0;const T=TM[p.team],i=cnt[p.team]++;const pose=A.pose;
   const s=2.8*SPK*(line?1.18:1);sc.set(s*mir*(1+sq),s*(1-sq)*p._sy,1);qR.setFromAxisAngle(zAx,p._r);qC.copy(cam.quaternion).multiply(qR);pm.compose(v3.set(Xw(p.x),0.02+p._lf,Z(p.y)),qC,sc);T.m.setMatrixAt(i,pm);
   T.uo.setXY(i,pose*CU,1-((dir*10+p.skin*2+line)+1)*CV);
-  const M=S.META[dir*S.POSES+N_.idle0]||{ty:9};const noNum=Math.abs(p._r)>0.3||p._sy<0.85||p.fallen>0||p.dive>0||((p.role==='OL'||p.role==='DL')&&G.st==='live'&&(p.eng||G.players.some(q=>q!==p&&q.team!==p.team&&(q.role==='OL'||q.role==='DL')&&Math.abs(q.x-p.x)<1.6&&Math.abs(q.y-p.y)<1.8)));p._ny=p._ny===undefined?M.ty:p._ny+(M.ty-p._ny)*Math.min(1,dt*10);
-  if(!noNum){const Nm=NM[p.team],j=nc[p.team]++;const hpx=24-(p._ny+3.5)+(dir===2?0.5:0);const u=s/24;
-   v3.set(Xw(p.x),0.02+p._lf,Z(p.y)).addScaledVector(camUp,hpx*u).addScaledVector(camBk,0.18);pm.compose(v3,cam.quaternion,sc.set(9*u*(line?1.05:0.95)*(dir===2?0.8:1),7*u*(dir===2?0.85:1),1));Nm.m.setMatrixAt(j,pm);const n=Math.max(0,Math.min(99,p.num|0));Nm.uo.setXY(j,(n%10)*0.1,1-(Math.floor(n/10)+1)*0.1)}
+  const M=S.META[dir*S.POSES+pose]||S.META[dir*S.POSES+N_.idle0]||{ty:9};p._ny=p._ny===undefined?M.ty:p._ny+(M.ty-p._ny)*Math.min(1,dt*14);
+  // Numbers always on jersey BACK (player-facing). Hide only when front-on to camera, fallen, or dive.
+  const backVis=dir>=2;const noNum=!backVis||Math.abs(p._r)>0.7||p._sy<0.7||p.fallen>0||p.dive>0;
+  if(!noNum){const Nm=NM[p.team],j=nc[p.team]++;const hpx=24-(p._ny+3.2)+(dir===2?0.4:0);const u=s/24;
+   const fa=p.fa||0,bx=-Math.sin(fa)*0.55,bz=Math.cos(fa)*0.55; // field back → world (Xw uses x, Z=-y)
+   v3.set(Xw(p.x)+bx,0.02+p._lf,Z(p.y)+bz).addScaledVector(camUp,hpx*u);
+   // slight camBk so it sits on the sprite surface from behind
+   v3.addScaledVector(camBk,0.05);
+   const nw=9*u*(line?1.08:0.98)*(dir===2?0.78:1),nh=7*u*(dir===2?0.82:1);
+   pm.compose(v3,cam.quaternion,sc.set(nw,nh,1));Nm.m.setMatrixAt(j,pm);const n=Math.max(0,Math.min(99,p.num|0));Nm.uo.setXY(j,(n%10)*0.1,1-(Math.floor(n/10)+1)*0.1)}
   m4.makeRotationX(-Math.PI/2);m4.setPosition(Xw(p.x),.02,Z(p.y));shadow.setMatrixAt(si,m4)});
  TM.forEach((T,k)=>{T.m.count=cnt[k];T.m.instanceMatrix.needsUpdate=true;T.uo.needsUpdate=true});NM.forEach((T,k)=>{T.m.count=nc[k];T.m.instanceMatrix.needsUpdate=true;T.uo.needsUpdate=true});shadow.count=G.players.length;shadow.instanceMatrix.needsUpdate=true}
 // route ribbons
@@ -333,7 +354,7 @@ window.R3D=()=>{if(!_pixDone)pixelize();const st=G.st;if(window.MENU_ST?window.M
   else{camFy=sdamp(camFy,fy,V,'fy',stF,dt);camX=sdamp(camX,fx,V,'fx',0.35,dt);cam._yN=sdamp(cam._yN,yN,V,'yN',0.3,dt);cam._R=sdamp(cam._R,cam._Rt||0,V,'R',0.22,dt);cam._yW=sdamp(cam._yW,want===0?yN:CA.w.yN,V,'yW',0.35,dt)}
   RR=CA.ref?1:cam._R;
   let bf=0,zt=1;for(let bb=want;bb>0;bb-=0.05){camPose(CA,bb,want);if(camFits()){bf=bb;break}}if(bf===0){for(zt=1;zt<4;zt+=0.1){camPose(CA,0,want,zt);if(camFits())break}}cam._zf=cam._zf||1;
-  if(cam._b===undefined||jump){cam._b=bf;V.b=0}else{const up=bf>cam._b;cam._b=sdamp(cam._b,bf,V,'b',up?(st==='live'?0.34:0.3):(st==='result'?0.4:0.12),dt);
+  if(cam._b===undefined||jump){cam._b=bf;V.b=0}else{const up=bf>cam._b;cam._b=sdamp(cam._b,bf,V,'b',up?(st==='live'?0.4:0.32):(st==='result'?0.4:0.12),dt);
     if(!up&&st!=='result'){camPose(CA,cam._b,want,cam._zf);if(!camFits()){cam._b=bf;V.b=Math.min(V.b,0);cam._snaps=(cam._snaps||0)+1}}}
   if(jump)cam._zf=zt;else{cam._zf=sdamp(cam._zf,zt,V,'zf',zt>cam._zf?0.12:0.35,dt);if(cam._zf<zt){camPose(CA,cam._b,want,cam._zf);if(!camFits()){cam._zf=zt;V.zf=0;cam._snaps=(cam._snaps||0)+1}}}
   camPose(CA,cam._b,want,cam._zf);SPKT=CA.w.s+((CA.t.s+(CA.r.s-CA.t.s)*RR)-CA.w.s)*cam._b;

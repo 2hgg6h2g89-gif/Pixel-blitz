@@ -1,8 +1,8 @@
 // PIXEL BLITZ v15: 32-team season mode (original team names), standings, schedule, playoffs
 (function(){
-const CITY=['Glendale','Atlanta','Baltimore','Orchard Park','Charlotte','Chicago','Cincinnati','Cleveland','Dallas','Denver','Detroit','Green Bay','Houston','Indianapolis','Jacksonville','Kansas City','Las Vegas','Los Angeles','Los Angeles','Miami','Minneapolis','Foxborough','New Orleans','New York','New York','Philadelphia','Pittsburgh','San Francisco','Seattle','Tampa Bay','Nashville','Washington'];
-const NICK=['Hawks','Kestrels','Rooks','Stampede','Cougars','Kodiaks','Stripes','Bulldogs','Wranglers','Mustangs','Pumas','Haulers','Lonestars','Stallions','Leopards','Sovereigns','Corsairs','Voltage','Bighorns','Barracudas','Norsemen','Minutemen','Halos','Colossus','Rockets','Condors','Forgemen','Prospectors','Ospreys','Privateers','Goliaths','Admirals'];
-const AB=['GLN','ATL','BAL','ORP','CHA','CHI','CIN','CLE','DFW','DEN','DET','GB','HOU','IND','JAX','KC','LV','LAV','LAB','MIA','MIN','FOX','NO','NYC','NYR','PHI','PIT','SF','SEA','TB','NSH','WAS'];
+const CITY=["Phoenix", "Atlanta", "Baltimore", "Buffalo", "Charlotte", "Chicago", "Cincinnati", "Cleveland", "Arlington", "Denver", "Detroit", "Green Bay", "Houston", "Indianapolis", "Jacksonville", "Kansas City", "Las Vegas", "Los Angeles", "Anaheim", "Miami", "Minneapolis", "Boston", "New Orleans", "Brooklyn", "Jersey City", "Philadelphia", "Pittsburgh", "San Francisco", "Seattle", "Tampa", "Nashville", "Washington"];
+const NICK=["Emberhawks", "Nightstrike", "Ironwake", "Frontier", "Volt", "Windfall", "Riverfangs", "Forge", "Stampede", "Peakrunners", "Motorknights", "Timberline", "Sunrail", "Gridlock", "Breakwater", "Railhorns", "Neonjacks", "Pacifire", "Goldrush", "Gulfstream", "Northwall", "Harborguard", "Jazzfire", "Colossus", "Stormrail", "Bellforge", "Riveters", "Fogline", "Rainforge", "Stormcap", "Soundwave", "Monumentals"];
+const AB=["PHX", "ATL", "BAL", "BUF", "CHA", "CHI", "CIN", "CLE", "ARL", "DEN", "DET", "GB", "HOU", "IND", "JAX", "KC", "LV", "LA", "ANA", "MIA", "MIN", "BOS", "NO", "BKN", "JC", "PHI", "PIT", "SF", "SEA", "TB", "NSH", "WAS"];
 const COL=[['#9b1b30','#111111','#ffffff','#ffffff'],['#d1102f','#111111','#111111','#c0c4c8'],['#3b1f73','#c9a227','#111111','#111111'],['#1f4fbf','#d6202f','#ffffff','#ffffff'],['#4fa3e0','#111111','#c0c4c8','#c0c4c8'],['#0e1f3d','#e05a12','#0e1f3d','#ffffff'],['#f26a1b','#111111','#111111','#ffffff'],['#4a2b1a','#f25c19','#f25c19','#ffffff'],
  ['#0b2a55','#1f5fbf','#c0c4c8','#c0c4c8'],['#f2611d','#0a2246','#0a2246','#ffffff'],['#0076b6','#b0b7bc','#b0b7bc','#b0b7bc'],['#1f4a2f','#ffb81c','#ffb81c','#ffb81c'],['#0b2240','#c8102e','#0b2240','#ffffff'],['#0a4a9a','#ffffff','#ffffff','#ffffff'],['#00788c','#d4a12a','#111111','#ffffff'],['#e31837','#ffb612','#e31837','#ffffff'],
  ['#111111','#a5acaf','#a5acaf','#a5acaf'],['#6ab4e8','#ffc20e','#ffffff','#ffc20e'],['#1e3fa8','#ffc72c','#1e3fa8','#ffc72c'],['#00a3ad','#f58220','#ffffff','#ffffff'],['#4f2683','#ffc62f','#4f2683','#ffffff'],['#0b2244','#c60c30','#b0b7bc','#b0b7bc'],['#111111','#c8aa76','#c8aa76','#c8aa76'],['#0b2265','#c8102e','#0b2265','#ffffff'],
@@ -63,7 +63,7 @@ function nameTeam(){if(!G.season||!G.players)return;const h=G.home,a=G.away;cons
   p.nm=nm(p.team?a:h,key)})}
 window.__nameTeam=nameTeam;['setupPlay','startKickoff'].forEach(f=>{const o=window[f];if(!o)return;window[f]=function(){const r=o.apply(this,arguments);nameTeam();return r}});
 // ---------- update / screens ----------
-const MENU=['team','hub','standings','schedule','bracket'];window.MENU_ST=st=>st==='title'||MENU.includes(st);
+const MENU=['modesel','team','hub','standings','schedule','bracket','career'];window.MENU_ST=st=>st==='title'||MENU.includes(st);
 let sel=0,tab=0,scroll=0,teamDiff=1;
 function hitR(t,x,y,w,h){return t&&t[0]>=x&&t[0]<=x+w&&t[1]>=y&&t[1]<=y+h}
 function gridPos(i){const cols=4,cw=(W-24)/cols,rh=54;return[12+(i%cols)*cw,136+Math.floor(i/cols)*rh,cw-6,rh-6]}
@@ -71,13 +71,16 @@ function startMyGame(){const g=myGame();if(!g)return;G.season=true;G.home=S.team
  Object.assign(G,{sh:0,sa:0,drive:0,q:1,clock:QLEN,aud:4,los:25,down:1,togo:10,log:[],stats:{py:0,ry:0,td:0,int:0,sack:0},two:false,fgDone:false,paused:false});G.st='vs';G.vsT=0}
 window.startMyGame=startMyGame;
 const _u=update;update=function(dt){
- if(G.st==='title'&&!G.paused){const taps=IN.taps.splice(0);IN.keyp.splice(0);G.t+=dt;if(taps.length){load();if(S&&S.v===1){G.st='hub'}else{sel=0;G.st='team'}}return}
+ if(G.st==='title'&&!G.paused){const taps=IN.taps.splice(0);IN.keyp.splice(0);G.t+=dt;if(taps.length){G.st='modesel'}return}
  if(G.st==='vs'){G.t+=dt;G.vsT+=dt;const taps=IN.taps.splice(0);IN.keyp.splice(0);if(G.vsT>2.2||(taps.length&&G.vsT>0.5)){startKickoff()}return}
  if(G.st==='final'&&G.season){G.t+=dt;const taps=IN.taps.splice(0);IN.keyp.splice(0);if(taps.length){G.season=false;G.st='hub'}return}
  if(MENU.includes(G.st)&&!G.paused){G.t+=dt;const taps=IN.taps.splice(0);IN.keyp.splice(0);for(const t of taps){if(!t)continue;menuTap(t)}return}
  if(G.otFlag&&G.st==='result'){G.otFlag=false}
  _u(dt)};
 function menuTap(t){const[x,y]=t;
+ if(G.st==='modesel'){if(hitR(t,40,300,W-80,90)){G.career=false;load();if(S&&S.v===1)G.st='hub';else{sel=0;G.st='team'}return}
+  if(hitR(t,40,420,W-80,90)){G.career=true;G.st='career';return}return}
+ if(G.st==='career'){if(hitR(t,40,700,W-80,56)){G.career=false;G.st='modesel'}return}
  if(G.st==='team'){for(let i=0;i<32;i++){const[a,b,w,h]=gridPos(i);if(hitR(t,a,b,w,h)){sel=i;return}}
   const bw=(W-32)/4;for(let i=0;i<4;i++)if(hitR(t,16+i*bw,690,bw,40)){teamDiff=i;return}
   if(hitR(t,40,750,W-80,56)){newSeason(sel,teamDiff);G.st='hub'}if(S&&hitR(t,8,40,90,40)&&S.v===1)G.st='hub';return}
@@ -94,6 +97,15 @@ function bg(){const g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b0a26'
 function hdr(s){txt(s,W/2,62,24,PAL.yel)}
 function back(){btn(12,40,90,40,'< BACK','#2b3a7a','#8fc4ff',13)}
 function recStr(t){const r=S.rec[t];return r.w+'-'+r.l+(r.t?'-'+r.t:'')}
+function drawModeSel(){bg();txt('PIXEL BLITZ',W/2,120,28,PAL.yel);txt('CHOOSE YOUR PATH',W/2,160,14,PAL.cy,'center',false);
+ btn(40,300,W-80,90,'ARCADE','#1f6fd6','#fff',26);txt('PICK A TEAM  ·  PLAY NOW',W/2,365,11,'#c9d4ff','center',false);
+ btn(40,420,W-80,90,'CAREER','#c8102e','#fff',26);txt('COACH  ·  DRAFT  ·  BUILD YOUR DYNASTY',W/2,485,11,'#ffd0d6','center',false);
+ txt('CAREER FULL BUILD IN NEXT UPDATE',W/2,560,10,'#8a93b8','center',false)}
+function drawCareer(){bg();hdr('CAREER MODE');txt('YOU ARE THE COACH',W/2,120,16,PAL.cy,'center',false);
+ txt('DRAFT  ·  CONTRACTS  ·  FREE AGENTS  ·  TRADES',W/2,160,11,'#9fb3ff','center',false);
+ box(30,220,W-60,280,'#120a24',PAL.yel);
+ txt('COMING IN V27',W/2,300,22,PAL.yel);txt('Build your roster every season.',W/2,340,13,PAL.txt);txt('Arcade stays ready to play now.',W/2,370,13,PAL.txt);
+ btn(40,700,W-80,56,'BACK TO MODES','#2b3a7a','#8fc4ff',16)}
 function drawTeam(){bg();txt('PICK YOUR TEAM',W/2,60,24,PAL.yel);txt('32 TEAMS  -  17 GAMES  -  PLAYOFFS',W/2,92,11,PAL.cy,'center',false);txt('TAP A HELMET',W/2,118,10,'#9fb3ff','center',false);
  for(let i=0;i<32;i++){const[a,b,w,h]=gridPos(i);const on=i===sel;pill(a,b,w,h,on?'#2a1450':'rgba(18,10,36,.9)',on?PAL.yel:TEAMS[i].c1);HELM.drawHelmet(X,a+w/2,b+19,30,TEAMS[i],false,i);txt(TEAMS[i].a,a+w/2,b+h-9,11,on?PAL.yel:'#fff','center',false)}
  const t=TEAMS[sel];pill(16,602,W-32,72,'#120a24',t.c1);txt(t.city,W/2,622,13,'#c9d4ff','center',false);txt(t.nick,W/2,646,22,'#fff');txt('OVR '+t.rat+'   '+CABR[confOf(sel)]+' '+DIVN[divOf(sel)]+'   QB '+last(t.r.QB),W/2,664,10,PAL.cy,'center',false);
@@ -132,7 +144,7 @@ function drawVS(){bg();const t=TEAMS[G.home],o=TEAMS[G.away];const k=Math.min(1,
  txt(t.city,110,350,13,'#fff');txt(t.nick,110,374,20,'#fff');txt(recStr(G.home),110,398,13,'#fff');txt(o.city,W-110,452,13,'#fff');txt(o.nick,W-110,476,20,'#fff');txt(recStr(G.away),W-110,500,13,'#fff');
  const s=G.vsT<0.5?3-4*G.vsT:1;X.translate(W/2,H/2-10);X.scale(s,s);txt('VS',0,0,64,PAL.yel);X.restore();txt(S.phase==='po'?RND[S.po.round]:'WEEK '+(S.week+1),W/2,H-60,16,'#fff')}
 const _r=render;render=function(){if(MENU.includes(G.st)||G.st==='vs'||(G.st==='title'&&false)){X.setTransform(DPR,0,0,DPR,0,0);X.save();
-  if(G.st==='team')drawTeam();else if(G.st==='hub')drawHub();else if(G.st==='standings')drawStandings();else if(G.st==='schedule')drawSchedule();else if(G.st==='bracket')drawBracket();else if(G.st==='vs')drawVS();X.restore();return}
+  if(G.st==='modesel')drawModeSel();else if(G.st==='career')drawCareer();else if(G.st==='team')drawTeam();else if(G.st==='hub')drawHub();else if(G.st==='standings')drawStandings();else if(G.st==='schedule')drawSchedule();else if(G.st==='bracket')drawBracket();else if(G.st==='vs')drawVS();X.restore();return}
  _r();
  if(G.season&&(G.st==='live'||G.st==='result')&&window.PROJ){const c=G.carrier;if(c&&c.nm&&G.st==='live'&&!((G.hoA||0)>0.05&&c===G.qb)){const q=scr(c.x,c.y,3.6);X.save();X.setTransform(DPR,0,0,DPR,0,0);const s=last(c.nm);X.font='800 11px Trebuchet MS';const w=X.measureText(s).width+12;pill(q[0]-w/2,q[1]-34,w,16,'rgba(10,14,36,.85)','#ffd23f');txt(s,q[0],q[1]-26,11,'#fff','center',false);X.restore()}}
  if(G.st==='final'&&G.season){X.save();X.setTransform(DPR,0,0,DPR,0,0);rect(40,540,W-80,40,'#120a24');txt('TAP TO CONTINUE THE SEASON',W/2,560,13,PAL.cy);X.restore()}};
