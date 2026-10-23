@@ -120,7 +120,7 @@ function drawHub(){bg();const t=TEAMS[S.team];hdr(t.nick);txt(t.city,W/2,36,12,'
  let label='PLAY',sub='';const g=myGame();
  if(S.phase==='reg'){sub='WEEK '+(S.week+1)+' OF 17'}else if(S.phase==='po'){sub=alive()?RND[S.po.round]:'ELIMINATED'}else sub='SEASON COMPLETE';
  pill(30,300,W-60,200,'rgba(18,10,36,.92)','#4fa3ff');txt(sub,W/2,322,14,PAL.yel,'center',false);
- if(g&&(S.phase==='reg'||alive())){const o=TEAMS[g.opp];HELM.drawHelmet(X,W/2,392,128,t,false,S.team);HELM.drawHelmet(X,W-58,340,48,o,true,g.opp);txt('VS',W-58,386,12,PAL.pink);txt(t.a+' '+recStr(S.team),W/2,464,12,'#fff','center',false);txt(o.a,W-58,368,10,'#fff','center',false);txt((g.atHome?'HOME':'AWAY')+'  -  '+o.city+' '+o.nick,W/2,486,11,'#c9d4ff','center',false);label='PLAY GAME'}
+ if(g&&(S.phase==='reg'||alive())){const o=TEAMS[g.opp];HELM.drawHelmet(X,W/2+9,392,128,t,false,S.team);HELM.drawHelmet(X,W-58,340,48,o,true,g.opp);txt('VS',W-58,386,12,PAL.pink);txt(t.a+' '+recStr(S.team),W/2,464,12,'#fff','center',false);txt(o.a,W-58,368,10,'#fff','center',false);txt((g.atHome?'HOME':'AWAY')+'  -  '+o.city+' '+o.nick,W/2,486,11,'#c9d4ff','center',false);label='PLAY GAME'}
  else if(S.phase==='done'){txt('CHAMPIONS',W/2,360,16,'#c9d4ff','center',false);HELM.drawHelmet(X,W/2,420,80,TEAMS[S.champ],false,S.champ);txt(TEAMS[S.champ].city+' '+TEAMS[S.champ].nick,W/2,476,14,PAL.yel);label='VIEW BRACKET'}
  else{txt(S.phase==='po'?'YOUR SEASON IS OVER':'',W/2,400,16,'#ff6a7a');label='SIM PLAYOFFS'}
  btn(30,520,W-60,64,label,'#ff4f7a','#ffd0dc',22);

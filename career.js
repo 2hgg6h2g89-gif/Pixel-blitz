@@ -286,7 +286,7 @@ function drawCHub(){
   const rec=S?S.rec[C.team].w+'-'+S.rec[C.team].l+'-'+S.rec[C.team].t:'0-0-0';
   uiTxt('OVR '+TEAMS[C.team].rat+'   Cap '+salaryUsed()+'/'+C.cap+'   Rec '+rec,W/2,354,11,'#c9d4ff','center',false);
   if(g){const opp=TEAMS[g.opp];
-    HELM.drawHelmet(X,W/2,438,140,t,false,C.team);
+    HELM.drawHelmet(X,W/2+10,438,140,t,false,C.team);
     HELM.drawHelmet(X,W-64,392,56,opp,true,g.opp);
     uiTxt('VS',W-64,440,12,PAL.pink,'center');
     uiTxt(t.a+'  '+t.nick,W/2,508,12,'#fff','center',false);

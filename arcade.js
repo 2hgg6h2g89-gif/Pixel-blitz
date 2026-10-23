@@ -201,7 +201,7 @@ function drawTitle(){const t=G.t;
  const saved=window.__season&&__season.get&&__season.get();
  const homeI=saved&&saved.team!=null?saved.team:titleTeams[0];
  const awayI=titleTeams[1]===homeI?titleTeams[0]:titleTeams[1];
- HELM.drawHelmet(X,W/2,518+bob,168,TEAMS[homeI],false,homeI);
+ HELM.drawHelmet(X,W/2+12,518+bob,168,TEAMS[homeI],false,homeI);
  HELM.drawHelmet(X,W-72,590+bob,78,TEAMS[awayI],true,awayI);
  // logo
  const s=Math.min(1,t/0.35);const sc=t<0.35?2.0-1.0*s*s:1;X.save();X.translate(W/2,210);X.scale(sc,sc);
@@ -223,7 +223,7 @@ function drawVS(){const t=TEAMS[G.home],o=TEAMS[G.away];const a=G.vsT||0;const k
  // lightning crack on the diagonal
  if(a>0.3){X.save();X.strokeStyle='#fff';X.lineWidth=5;X.shadowColor='#9fe3ff';X.shadowBlur=18;X.beginPath();X.moveTo(W*0.78,0);for(let i=1;i<=12;i++){const f=i/12;X.lineTo(W*0.78+(W*0.22-W*0.78)*f+(i<12?Math.sin(i*7.3+a*30)*8:0),H*f)}X.stroke();X.restore()}
  const ha=Math.min(1,Math.max(0,(a-0.15)/0.3)),he=1-Math.pow(1-ha,3);
- HELM.drawHelmet(X,W/2,470-(1-he)*40,196,t,false,G.home);
+ HELM.drawHelmet(X,W/2+14,470-(1-he)*40,196,t,false,G.home);
  HELM.drawHelmet(X,W-74+(1-he)*80,168,84,o,true,G.away);
  const plate=(tm,x,y,rec,al)=>{arcTxt(tm.city,x,y,14,['#fff','#e8eeff'],{rim:false,shine:false,al,sk:0.15});arcTxt(tm.nick,x,y+26,Math.min(26,240/Math.max(5,tm.nick.length)*1.6),CHROME,{al,sk:0.18});if(rec)arcTxt(rec,x,y+52,14,GOLD,{rim:false,al,sk:0.15})};
  if(a>0.35){plate(t,W/2,600,recOf(G.home),'center');plate(o,W-18,210,recOf(G.away),'right')}
@@ -237,13 +237,8 @@ let pj=0,pd=false;const _u=update;update=function(dt){_u(dt);const c=G.carrier;i
 const _r=render;render=function(){if(G.st==='title'&&!G.paused){X.setTransform(DPR,0,0,DPR,0,0);X.save();drawTitle();X.restore();return}
  if(G.st==='vs'){X.setTransform(DPR,0,0,DPR,0,0);X.save();drawVS();X.restore();return}
  _r();if(G.st==='live'||G.st==='presnap'||G.st==='result'){X.setTransform(DPR,0,0,DPR,0,0);X.save();bottomStrip();drawPop();X.restore()}};
-let defShown='',defCand='',defHold=0;
 function bottomStrip(){const c=(G.st==='live'&&G.carrier)||G.qb;if(!c)return;const y=H-20;X.fillStyle='rgba(0,0,0,.82)';X.fillRect(0,y,W,20);X.fillStyle='#ffd23f';X.fillRect(0,y,W,1);
- const nm=(c.nm?(c.nm.split(' ').slice(-1)[0]):(c.role==='QB'?'QUARTERBACK':'PLAYER')).toUpperCase();X.font='900 12px "Courier New", monospace';X.textBaseline='middle';X.textAlign='left';X.fillStyle='#fff';X.fillText(nm,12,y+11);const w=X.measureText(nm).width;X.fillStyle='#ffd23f';X.fillText(c.role+'  #'+(c.num|0),20+w,y+11);
- let near='';if(G.st==='live'&&G.carrier&&G.players){let best=null,bd=6.2;for(const q of G.players){if(q.team===G.carrier.team||q.fallen>0)continue;const d=Math.hypot(q.x-G.carrier.x,q.y-G.carrier.y);if(d<bd){bd=d;best=q}}if(best)near=(best.nm?best.nm.split(' ').slice(-1)[0]:best.role||'').toUpperCase()}
- if(near!==defCand){defCand=near;defHold=0}else defHold+=window.__fdt||1/60;
- if(!near){defShown='';defHold=0}else if(defHold>0.4||defShown===near)defShown=near;
- if(defShown){const role=c.role+'  #'+(c.num|0);const leftEnd=20+w+X.measureText(role).width+12;X.textAlign='right';X.fillStyle='#9fb3ff';if(W-12-X.measureText(defShown).width>leftEnd)X.fillText(defShown,W-12,y+11)}}
+ const nm=(c.nm?(c.nm.split(' ').slice(-1)[0]):(c.role==='QB'?'QUARTERBACK':'PLAYER')).toUpperCase();X.font='900 12px "Courier New", monospace';X.textBaseline='middle';X.textAlign='left';X.fillStyle='#fff';X.fillText(nm,12,y+11);const w=X.measureText(nm).width;X.fillStyle='#ffd23f';X.fillText(c.role+'  #'+(c.num|0),20+w,y+11)}
 function drawPop(){const p=G.pop;if(!p||p.t>0.9)return;const q=scr(p.x,p.y,4.2);const k=p.t/0.9,s=p.t<0.12?0.5+p.t/0.12*0.7:1.2-Math.min(0.2,(p.t-0.12)*0.6);X.save();X.globalAlpha=k>0.7?(1-k)/0.3:1;X.translate(q[0],q[1]-k*26);X.scale(s,s);arcTxt(p.s,0,0,22,GOLD,{sk:0.15,rim:'#fff'});X.restore()}
 const _u18=update;update=function(dt){_u18(dt);if(G.pop)G.pop.t+=dt;if(G.st==='presnap')G.pop=null};
 })();

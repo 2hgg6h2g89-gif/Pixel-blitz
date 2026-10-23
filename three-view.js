@@ -36,7 +36,7 @@ function paintField(){const W2=fc.width;
   f.strokeStyle=HELM.mix(tm.c1,.55);f.lineWidth=Math.max(2,PX*.35);for(let x=-W2;x<W2*2;x+=PX*5){f.beginPath();f.moveTo(x,y0+PX);f.lineTo(x+8*PX,y0+9*PX);f.stroke()}
   f.restore();
   f.save();f.translate(W2/2,y0+5*PX);if(flip)f.rotate(Math.PI);
-  const nm=(tm.nick||tm.n.split(' ')[1]||'').toUpperCase();
+  const nm=(tm.a||tm.nick||'').toUpperCase();
   const fill=tm.c2===tm.c1?'#fff':(Math.abs(parseInt(String(tm.c2).replace('#','').slice(0,6),16)-parseInt(String(tm.c1).replace('#','').slice(0,6),16))>0x303030?tm.c2:'#fff');
   const sc=Math.max(3,Math.round(PX*0.55));
   if(window.pxText){pxText(f,nm,0,0,sc,fill,{al:'center',out:HELM.mix(tm.c1,.35),sk:0.12})}
@@ -58,10 +58,10 @@ function paintField(){const W2=fc.width;
    f.save();f.translate(hx*PX,y);f.rotate(r);
    f.lineWidth=Math.max(2,PX*0.35);f.strokeStyle='rgba(10,40,18,.55)';f.strokeText(String(n),0,0);
    f.fillStyle='#f7faf6';f.fillText(String(n),0,0);f.restore()}}
- // midfield mark — light emblem only (no coin disc)
- f.save();f.translate(W2/2,60*PX);f.rotate(Math.PI/4);f.fillStyle='rgba(247,250,246,.9)';const dm=PX*1.35;f.fillRect(-dm,-dm,dm*2,dm*2);f.restore();
- f.fillStyle='#f4f8f2';f.fillRect(0,0,6,fc.height);f.fillRect(W2-6,0,6,fc.height);quantField();buildMips()}
-let _ftexReady=false;function buildMips(){if(!_ftexReady)return;const L=[fc];let c=fc;while(c.width>1||c.height>1){const n=document.createElement('canvas');n.width=Math.max(1,c.width>>1);n.height=Math.max(1,c.height>>1);const g=n.getContext('2d');g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(c,0,0,n.width,n.height);L.push(n);c=n}ftex.mipmaps=L;ftex.generateMipmaps=false;ftex.needsUpdate=true}
+ f.fillStyle='#f4f8f2';f.fillRect(0,0,6,fc.height);f.fillRect(W2-6,0,6,fc.height);quantField();
+ f.save();f.translate(W2/2,60*PX);f.rotate(Math.PI/4);f.fillStyle='rgba(247,250,246,.92)';const dm=PX*1.35;f.fillRect(-dm,-dm,dm*2,dm*2);f.restore();
+ buildMips()}
+let _ftexReady=false;function buildMips(){if(!_ftexReady)return;const L=[fc];let c=fc;while(c.width>1||c.height>1){const n=document.createElement('canvas');n.width=Math.max(1,c.width>>1);n.height=Math.max(1,c.height>>1);const g=n.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(c,0,0,n.width,n.height);L.push(n);c=n}ftex.mipmaps=L;ftex.generateMipmaps=false;ftex.minFilter=THREE.NearestMipmapNearestFilter;ftex.magFilter=THREE.NearestFilter;ftex.needsUpdate=true}
 function quantField(){const id=f.getImageData(0,0,fc.width,fc.height),d=id.data;const pal=[[0x1a,0x5a,0x26],[0x1f,0x67,0x2b],[0x2a,0x82,0x37],[0x3a,0x9a,0x44],[0x4f,0xae,0x52],[0xf4,0xf8,0xf2],[0x12,0x16,0x30]];
  for(const tm of [home(),away()])for(const c of [tm.c1,tm.c2,HELM.mix(tm.c1,.82),HELM.mix(tm.c1,.4)]){const n=parseInt(String(c).replace('#','').slice(0,6),16);if(!isNaN(n))pal.push([n>>16&255,n>>8&255,n&255])}
  const cache=new Map();for(let i=0;i<d.length;i+=4){const k=(d[i]>>2)<<12|(d[i+1]>>2)<<6|(d[i+2]>>2);let c=cache.get(k);if(!c){let bd=1e9;for(const p of pal){const e=(p[0]-d[i])**2*0.3+(p[1]-d[i+1])**2*0.59+(p[2]-d[i+2])**2*0.11;if(e<bd){bd=e;c=p}}cache.set(k,c)}d[i]=c[0];d[i+1]=c[1];d[i+2]=c[2];d[i+3]=255}f.putImageData(id,0,0)}
@@ -108,7 +108,7 @@ const cvs=(w,h,fn)=>{const c=document.createElement('canvas');c.width=w;c.height
 let wallTex,ledTex;
 function paintWall(){wallTex=cvs(512,64,(g,w,h)=>{const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,home().c1);gr.addColorStop(1,HELM.mix(home().c1,.55));g.fillStyle=gr;g.fillRect(0,0,w,h);
  g.fillStyle='rgba(255,255,255,.12)';for(let x=0;x<w;x+=32){g.beginPath();g.moveTo(x,h);g.lineTo(x+16,0);g.lineTo(x+24,0);g.lineTo(x+8,h);g.fill()}
- g.font='900 30px "Arial Black",Arial';g.textAlign='center';g.textBaseline='middle';g.fillStyle='#fff';g.fillText('PIXEL BLITZ',w*.3,h/2+2);g.fillText(home().nick||home().n.split(' ')[1],w*.78,h/2+2);g.fillStyle='#fff';g.fillRect(0,0,w,3)});
+ g.font='900 30px "Arial Black",Arial';g.textAlign='center';g.textBaseline='middle';g.fillStyle='#fff';g.fillText('PIXEL BLITZ',w*.3,h/2+2);g.fillText(home().a||home().nick,w*.78,h/2+2);g.fillStyle='#fff';g.fillRect(0,0,w,3)});
  ledTex=cvs(1024,32,(g,w,h)=>{const segs=[[home().c1,'GO '+home().a],['#0c0f20','BLITZ NIGHT'],[away().c1,away().n],['#ffd23f','MAKE SOME NOISE'],[home().c2,'PIXEL BLITZ']];const sw=w/segs.length;
   segs.forEach((s,i)=>{g.fillStyle=s[0];g.fillRect(i*sw,0,sw,h);g.font='900 20px Arial';g.textAlign='center';g.textBaseline='middle';const lum=parseInt(s[0].slice(1,3),16)*.3+parseInt(s[0].slice(3,5),16)*.59+parseInt(s[0].slice(5,7),16)*.11;g.fillStyle=lum>150?'#141a3a':'#fff';g.fillText(s[1],i*sw+sw/2,h/2+1)});
   g.fillStyle='rgba(0,0,0,.25)';for(let x=0;x<w;x+=3)g.fillRect(x,0,1,h)})}
@@ -230,11 +230,12 @@ function mkTeamMesh(){const tex=new THREE.CanvasTexture(document.createElement('
 const TM=[mkTeamMesh(),mkTeamMesh()];
 const ngeo=new THREE.PlaneGeometry(1,1);
 function mkNumMesh(){const mat=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(document.createElement('canvas')),alphaTest:.15,depthTest:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4});
- mat.onBeforeCompile=sh=>{sh.vertexShader='attribute vec2 uvOff;\n'+sh.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\n vMapUv = vMapUv*vec2(0.1,0.1) + uvOff;')};
- const g=ngeo.clone();const uo=new THREE.InstancedBufferAttribute(new Float32Array(N*2),2);uo.setUsage(THREE.DynamicDrawUsage);g.setAttribute('uvOff',uo);const m=new THREE.InstancedMesh(g,mat,N);m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);m.frustumCulled=false;scene.add(m);return{m,mat,uo}}
+ const SU=1/S.NSLOT;
+ mat.onBeforeCompile=sh=>{sh.vertexShader='attribute vec2 uvOff;\n'+sh.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\n vMapUv = vMapUv*vec2('+SU.toFixed(8)+',1.0) + uvOff;')};
+ const m=new THREE.InstancedMesh(ngeo,mat,N);m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);const uo=new THREE.InstancedBufferAttribute(new Float32Array(N*2),2);uo.setUsage(THREE.DynamicDrawUsage);m.geometry=ngeo.clone();m.geometry.setAttribute('uvOff',uo);m.frustumCulled=false;scene.add(m);return{m,mat,uo,cv:null,tex:null}}
 const NM=[mkNumMesh(),mkNumMesh()];NM.forEach(n=>n.m.renderOrder=3);const camUp=new THREE.Vector3(),camBk=new THREE.Vector3();window.__atlases=[];
-let atlasKey='';function ensureAtlas(){const k=G.home+'-'+G.away+'-v35';if(k===atlasKey)return;atlasKey=k;[home(),away()].forEach((t,i)=>{const c=S.buildAtlas(t,i?G.away:G.home);window.__atlases[i]=c;const tx=new THREE.CanvasTexture(c);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;tx.generateMipmaps=false;tx.colorSpace=THREE.SRGBColorSpace;TM[i].mat.map=tx;TM[i].mat.needsUpdate=true;const nc=S.buildNumbers(t);const nt=new THREE.CanvasTexture(nc);nt.magFilter=nt.minFilter=THREE.NearestFilter;nt.generateMipmaps=false;nt.colorSpace=THREE.SRGBColorSpace;NM[i].mat.map=nt;NM[i].mat.needsUpdate=true})}
-const pm=new THREE.Matrix4(),v3=new THREE.Vector3(),sc=new THREE.Vector3();
+let atlasKey='';function ensureAtlas(){const k=G.home+'-'+G.away+'-v35b';if(k===atlasKey)return;atlasKey=k;[home(),away()].forEach((t,i)=>{const c=S.buildAtlas(t,i?G.away:G.home);window.__atlases[i]=c;const tx=new THREE.CanvasTexture(c);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;tx.generateMipmaps=false;tx.colorSpace=THREE.SRGBColorSpace;TM[i].mat.map=tx;TM[i].mat.needsUpdate=true;const nc=S.buildNumbers(t);const nt=new THREE.CanvasTexture(nc);nt.magFilter=nt.minFilter=THREE.NearestFilter;nt.generateMipmaps=false;nt.flipY=true;nt.colorSpace=THREE.SRGBColorSpace;NM[i].mat.map=nt;NM[i].cv=nc;NM[i].tex=nt;NM[i].mat.needsUpdate=true})}
+const pm=new THREE.Matrix4(),v3=new THREE.Vector3(),sc=new THREE.Vector3(),bUp=new THREE.Vector3(),bOut=new THREE.Vector3();
 // ===== v17 animation state machine: pose + roll + squash + lift, eased per player =====
 const N_=S.P;let animT=performance.now();const qR=new THREE.Quaternion(),qC=new THREE.Quaternion(),zAx=new THREE.Vector3(0,0,1);
 const ang=(a)=>{while(a>Math.PI)a-=2*Math.PI;while(a<-Math.PI)a+=2*Math.PI;return a};
@@ -286,16 +287,23 @@ function updatePlayers(){SPK+=(SPKT-SPK)*0.25;window.__SPK=SPK;{const bs=Math.ma
   const s=2.8*SPK*(line?1.18:1);sc.set(s*mir*(1+sq),s*(1-sq)*p._sy,1);qR.setFromAxisAngle(zAx,p._r);qC.copy(cam.quaternion).multiply(qR);pm.compose(v3.set(Xw(p.x),0.02+p._lf,Z(p.y)),qC,sc);T.m.setMatrixAt(i,pm);
   T.uo.setXY(i,pose*CU,1-((dir*10+p.skin*2+line)+1)*CV);
   const M=S.META[dir*S.POSES+pose]||S.META[dir*S.POSES+N_.idle0]||{ty:9};p._ny=p._ny===undefined?M.ty:p._ny+(M.ty-p._ny)*Math.min(1,dt*14);
-  // Numbers: same qC as body (tracks roll/anim) + camUp mid-upper (v30 proven, no turf float)
+  // Billboard local axes (includes roll). Body origin is the feet.
+  bUp.set(0,1,0).applyQuaternion(qC);bOut.set(0,0,1).applyQuaternion(qC);
+  const sY=s*(1-sq)*(p._sy||1);
+  const helmPx=Math.max(0,Math.min(18,(p._ny||9)-8));
+  v3b.set(Xw(p.x),0.02+p._lf,Z(p.y)).addScaledVector(bUp,((24-helmPx)/24)*sY);
+  v3b.project(cam);p._hx=(v3b.x+1)/2*W;p._hy=(1-v3b.y)/2*H;
+  // Number quad shares the sprite axes (qC / bUp). Center is three pixels under the shoulder line, so it stays on the upper back and cannot clear the helmet.
   const noNum=p.fallen>0.3||p.dive>0.2||Math.abs(p._r)>1.35||p._sy<0.4;
-  if(!noNum){const Nm=NM[p.team],j=nc[p.team]++;
-   const ly=0.23*s*(p._sy||1);
-   v3.set(Xw(p.x),0.02+p._lf,Z(p.y));
-   v3.addScaledVector(camUp,ly);
-   v3.addScaledVector(camBk,0.08);
-   const nw=0.42*s*(line?1.15:1),nh=0.32*s;
-   pm.compose(v3,qC,sc.set(nw*Math.sign(mir||1),nh,1));Nm.m.setMatrixAt(j,pm);
-   const n=Math.max(0,Math.min(99,p.num|0));Nm.uo.setXY(j,(n%10)*0.1,1-(Math.floor(n/10)+1)*0.1)}
+  if(!noNum&&nc[p.team]<S.NSLOT){const Nm=NM[p.team],j=nc[p.team]++;
+   const backPx=Math.max(6,Math.min(16,(p._ny||9)+3));
+   const frac=(24-backPx)/24;
+   const nh=(4.5/24)*sY,nw=(7.5/24)*s*(line?1.06:1);
+   v3.set(Xw(p.x),0.02+p._lf,Z(p.y)).addScaledVector(bUp,frac*sY).addScaledVector(bOut,0.025);
+   pm.compose(v3,qC,sc.set(nw,nh,1));Nm.m.setMatrixAt(j,pm);
+   const n=Math.max(0,Math.min(99,p.num|0));
+   if(S.paintNumber(Nm.cv,j,n)&&Nm.tex)Nm.tex.needsUpdate=true;
+   Nm.uo.setXY(j,j/S.NSLOT,0)}
   m4.makeRotationX(-Math.PI/2);m4.setPosition(Xw(p.x),.02,Z(p.y));shadow.setMatrixAt(si,m4)});
  TM.forEach((T,k)=>{T.m.count=cnt[k];T.m.instanceMatrix.needsUpdate=true;T.uo.needsUpdate=true});NM.forEach((T,k)=>{T.m.count=nc[k];T.m.instanceMatrix.needsUpdate=true;T.uo.needsUpdate=true});shadow.count=G.players.length;shadow.instanceMatrix.needsUpdate=true}
 // route ribbons

@@ -116,17 +116,17 @@ function buildAtlas(t,ti){const at=document.createElement('canvas');at.width=CEL
   gb.clearRect(0,0,CELL,CELL);const m=fig(gb,t,SKIN[s],line,dir,NAMES[pose],ti);if(s===0&&line===0)META[dir*POSES+pose]=m;
   outline(B,CELL,CELL,OUT);ag.drawImage(B,pose*CELL,(dir*10+s*2+line)*CELL)}
  return at}
-// jersey numbers: 3x5 pixel digits, 10x10 grid of 9x7 cells
+// One slot per on-field player. Digits are painted into that slot so 72 can never sample as 77.
 const DG=['111101101101111','010110010010111','111001111100111','111001111001111','101101111001001','111100111001111','111100111101111','111001010010010','111101111101111','111101111001111'];
-function buildNumbers(t){const c=document.createElement('canvas');c.width=90;c.height=70;const g=c.getContext('2d',{willReadFrequently:true});
- // Always max-contrast digits so numbers never wash out on any jersey
- const fg=lum(t.c1)>130?'#101018':'#ffffff';
- const out=lum(t.c1)>130?'#ffffff':'#0a0a12';
- for(let n=0;n<100;n++){const ox=(n%10)*9,oy=Math.floor(n/10)*7;const s=String(n);const digs=s.length===1?[s]:[s[0],s[1]];const x0=s.length===1?ox+3:ox+1;
-  // outline pass then fill — locked readable digits
-  digs.forEach((d,k)=>{const b=DG[+d];for(let i=0;i<15;i++)if(b[i]==='1'){const px=x0+k*4+i%3,py=oy+1+Math.floor(i/3);
-   g.fillStyle=out;for(const[dx,dy]of[[0,0],[1,0],[-1,0],[0,1],[0,-1]])g.fillRect(px+dx,py+dy,1,1)}
-   for(let i=0;i<15;i++)if(b[i]==='1'){g.fillStyle=fg;g.fillRect(x0+k*4+i%3,oy+1+Math.floor(i/3),1,1)}})}
- return c}
-window.SPR={CELL,DIRS,POSES,P,NAMES,META,buildAtlas,buildNumbers};
+const NSLOT=14,NCW=18,NCH=12;
+function buildNumbers(t){const c=document.createElement('canvas');c.width=NCW*NSLOT;c.height=NCH;const g=c.getContext('2d',{willReadFrequently:true});
+ g.clearRect(0,0,c.width,c.height);c._g=g;c._last=new Array(NSLOT).fill(-1);
+ c._fg=lum(t.c1)>140?'#101018':'#ffffff';c._out=lum(t.c1)>140?'#ffffff':'#0a0a12';return c}
+function paintNumber(c,slot,n){if(!c||slot<0||slot>=NSLOT)return false;n=Math.max(0,Math.min(99,n|0));if(c._last[slot]===n)return false;c._last[slot]=n;
+ const g=c._g,ox=slot*NCW,fg=c._fg,out=c._out;g.clearRect(ox,0,NCW,NCH);
+ const s=String(n).padStart(2,'0'),dw=3,gap=1,total=dw*2+gap,x0=ox+Math.floor((NCW-total)/2),y0=Math.floor((NCH-5)/2);
+ for(let k=0;k<2;k++){const b=DG[+s[k]];for(let i=0;i<15;i++)if(b[i]==='1'){const px=x0+k*(dw+gap)+(i%3),py=y0+((i/3)|0);g.fillStyle=out;g.fillRect(px-1,py-1,3,3)}}
+ for(let k=0;k<2;k++){const b=DG[+s[k]];for(let i=0;i<15;i++)if(b[i]==='1'){g.fillStyle=fg;g.fillRect(x0+k*(dw+gap)+(i%3),y0+((i/3)|0),1,1)}}
+ return true}
+window.SPR={CELL,DIRS,POSES,P,NAMES,META,buildAtlas,buildNumbers,paintNumber,NSLOT,NCW};
 })();
