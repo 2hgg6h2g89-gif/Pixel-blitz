@@ -38,8 +38,7 @@ function paintField(){const W2=fc.width;
   const sc=Math.max(3,Math.round(PX*0.55));
   if(window.pxText){pxText(f,nm,0,0,sc,fill,{al:'center',out:HELM.mix(tm.c1,.35),sk:0.12})}
   else{f.font=`900 ${5.2*PX}px "Arial Black", Arial`;f.textAlign='center';f.textBaseline='middle';f.lineWidth=PX*.7;f.strokeStyle=HELM.mix(tm.c1,.4);f.strokeText(nm,0,PX*.3);f.fillStyle=fill;f.fillText(nm,0,PX*.3)}
-  // team logos flanking wordmark
-  if(HELM.drawLogo){const ls=PX*3.2;HELM.drawLogo(f,-nm.length*sc*1.1,0,ls,ti,fill,HELM.mix(tm.c1,.3));HELM.drawLogo(f,nm.length*sc*1.1,0,ls,ti,fill,HELM.mix(tm.c1,.3))}
+  // v29: no coin/medallion logos in end zones — wordmark only
   f.restore()};
  ez(away(),0,false,G.away);ez(home(),110*PX,false,G.home);
  f.fillStyle='#f4f8f2';
@@ -48,9 +47,8 @@ function paintField(){const W2=fc.width;
  f.font=`700 ${2.6*PX}px "Arial Black", Arial`;f.textAlign='center';f.textBaseline='middle';
  for(let yd=10;yd<100;yd+=10){const n=yd<=50?yd:100-yd,y=(110-yd)*PX;
   for(const [hx,r] of [[9,Math.PI/2],[FW-9,-Math.PI/2]]){f.save();f.translate(hx*PX,y);f.rotate(r);f.fillText(String(n),0,0);f.restore()}}
- // midfield logo: home emblem in a ring
- f.save();f.translate(W2/2,60*PX);f.beginPath();f.arc(0,0,4.2*PX,0,7);f.fillStyle='rgba(16,20,48,.88)';f.fill();f.lineWidth=PX*.5;f.strokeStyle=home().c1;f.stroke();f.lineWidth=PX*.18;f.strokeStyle='#fff';f.beginPath();f.arc(0,0,3.6*PX,0,7);f.stroke();
- f.rotate(Math.PI);HELM.drawLogo(f,0,0,PX*5.5,G.home,home().c1,'#0c0f20');f.restore();
+ // midfield mark — light emblem only (no coin disc)
+ f.save();f.translate(W2/2,60*PX);f.globalAlpha=.55;f.rotate(Math.PI);if(HELM.drawLogo)HELM.drawLogo(f,0,0,PX*4.2,G.home,home().c1,HELM.mix(home().c1,.35));f.restore();
  f.fillStyle='#f4f8f2';f.fillRect(0,0,6,fc.height);f.fillRect(W2-6,0,6,fc.height);quantField();buildMips()}
 let _ftexReady=false;function buildMips(){if(!_ftexReady)return;const L=[fc];let c=fc;while(c.width>1||c.height>1){const n=document.createElement('canvas');n.width=Math.max(1,c.width>>1);n.height=Math.max(1,c.height>>1);const g=n.getContext('2d');g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(c,0,0,n.width,n.height);L.push(n);c=n}ftex.mipmaps=L;ftex.generateMipmaps=false;ftex.needsUpdate=true}
 function quantField(){const id=f.getImageData(0,0,fc.width,fc.height),d=id.data;const pal=[[0x1a,0x5a,0x26],[0x1f,0x67,0x2b],[0x2a,0x82,0x37],[0x3a,0x9a,0x44],[0x4f,0xae,0x52],[0xf4,0xf8,0xf2],[0x12,0x16,0x30]];
@@ -218,7 +216,7 @@ function mkTeamMesh(){const tex=new THREE.CanvasTexture(document.createElement('
  const m=new THREE.InstancedMesh(bgeo,mat,N);m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);const uo=new THREE.InstancedBufferAttribute(new Float32Array(N*2),2);uo.setUsage(THREE.DynamicDrawUsage);m.geometry=bgeo.clone();m.geometry.setAttribute('uvOff',uo);m.frustumCulled=false;scene.add(m);return{m,mat,uo}}
 const TM=[mkTeamMesh(),mkTeamMesh()];
 const ngeo=new THREE.PlaneGeometry(1,1);
-function mkNumMesh(){const mat=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(document.createElement('canvas')),alphaTest:.5,depthTest:true,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+function mkNumMesh(){const mat=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(document.createElement('canvas')),alphaTest:.15,depthTest:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4});
  mat.onBeforeCompile=sh=>{sh.vertexShader='attribute vec2 uvOff;\n'+sh.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\n vMapUv = vMapUv*vec2(0.1,0.1) + uvOff;')};
  const g=ngeo.clone();const uo=new THREE.InstancedBufferAttribute(new Float32Array(N*2),2);uo.setUsage(THREE.DynamicDrawUsage);g.setAttribute('uvOff',uo);const m=new THREE.InstancedMesh(g,mat,N);m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);m.frustumCulled=false;scene.add(m);return{m,mat,uo}}
 const NM=[mkNumMesh(),mkNumMesh()];NM.forEach(n=>n.m.renderOrder=3);const camUp=new THREE.Vector3(),camBk=new THREE.Vector3();window.__atlases=[];
@@ -275,14 +273,15 @@ function updatePlayers(){SPK+=(SPKT-SPK)*0.25;window.__SPK=SPK;{const bs=Math.ma
   const s=2.8*SPK*(line?1.18:1);sc.set(s*mir*(1+sq),s*(1-sq)*p._sy,1);qR.setFromAxisAngle(zAx,p._r);qC.copy(cam.quaternion).multiply(qR);pm.compose(v3.set(Xw(p.x),0.02+p._lf,Z(p.y)),qC,sc);T.m.setMatrixAt(i,pm);
   T.uo.setXY(i,pose*CU,1-((dir*10+p.skin*2+line)+1)*CV);
   const M=S.META[dir*S.POSES+pose]||S.META[dir*S.POSES+N_.idle0]||{ty:9};p._ny=p._ny===undefined?M.ty:p._ny+(M.ty-p._ny)*Math.min(1,dt*14);
-  // Numbers on jersey BACK — billboard-parented (v29: same qC as body so they stay on the jersey).
-  const backVis=dir>=2;const noNum=!backVis||Math.abs(p._r)>0.7||p._sy<0.7||p.fallen>0||p.dive>0;
-  if(!noNum){const Nm=NM[p.team],j=nc[p.team]++;const u=s/24;
-   const torsoY=(24-(p._ny+1.5))/24;const side=dir===2;
-   const nw=9*u*(line?1.08:0.98)*(side?0.78:1),nh=7*u*(side?0.82:1);
-   v3b.set(0,torsoY,0.04);v3b.applyQuaternion(qC);
-   v3.set(Xw(p.x),0.02+p._lf,Z(p.y)).add(v3b);
-   pm.compose(v3,qC,sc.set(nw,nh*p._sy,1));Nm.m.setMatrixAt(j,pm);
+  // Numbers ALWAYS on jersey BACK (v25/v26 quality). Physical-back offset — never gated by dir/linemen.
+  // Only hide when body is flattened (dive/fallen) so digits never glitch off during blocks.
+  const noNum=p.fallen>0.2||p.dive>0||Math.abs(p._r)>1.15||p._sy<0.5;
+  if(!noNum){const Nm=NM[p.team],j=nc[p.team]++;const hpx=24-(p._ny+3.0)+(dir===2?0.35:0);const u=s/24;
+   const fa=p.fa||0,bx=-Math.sin(fa)*0.52,bz=Math.cos(fa)*0.52;
+   v3.set(Xw(p.x)+bx,0.02+p._lf,Z(p.y)+bz).addScaledVector(camUp,hpx*u);
+   v3.addScaledVector(camBk,0.06);
+   const nw=9*u*(line?1.2:1.05)*(dir===2?0.85:1),nh=7*u*(dir===2?0.88:1.05);
+   pm.compose(v3,cam.quaternion,sc.set(nw,nh,1));Nm.m.setMatrixAt(j,pm);
    const n=Math.max(0,Math.min(99,p.num|0));Nm.uo.setXY(j,(n%10)*0.1,1-(Math.floor(n/10)+1)*0.1)}
   m4.makeRotationX(-Math.PI/2);m4.setPosition(Xw(p.x),.02,Z(p.y));shadow.setMatrixAt(si,m4)});
  TM.forEach((T,k)=>{T.m.count=cnt[k];T.m.instanceMatrix.needsUpdate=true;T.uo.needsUpdate=true});NM.forEach((T,k)=>{T.m.count=nc[k];T.m.instanceMatrix.needsUpdate=true;T.uo.needsUpdate=true});shadow.count=G.players.length;shadow.instanceMatrix.needsUpdate=true}

@@ -113,9 +113,14 @@ function buildAtlas(t){const at=document.createElement('canvas');at.width=CELL*P
 // jersey numbers: 3x5 pixel digits, 10x10 grid of 9x7 cells
 const DG=['111101101101111','010110010010111','111001111100111','111001111001111','101101111001001','111100111001111','111100111101111','111001010010010','111101111101111','111101111001111'];
 function buildNumbers(t){const c=document.createElement('canvas');c.width=90;c.height=70;const g=c.getContext('2d',{willReadFrequently:true});
- const fg=Math.abs(lum(t.c2)-lum(t.c1))>60?t.c2:(lum(t.c1)>140?'#1a1a2a':'#ffffff');
+ // Always max-contrast digits so numbers never wash out on any jersey
+ const fg=lum(t.c1)>130?'#101018':'#ffffff';
+ const out=lum(t.c1)>130?'#ffffff':'#0a0a12';
  for(let n=0;n<100;n++){const ox=(n%10)*9,oy=Math.floor(n/10)*7;const s=String(n);const digs=s.length===1?[s]:[s[0],s[1]];const x0=s.length===1?ox+3:ox+1;
-  digs.forEach((d,k)=>{const b=DG[+d];for(let i=0;i<15;i++)if(b[i]==='1'){g.fillStyle=fg;g.fillRect(x0+k*4+i%3,oy+1+Math.floor(i/3),1,1)}})}
- const sh=hx(shade(t.c1,.45));outline(c,90,70,sh);return c}
+  // outline pass then fill — locked readable digits
+  digs.forEach((d,k)=>{const b=DG[+d];for(let i=0;i<15;i++)if(b[i]==='1'){const px=x0+k*4+i%3,py=oy+1+Math.floor(i/3);
+   g.fillStyle=out;for(const[dx,dy]of[[0,0],[1,0],[-1,0],[0,1],[0,-1]])g.fillRect(px+dx,py+dy,1,1)}
+   for(let i=0;i<15;i++)if(b[i]==='1'){g.fillStyle=fg;g.fillRect(x0+k*4+i%3,oy+1+Math.floor(i/3),1,1)}})}
+ return c}
 window.SPR={CELL,DIRS,POSES,P,NAMES,META,buildAtlas,buildNumbers};
 })();

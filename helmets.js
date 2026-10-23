@@ -172,19 +172,13 @@ function pxHelm(t,ti,left){
  // glass specular
  P(33,12,3,1,'#ffffff');P(34,13,2,1,mix(vHi,1.4));
  P(32,11,5,1,vEdge); // top lid
- // ---- FACEMASK cage (solid, readable)
- // forehead bar
- P(37,10,4,1,fm);P(36,11,1,1,fm);P(39,11,2,1,fm);
- // upper cage
- P(38,12,3,1,fm);P(39,13,3,1,fm);P(39,14,3,1,fm);
- // mid bar
- P(37,15,5,1,fm);P(36,16,6,1,fm);
- // lower / chin bars
- P(35,17,6,1,fm);P(34,18,6,1,fm);P(33,19,6,1,fm);P(32,20,5,1,fm);
- // vertical posts
- P(40,11,1,8,fm);P(38,12,1,7,fmHi);P(36,15,1,5,fm);
- // nose / brow connector
- P(35,12,2,1,fm);
+ // ---- FACEMASK cage (solid quality-bar bars)
+ P(36,10,5,2,fm);P(35,11,2,1,fm);P(39,11,3,1,fm);
+ P(38,12,4,1,fm);P(39,13,4,1,fm);P(39,14,4,1,fm);
+ P(36,15,6,2,fm);
+ P(34,17,7,1,fm);P(33,18,7,1,fm);P(32,19,7,1,fm);P(31,20,6,1,fm);
+ P(41,11,2,9,fm);P(38,12,2,8,fmHi);P(36,15,2,6,fm);
+ P(34,12,3,1,fm);
  // chinstrap buckle
  P(28,22,3,2,fmHi);P(29,22,1,1,'#e8ecf2');
  // bottom padding / liner peek
