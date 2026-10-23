@@ -1,4 +1,4 @@
-// Pixel Blitz helmets — shell craft copied from Rivalries Drop template; ORIGINAL marks only.
+// Pixel Blitz helmets — exact Rivalries Drop blank shell. Teams differ by color only. No logos, marks, or stripes.
 (function(){
 function hex(h){const n=parseInt(String(h).replace('#',''),16);return[n>>16&255,n>>8&255,n&255]}
 function mix(h,f){const[r,g,b]=hex(h);const m=v=>Math.max(0,Math.min(255,Math.round(f>1?v+(255-v)*(f-1):v*f)));return`rgb(${m(r)},${m(g)},${m(b)})`}
@@ -52,36 +52,38 @@ const SHELL_RGBA=b64u8(SHELL_B64), ROLE=b64u8(ROLE_B64);
 function pxHelm(t,ti,left){
   const c=document.createElement('canvas');c.width=SHELL_W;c.height=SHELL_H;const g=c.getContext('2d');
   const img=g.createImageData(SHELL_W,SHELL_H),d=img.data;
-  const shell=hex(t.h), stripe=hex(t.c1===t.h?t.c2:t.c1);
-  const vHue=hex(best(t.h,[t.c2,t.c1,t.h,'#3fd0ff']));
+  const shell=hex(t.h);
+  const mask=hex(best(t.h,[t.c2,t.c1,'#16181f','#eceae4']));
+  const glass=[mask[0]*0.22+18,mask[1]*0.24+26,mask[2]*0.30+34];
   const ref=[245,107,78]; const refL=.3*ref[0]+.59*ref[1]+.11*ref[2];
   const role=SCRUB;
   for(let i=0;i<SHELL_W*SHELL_H;i++){
     const o=i*4,r0=SHELL_RGBA[o],g0=SHELL_RGBA[o+1],b0=SHELL_RGBA[o+2],a0=SHELL_RGBA[o+3];
     if(a0<8){d[o+3]=0;continue}
     const rl=role[i], L=.3*r0+.59*g0+.11*b0, shade=L/refL;
+    const x=i%SHELL_W,y=(i/SHELL_W)|0;
     let r,gc,b;
-    if(rl===2){r=gc=b=Math.max(8,Math.min(40,L*0.35));}
-    else if(rl===4){r=gc=b=Math.min(255,L*1.05);}
+    if(rl===2){
+      if(x>=52&&y>=16&&y<=62){
+        const k=Math.max(0.62,Math.min(1.2,0.5+shade*0.45));
+        r=Math.min(255,mask[0]*k+16);gc=Math.min(255,mask[1]*k+16);b=Math.min(255,mask[2]*k+16);
+      }else r=gc=b=Math.max(10,Math.min(36,L*0.32));
+    }
+    else if(rl===4){const k=Math.min(1.15,Math.max(0.7,shade));r=Math.min(255,214*k);gc=Math.min(255,220*k);b=Math.min(255,228*k);}
     else if(rl===5){r=Math.min(255,220*shade);gc=Math.min(255,224*shade);b=Math.min(255,230*shade);}
     else if(rl===3){
-      const k=Math.min(1.4,Math.max(0.25,shade));
-      r=Math.min(255,vHue[0]*k*(0.45+0.55*(b0/255)));
-      gc=Math.min(255,vHue[1]*k*(0.45+0.55*(g0/255)));
-      b=Math.min(255,vHue[2]*k*(0.55+0.5*(r0/255)));
-      if(L>200){r=Math.min(255,r+80);gc=Math.min(255,gc+90);b=Math.min(255,b+100)}
+      const k=Math.min(1.35,Math.max(0.28,shade));
+      r=Math.min(255,glass[0]*k*(0.55+0.45*(b0/255)));
+      gc=Math.min(255,glass[1]*k*(0.55+0.45*(g0/255)));
+      b=Math.min(255,glass[2]*k*(0.55+0.45*(r0/255)));
+      if(L>200){r=Math.min(255,r+70);gc=Math.min(255,gc+78);b=Math.min(255,b+86)}
     }
     else {
       const k=Math.min(1.55,Math.max(0.22,shade));
       r=Math.min(255,shell[0]*k);gc=Math.min(255,shell[1]*k);b=Math.min(255,shell[2]*k);
-      const x=i%SHELL_W,y=(i/SHELL_W)|0;
-      if(((ti|0)%3)!==2 && x>=46&&x<=50 && y>=8&&y<=52 && rl===1){
-        const sk=k*0.95;r=Math.min(255,stripe[0]*sk);gc=Math.min(255,stripe[1]*sk);b=Math.min(255,stripe[2]*sk);
-      }
     }
     d[o]=r|0;d[o+1]=gc|0;d[o+2]=b|0;d[o+3]=255;
   }
-  stampMark(d,role,t,ti);
   g.putImageData(img,0,0);
   if(left){const f=document.createElement('canvas');f.width=SHELL_W;f.height=SHELL_H;const fg=f.getContext('2d');fg.translate(SHELL_W,0);fg.scale(-1,1);fg.drawImage(c,0,0);return f}
   return c;
@@ -180,9 +182,13 @@ function stampMark(d,role,t,ti){
   }
 }
 const _helmCache=new Map();
+function helmSrc(t,left){
+  const key=(left?1:0)+':'+(t.h||'')+':'+(t.c1||'')+':'+(t.c2||'')+':v35blank';
+  let src=_helmCache.get(key);if(!src){src=pxHelm(t,0,!!left);_helmCache.set(key,src)}
+  return src;
+}
 function drawHelmet(g,x,y,size,t,left,ti){
-  const key=(ti|0)+':'+(left?1:0)+':'+(t.h||'')+':'+(t.c1||'')+':'+(t.c2||'')+':v33logo';
-  let src=_helmCache.get(key);if(!src){src=pxHelm(t,ti,!!left);_helmCache.set(key,src)}
+  const src=helmSrc(t,left);
   const s=Math.max(12,Math.round(size));
   const dw=s,dh=Math.round(s*SHELL_H/SHELL_W);
   g.save();g.imageSmoothingEnabled=false;
@@ -208,5 +214,5 @@ function glyph(ti){
   return GLY[id]=g;
 }
 function clearHelmCache(){_helmCache.clear()}
-window.HELM={drawHelmet,drawLogo,emblem,EMB,MARK:LOGO_CELLS,ART,glyph,markCols,mix,clearHelmCache};
+window.HELM={drawHelmet,shell:(t,left)=>helmSrc(t,!!left),drawLogo,emblem,EMB,MARK:LOGO_CELLS,ART,glyph,markCols,mix,clearHelmCache};
 })();
