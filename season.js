@@ -63,23 +63,23 @@ function nameTeam(){if(!G.season||!G.players)return;const h=G.home,a=G.away;cons
   p.nm=nm(p.team?a:h,key)})}
 window.__nameTeam=nameTeam;['setupPlay','startKickoff'].forEach(f=>{const o=window[f];if(!o)return;window[f]=function(){const r=o.apply(this,arguments);nameTeam();return r}});
 // ---------- update / screens ----------
-const MENU=['modesel','team','hub','standings','schedule','bracket','career'];window.MENU_ST=st=>st==='title'||MENU.includes(st);
+const MENU=['modesel','team','hub','standings','schedule','bracket','career','cteam','chub','croster','cdraft','cfa','ccontract','ctrade'];window.MENU_ST=st=>st==='title'||MENU.includes(st)||(window.__career&&window.__career.CMENU.includes(st));
 let sel=0,tab=0,scroll=0,teamDiff=1;
 function hitR(t,x,y,w,h){return t&&t[0]>=x&&t[0]<=x+w&&t[1]>=y&&t[1]<=y+h}
 function gridPos(i){const cols=4,cw=(W-24)/cols,rh=54;return[12+(i%cols)*cw,136+Math.floor(i/cols)*rh,cw-6,rh-6]}
-function startMyGame(){const g=myGame();if(!g)return;G.season=true;G.home=S.team;G.away=g.opp;G.diff=S.diff;G.lvl=1;
+function startMyGame(){const g=myGame();if(!g)return;G.season=true;if(window.__career&&window.__career.get())G.career=true;G.home=S.team;G.away=g.opp;G.diff=S.diff;G.lvl=1;
  Object.assign(G,{sh:0,sa:0,drive:0,q:1,clock:QLEN,aud:4,los:25,down:1,togo:10,log:[],stats:{py:0,ry:0,td:0,int:0,sack:0},two:false,fgDone:false,paused:false});G.st='vs';G.vsT=0}
 window.startMyGame=startMyGame;
 const _u=update;update=function(dt){
  if(G.st==='title'&&!G.paused){const taps=IN.taps.splice(0);IN.keyp.splice(0);G.t+=dt;if(taps.length){G.st='modesel'}return}
  if(G.st==='vs'){G.t+=dt;G.vsT+=dt;const taps=IN.taps.splice(0);IN.keyp.splice(0);if(G.vsT>2.2||(taps.length&&G.vsT>0.5)){startKickoff()}return}
- if(G.st==='final'&&G.season){G.t+=dt;const taps=IN.taps.splice(0);IN.keyp.splice(0);if(taps.length){G.season=false;G.st='hub'}return}
- if(MENU.includes(G.st)&&!G.paused){G.t+=dt;const taps=IN.taps.splice(0);IN.keyp.splice(0);for(const t of taps){if(!t)continue;menuTap(t)}return}
+ if(G.st==='final'&&G.season){G.t+=dt;const taps=IN.taps.splice(0);IN.keyp.splice(0);if(taps.length){G.season=false;G.st=(G.career?'chub':'hub')}return}
+ if(MENU.includes(G.st)&&!G.paused){G.t+=dt;const taps=IN.taps.splice(0);IN.keyp.splice(0);if(window.__career&&window.__career.CMENU.includes(G.st)){if(window.__career.tick)window.__career.tick(dt);for(const tp of taps){if(!tp)continue;window.__career.tap(tp)}return}for(const tp of taps){if(!tp)continue;menuTap(tp)}return}
  if(G.otFlag&&G.st==='result'){G.otFlag=false}
  _u(dt)};
 function menuTap(t){const[x,y]=t;
  if(G.st==='modesel'){if(hitR(t,40,300,W-80,90)){G.career=false;load();if(S&&S.v===1)G.st='hub';else{sel=0;G.st='team'}return}
-  if(hitR(t,40,420,W-80,90)){G.career=true;G.st='career';return}return}
+  if(hitR(t,40,420,W-80,90)){G.career=true;load();const C=window.__career&&window.__career.load();if(C&&C.v>=2){G.st='chub';window.__career.applyRatings();if(!S||!S.v){window.__season.newSeason(C.team,C.diff||1);const Ss=window.__season.get();if(Ss){Ss.career=true;Ss.year=C.year||1;window.__season.save()}}}else G.st='cteam';return}return}
  if(G.st==='career'){if(hitR(t,40,700,W-80,56)){G.career=false;G.st='modesel'}return}
  if(G.st==='team'){for(let i=0;i<32;i++){const[a,b,w,h]=gridPos(i);if(hitR(t,a,b,w,h)){sel=i;return}}
   const bw=(W-32)/4;for(let i=0;i<4;i++)if(hitR(t,16+i*bw,690,bw,40)){teamDiff=i;return}
@@ -87,7 +87,7 @@ function menuTap(t){const[x,y]=t;
  if(G.st==='hub'){if(hitR(t,30,520,W-60,64)){if(S.phase==='done'||(S.phase==='po'&&!alive())){finishOutPlayoffs();return}startMyGame();return}
   const bw=(W-60-16)/3;['standings','schedule','bracket'].forEach((s,i)=>{if(hitR(t,30+i*(bw+8),604,bw,52))G.st=s,scroll=0});
   if(hitR(t,W/2-80,780,160,34)){S=null;localStorage.removeItem(KEY);sel=0;G.st='team'}return}
- if(hitR(t,12,40,90,40)){G.st='hub';return}
+ if(hitR(t,12,40,90,40)){G.st=G.career?'chub':'hub';return}
  if(G.st==='standings'){if(hitR(t,W/2-150,92,150,34))tab=0;if(hitR(t,W/2,92,150,34))tab=1;return}
  if(G.st==='schedule'){return}
  if(G.st==='bracket'){return}}
@@ -100,7 +100,7 @@ function recStr(t){const r=S.rec[t];return r.w+'-'+r.l+(r.t?'-'+r.t:'')}
 function drawModeSel(){bg();txt('PIXEL BLITZ',W/2,120,28,PAL.yel);txt('CHOOSE YOUR PATH',W/2,160,14,PAL.cy,'center',false);
  btn(40,300,W-80,90,'ARCADE','#1f6fd6','#fff',26);txt('PICK A TEAM  ·  PLAY NOW',W/2,365,11,'#c9d4ff','center',false);
  btn(40,420,W-80,90,'CAREER','#c8102e','#fff',26);txt('COACH  ·  DRAFT  ·  BUILD YOUR DYNASTY',W/2,485,11,'#ffd0d6','center',false);
- txt('CAREER FULL BUILD IN NEXT UPDATE',W/2,560,10,'#8a93b8','center',false)}
+ txt('DRAFT · CONTRACTS · FREE AGENTS · TRADES',W/2,560,10,'#8a93b8','center',false)}
 function drawCareer(){bg();hdr('CAREER MODE');txt('YOU ARE THE COACH',W/2,120,16,PAL.cy,'center',false);
  txt('DRAFT  ·  CONTRACTS  ·  FREE AGENTS  ·  TRADES',W/2,160,11,'#9fb3ff','center',false);
  box(30,220,W-60,280,'#120a24',PAL.yel);
@@ -144,11 +144,11 @@ function drawVS(){bg();const t=TEAMS[G.home],o=TEAMS[G.away];const k=Math.min(1,
  txt(t.city,110,350,13,'#fff');txt(t.nick,110,374,20,'#fff');txt(recStr(G.home),110,398,13,'#fff');txt(o.city,W-110,452,13,'#fff');txt(o.nick,W-110,476,20,'#fff');txt(recStr(G.away),W-110,500,13,'#fff');
  const s=G.vsT<0.5?3-4*G.vsT:1;X.translate(W/2,H/2-10);X.scale(s,s);txt('VS',0,0,64,PAL.yel);X.restore();txt(S.phase==='po'?RND[S.po.round]:'WEEK '+(S.week+1),W/2,H-60,16,'#fff')}
 const _r=render;render=function(){if(MENU.includes(G.st)||G.st==='vs'||(G.st==='title'&&false)){X.setTransform(DPR,0,0,DPR,0,0);X.save();
-  if(G.st==='modesel')drawModeSel();else if(G.st==='career')drawCareer();else if(G.st==='team')drawTeam();else if(G.st==='hub')drawHub();else if(G.st==='standings')drawStandings();else if(G.st==='schedule')drawSchedule();else if(G.st==='bracket')drawBracket();else if(G.st==='vs')drawVS();X.restore();return}
+  if(G.st==='modesel')drawModeSel();else if(G.st==='career')drawCareer();else if(window.__career&&window.__career.CMENU.includes(G.st))window.__career.draw();else if(G.st==='team')drawTeam();else if(G.st==='hub')drawHub();else if(G.st==='standings')drawStandings();else if(G.st==='schedule')drawSchedule();else if(G.st==='bracket')drawBracket();else if(G.st==='vs')drawVS();X.restore();return}
  _r();
  if(G.season&&(G.st==='live'||G.st==='result')&&window.PROJ){const c=G.carrier;if(c&&c.nm&&G.st==='live'&&!((G.hoA||0)>0.05&&c===G.qb)){const q=scr(c.x,c.y,3.6);X.save();X.setTransform(DPR,0,0,DPR,0,0);const s=last(c.nm);X.font='800 11px Trebuchet MS';const w=X.measureText(s).width+12;pill(q[0]-w/2,q[1]-34,w,16,'rgba(10,14,36,.85)','#ffd23f');txt(s,q[0],q[1]-26,11,'#fff','center',false);X.restore()}}
  if(G.st==='final'&&G.season){X.save();X.setTransform(DPR,0,0,DPR,0,0);rect(40,540,W-80,40,'#120a24');txt('TAP TO CONTINUE THE SEASON',W/2,560,13,PAL.cy);X.restore()}};
 // carrier-change callouts with roster names
 let prevC=null;const _u2=update;update=function(dt){_u2(dt);if(!G.season)return;const c=G.carrier;if(G.st==='live'&&c&&c!==prevC&&prevC&&c.nm&&c.team===0){const how=c.role==='WR'?'CATCH BY ':c.role==='RB'&&G.play&&G.play.t!=='ko'?'HANDOFF TO ':'';if(how)say(how+last(c.nm),1.1)}prevC=G.st==='live'?c:null};
-window.__season={get:()=>S,load,newSeason,finishWeek,startPlayoffs,playRound,seeds,myGame,sim:simGame};
+window.__season={get:()=>S,load,save,newSeason,finishWeek,startPlayoffs,playRound,seeds,myGame,sim:simGame};
 })();
