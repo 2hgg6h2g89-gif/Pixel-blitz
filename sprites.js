@@ -53,12 +53,13 @@ const NAMES=Object.keys(D);const POSES=NAMES.length;const P={};NAMES.forEach((n,
 Object.assign(P,{idle:P.idle0,run:P.run0,hrun:P.carry0,throw:P.thr0,catch1:P.catchUp,catch2:P.catchTuck,dive:P.dive1,fall:P.down,celeb:P.cel1,block:P.blk0});
 function frontOf(s){if(s.F)return Object.assign({c:s.c||0,j:s.j||0},s.F);const A=s.A||[[0,5],[0,5]];
  const f=([hx,hy])=>[1+Math.max(0,-hx)*0.3|0,hy-(hx>2?2:0)];return{c:s.c||0,j:s.j||0,L:[s.L?s.L[1]:0,s.L?s.L[3]:0],sp:(s.c||0)>=2?1:0,A:[f(A[0]),f(A[1])],ball:s.ball==='tuck'||s.ball==='tuck2'?'chest':s.ball==='n'?'r':s.ball==='hi'?'up':null}}
-function fig(g,t,skin,line,dir,name){const s=D[name];
+function fig(g,t,skin,line,dir,name,ti){const s=D[name];
  const r=(x,y,w,h,c)=>{if(w>0&&h>0){g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}};
  const seg=(x0,y0,x1,y1,w,c)=>{const n=Math.max(1,Math.ceil(Math.max(Math.abs(x1-x0),Math.abs(y1-y0))));for(let i=0;i<=n;i++){const k=i/n;r(x0+(x1-x0)*k-w/2+0.5,y0+(y1-y0)*k-w/2+0.5,w,w,c)}};
  const side=dir===2,back=dir>=3,diag=dir===1||dir===3;
  const bw=line?11:8,cx=12;const fs=side?s:frontOf(s);
  const c=fs.c||0,j=fs.j||0,br=fs.br||0;const y0=1+c-j+br,ty=y0+8,py=ty+6,ly=py+2,fy=22-j;const ln=side?(s.ln||0):0;
+ const paintMark=(ox,oy)=>{if(ti==null||!window.HELM||!HELM.glyph)return;const gl=HELM.glyph(ti),col=HELM.markCols(t);for(let yy=0;yy<4;yy++)for(let xx=0;xx<4;xx++){const v=gl[yy][xx];if(!v)continue;r(ox+xx,oy+yy,1,1,v===2?col.accent:col.fill)}};
  const J=t.c1,J2=shade(t.c1,.7),JL=shade(t.c1,1.2),H=t.h,HL=shade(t.h,1.45),H2=shade(t.h,.68),ST=lum(t.c1)-lum(t.h)>-40&&Math.abs(lum(t.c1)-lum(t.h))>40?t.c1:t.c2,
   PN=t.p,PN2=shade(t.p,.75),SK=skin,SK2=shade(skin,.8),MK='#d4d8e0',MK2='#8a909c',SH='#1a1a1a',SO=t.c2;
  const ballAt=(x,y,v)=>{if(v){r(x,y,2,3,BALL);r(x,y+1,1,1,LACE)}else{r(x,y,3,2,BALL);r(x+1,y,1,1,LACE)}};
@@ -92,10 +93,11 @@ function fig(g,t,skin,line,dir,name){const s=D[name];
   r(cx-3,y0+1,3,1,HL);r(cx-2,y0,2,1,'#ffffff');r(cx-1,y0,2,7,ST);r(cx-4,y0+6,2,1,H2);r(cx-3,y0+5,2,2,H2);
   // tinted visor glass + solid cage (sprite-scale Rivalries cue)
   r(cx+3,y0+2,4,4,shade(ST,.45));r(cx+3,y0+2,4,1,'#d8f0ff');r(cx+4,y0+3,3,1,shade(ST,.3));r(cx+3,y0+5,4,1,shade(ST,.2));
-  r(cx+5,y0+2,2,1,MKD);r(cx+5,y0+4,2,1,MKD);r(cx+5,y0+6,2,1,MKD);r(cx+7,y0+2,1,5,MKD);r(cx+4,y0+6,3,1,MKD);r(cx-2,y0+4,2,2,'#141220')}
- else if(back){r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-1,y0,2,7,ST);r(cx-1,y0,2,1,HL);r(cx-4,y0+1,2,1,HL);r(cx-5,y0+5,1,1,'#141220');r(cx+4,y0+5,1,1,'#141220')}
+  r(cx+5,y0+2,2,1,MKD);r(cx+5,y0+4,2,1,MKD);r(cx+5,y0+6,2,1,MKD);r(cx+7,y0+2,1,5,MKD);r(cx+4,y0+6,3,1,MKD);paintMark(cx-5,y0+2)}
+ else if(back){r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-1,y0,2,7,ST);r(cx-1,y0,2,1,HL);r(cx-4,y0+1,2,1,HL);paintMark(cx-5,y0+2)}
  else{const o=diag?2:0,fw=6-(diag?1:0);r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-1+o,y0,2,7,ST);r(cx-1+o,y0,2,1,HL);r(cx-4+o,y0+1,1,1,HL);r(cx-3+o,y0+1,1,1,'#ffffff');
-  r(cx-3+o,y0+3,fw,4,shade(ST,.35));r(cx-3+o,y0+3,fw,1,'#b8e0ff');r(cx-3+o,y0+4,fw,1,MKD);r(cx-3+o,y0+6,fw,1,MKD);r(cx+o,y0+4,1,3,MKD);if(diag)r(cx-4,y0+4,1,1,'#141220')}
+  paintMark(cx-5,y0+1);
+  r(cx-3+o,y0+3,fw,4,shade(ST,.35));r(cx-3+o,y0+3,fw,1,'#b8e0ff');r(cx-3+o,y0+4,fw,1,MKD);r(cx-3+o,y0+6,fw,1,MKD);r(cx+o,y0+4,1,3,MKD)}
  after.forEach(f=>f());
  return {ty,cover:!side&&(fs.ball==='chest'||(A[0][1]>0&&A[0][1]<4&&fs.A&&fs.A[0][0]<0))}}
 function outline(c,W,Hh,col){const g=c.getContext('2d',{willReadFrequently:true}),d=g.getImageData(0,0,W,Hh),a=d.data;
@@ -106,10 +108,10 @@ function outline(c,W,Hh,col){const g=c.getContext('2d',{willReadFrequently:true}
  g.putImageData(new ImageData(o,W,Hh),0,0)}
 // atlas: columns = pose, rows = dir*10 + skin*2 + line
 const META=[];
-function buildAtlas(t){const at=document.createElement('canvas');at.width=CELL*POSES;at.height=CELL*10*DIRS;const ag=at.getContext('2d');ag.imageSmoothingEnabled=false;
+function buildAtlas(t,ti){const at=document.createElement('canvas');at.width=CELL*POSES;at.height=CELL*10*DIRS;const ag=at.getContext('2d');ag.imageSmoothingEnabled=false;
  const B=document.createElement('canvas');B.width=B.height=CELL;const gb=B.getContext('2d',{willReadFrequently:true});gb.imageSmoothingEnabled=false;
  for(let dir=0;dir<DIRS;dir++)for(let pose=0;pose<POSES;pose++)for(let s=0;s<5;s++)for(let line=0;line<2;line++){
-  gb.clearRect(0,0,CELL,CELL);const m=fig(gb,t,SKIN[s],line,dir,NAMES[pose]);if(s===0&&line===0)META[dir*POSES+pose]=m;
+  gb.clearRect(0,0,CELL,CELL);const m=fig(gb,t,SKIN[s],line,dir,NAMES[pose],ti);if(s===0&&line===0)META[dir*POSES+pose]=m;
   outline(B,CELL,CELL,OUT);ag.drawImage(B,pose*CELL,(dir*10+s*2+line)*CELL)}
  return at}
 // jersey numbers: 3x5 pixel digits, 10x10 grid of 9x7 cells
