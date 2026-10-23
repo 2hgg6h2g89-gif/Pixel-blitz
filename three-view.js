@@ -234,7 +234,7 @@ function mkNumMesh(){const mat=new THREE.MeshBasicMaterial({map:new THREE.Canvas
  mat.onBeforeCompile=sh=>{sh.vertexShader='attribute vec2 uvOff;\n'+sh.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\n vMapUv = vMapUv*vec2('+SU.toFixed(8)+',1.0) + uvOff;')};
  const m=new THREE.InstancedMesh(ngeo,mat,N);m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);const uo=new THREE.InstancedBufferAttribute(new Float32Array(N*2),2);uo.setUsage(THREE.DynamicDrawUsage);m.geometry=ngeo.clone();m.geometry.setAttribute('uvOff',uo);m.frustumCulled=false;scene.add(m);return{m,mat,uo,cv:null,tex:null}}
 const NM=[mkNumMesh(),mkNumMesh()];NM.forEach(n=>n.m.renderOrder=3);const camUp=new THREE.Vector3(),camBk=new THREE.Vector3();window.__atlases=[];
-let atlasKey='';function ensureAtlas(){const k=G.home+'-'+G.away+'-v35b';if(k===atlasKey)return;atlasKey=k;[home(),away()].forEach((t,i)=>{const c=S.buildAtlas(t,i?G.away:G.home);window.__atlases[i]=c;const tx=new THREE.CanvasTexture(c);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;tx.generateMipmaps=false;tx.colorSpace=THREE.SRGBColorSpace;TM[i].mat.map=tx;TM[i].mat.needsUpdate=true;const nc=S.buildNumbers(t);const nt=new THREE.CanvasTexture(nc);nt.magFilter=nt.minFilter=THREE.NearestFilter;nt.generateMipmaps=false;nt.flipY=true;nt.colorSpace=THREE.SRGBColorSpace;NM[i].mat.map=nt;NM[i].cv=nc;NM[i].tex=nt;NM[i].mat.needsUpdate=true})}
+let atlasKey='';function ensureAtlas(){const k=G.home+'-'+G.away+'-v36';if(k===atlasKey)return;atlasKey=k;[home(),away()].forEach((t,i)=>{const c=S.buildAtlas(t,i?G.away:G.home);window.__atlases[i]=c;const tx=new THREE.CanvasTexture(c);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;tx.generateMipmaps=false;tx.colorSpace=THREE.SRGBColorSpace;TM[i].mat.map=tx;TM[i].mat.needsUpdate=true;const nc=S.buildNumbers(t);const nt=new THREE.CanvasTexture(nc);nt.magFilter=nt.minFilter=THREE.NearestFilter;nt.generateMipmaps=false;nt.flipY=true;nt.colorSpace=THREE.SRGBColorSpace;NM[i].mat.map=nt;NM[i].cv=nc;NM[i].tex=nt;NM[i].mat.needsUpdate=true})}
 const pm=new THREE.Matrix4(),v3=new THREE.Vector3(),sc=new THREE.Vector3(),bUp=new THREE.Vector3(),bOut=new THREE.Vector3();
 // ===== v17 animation state machine: pose + roll + squash + lift, eased per player =====
 const N_=S.P;let animT=performance.now();const qR=new THREE.Quaternion(),qC=new THREE.Quaternion(),zAx=new THREE.Vector3(0,0,1);
@@ -327,7 +327,7 @@ const RQ=new Float64Array(4096);let RQn=0,RR=1;const _cl=(v,a,b)=>v<a?a:v>b?b:v;
 function rq(x,y,h){if(RQn<4093){RQ[RQn++]=x;RQ[RQn++]=y;RQ[RQn++]=h}}
 function rqP(q,la){const hh=2.9*SPKT;rq(q.x,q.y,0.05);rq(q.x,q.y,hh);if(la>0){const px=q.x+_cl(q.vx||0,-9,9)*la,py=q.y+_cl(q.vy||0,-9,9)*la;rq(px,py,0.05);rq(px,py,hh)}}
 function sdamp(c,t,o,k,ST,dt){const w=2/ST,x=w*dt,e=1/(1+x+0.48*x*x+0.235*x*x*x);const ch=c-t,tmp=(o[k]+w*ch)*dt;o[k]=(o[k]-w*tmp)*e;return t+(ch+tmp)*e}
-function camFits(){for(let i=0;i<RQn;i+=3){_fv.set(Xw(RQ[i]),RQ[i+2],Z(RQ[i+1])).project(cam);if(_fv.z>=1||Math.abs(_fv.x)>0.94||_fv.y>0.66||_fv.y<-0.87)return false}return true}
+function camFits(){const top=cam._fitTop||0.66;for(let i=0;i<RQn;i+=3){_fv.set(Xw(RQ[i]),RQ[i+2],Z(RQ[i+1])).project(cam);if(_fv.z>=1||Math.abs(_fv.x)>0.94||_fv.y>top||_fv.y<-0.87)return false}return true}
 function camPose(CA,bb,want,zf){zf=zf||1;const w=CA.w,asp=W/H;const Tp=CA.t.p+(CA.r.p-CA.t.p)*RR,Tf=CA.t.f+(CA.r.f-CA.t.f)*RR;const p=(w.p+(Tp-w.p)*bb)*Math.PI/180,f=w.f+(Tf-w.f)*bb,fr=f*Math.PI/360,t=Math.tan(fr),yn=cam._yW+(cam._yN-cam._yW)*bb;
   if(Math.abs(cam.fov-f)>1e-6){cam.fov=f;cam.updateProjectionMatrix()}
   let yl=1e9;for(let i=0;i<RQn;i+=3)if(RQ[i+1]<yl)yl=RQ[i+1];if(yl>1e8)yl=camFy;yl-=0.5;
@@ -364,7 +364,7 @@ window.R3D=()=>{if(!_pixDone)pixelize();const st=G.st;if(window.MENU_ST?window.M
    // Deep-route helpers: track deepest offensive route runner + aim lock
    const deepW=()=>{let best=null,by=-1e9;for(const w of P)if(w.team===0&&(w.role==='WR'||w.role==='TE')&&!(w.fallen>0)){const ey=(w.wp&&w.wp.length)?w.wp[w.wp.length-1].y:w.y;const dy=Math.max(w.y,ey);if(dy>by){by=dy;best=w}}return best};
    const aimT=(G.aim&&G.aim.lock)||(G.lastAim&&G.lastAim.lock)||(G.pend&&G.pend.w)||null;
-   if(!after){fy=drop?G.qb.y:c3.y;fx=drop?G.qb.x:c3.x;yN=drop?-0.5:-0.12;want=1;stF=drop?0.38:0.34;
+   if(!after){fy=drop?G.qb.y:c3.y;fx=drop?G.qb.x:c3.x;yN=drop?-0.5:-0.12;want=0.5;stF=drop?0.38:0.34;
     // Pre-throw: keep EVERYONE on screen (no off-screen runners)
     for(const q of P)rqP(q,LA*1.15);
     if(pass&&c3===G.qb){const dw=aimT||deepW();
@@ -375,13 +375,14 @@ window.R3D=()=>{if(!_pixDone)pixelize();const st=G.st;if(window.MENU_ST?window.M
      for(const w of P)if(w.team===0&&w.wp&&w.wp.length&&(w.role==='WR'||w.role==='TE'||w.role==='RB')){const e=w.wp[w.wp.length-1];rq(e.x,Math.min(e.y,G.los+(window.RDEEP||26)),0.05)}}
     }
    else if(inAir){let tg=aimT;if(ko)tg=c3;else if(!tg){let bd=1e9;for(const q of P)if(q.team===0&&q!==G.qb){const d=Math.hypot(q.x-b3.tx,q.y-b3.ty);if(d<bd){bd=d;tg=q}}}
-     // Follow ball along trajectory (spring-smooth, never stadium cut)
-     const k=Math.min(1,b3.t/b3.T);fy=b3.y+(b3.ty-b3.y)*Math.min(1,0.15+0.75*k);fx=b3.x+(b3.tx-b3.x)*0.5;yN=-0.08;want=1;stF=0.42;
+     // Ball + target only, so the existing fit can zoom in. Spring below, no stadium cut.
+     const k=Math.min(1,b3.t/b3.T);fy=b3.y+(b3.ty-b3.y)*Math.min(1,0.15+0.75*k);fx=b3.x+(b3.tx-b3.x)*0.5;yN=-0.08;want=1;stF=0.34;
      const bz=(b3.h0||1.6)*(1-k)+1.6*k+b3.z*0.9;rq(b3.x,b3.y,0.3);rq(b3.x,b3.y,bz+0.6);
      const k2=Math.min(1,(b3.t+LA*0.9)/b3.T);rq(b3.x+(b3.tx-b3.x)*(k2-k)/Math.max(0.05,1-k),b3.y+(b3.ty-b3.y)*(k2-k)/Math.max(0.05,1-k),0.3);
-     // Intended receiver stays framed but do NOT yank focus to stadium
-     if(tg){rqP(tg,LA*0.85);fy=fy*0.7+tg.y*0.3;fx=fx*0.72+tg.x*0.28}if(c3&&c3!==tg)rqP(c3,0.15)}
-   else{fy=c3.y;fx=c3.x;yN=-0.12;want=1;stF=0.32;rqP(c3,LA);const dw=deepW();if(pass&&dw&&dw.y>c3.y+8){rqP(dw,0.4);fy=fy*0.65+dw.y*0.35}}
+     if(tg){rqP(tg,LA*0.7);fy=fy*0.72+tg.y*0.28;fx=fx*0.74+tg.x*0.26;for(const q of P)if(q.team!==(tg.team||0)&&Math.hypot(q.x-tg.x,q.y-tg.y)<6.5)rqP(q,0.12)}}
+   else{const caught=!!(b3&&b3.caught);fy=c3.y;fx=c3.x;yN=-0.12;want=caught?1:0.82;stF=0.32;rqP(c3,LA);
+    if(caught){for(const q of P)if(q!==c3&&Math.hypot(q.x-c3.x,q.y-c3.y)<7)rqP(q,0.15)}
+    else{const dw=deepW();if(pass&&dw&&dw.y>c3.y+8){rqP(dw,0.4);fy=fy*0.65+dw.y*0.35}}}
    cam._Rt=after?1:0}
   if(live&&!ko&&!G.thrown){const push=hudErr();if(push){fx-=push.x*0.055;yN-=push.y*0.004;yN=_cl(yN,-0.58,0.12)}}
   if(!live&&st!=='result')cam._Rt=0;
@@ -391,18 +392,21 @@ window.R3D=()=>{if(!_pixDone)pixelize();const st=G.st;if(window.MENU_ST?window.M
   if(cam._yW===undefined)cam._yW=CA.w.yN;if(jump&&camFy!==undefined&&!window.__hold)window.__fadeA=1;if(jump){camFy=fy;camX=fx;cam._yN=yN;cam._yW=want===0?yN:CA.w.yN;V.yW=0;V.fy=V.fx=V.yN=0;cam._R=cam._Rt||0;V.R=0;V.b=0;V.zf=0}
   else{camFy=sdamp(camFy,fy,V,'fy',stF,dt);camX=sdamp(camX,fx,V,'fx',0.42,dt);cam._yN=sdamp(cam._yN,yN,V,'yN',0.36,dt);cam._R=sdamp(cam._R,cam._Rt||0,V,'R',0.28,dt);cam._yW=sdamp(cam._yW,want===0?yN:CA.w.yN,V,'yW',0.4,dt)}
   RR=CA.ref?1:cam._R;
-  // Fit zoom: NEVER pull to stadium overview mid-pass (cap zt, floor bf while live)
-  let bf=want,zt=1;const zCap=(live&&(inAir||pass))?1.35:(live?1.55:3.2);
-  for(let bb=want;bb>=0.35;bb-=0.04){camPose(CA,bb,want);if(camFits()){bf=bb;break}}
-  if(bf<0.36){bf=live?Math.max(0.45,want*0.55):0;for(zt=1;zt<zCap;zt+=0.06){camPose(CA,bf,want,zt);if(camFits())break}}
-  if(live&&inAir){bf=Math.max(bf,0.55);zt=Math.min(zt,1.28)}
+  // Pre-pass: widen until every player clears the HUD. Throws: tighten on the ball.
+  // If nothing fits, pull back (v30) — the old path left bf at the tight preset and cropped deep routes.
+  cam._fitTop=(live&&!inAir&&!G.thrown&&!ko)?0.46:0.64;
+  const preWide=live&&!inAir&&!G.thrown&&!ko;
+  let bf=want,zt=1,fitted=false;const zCap=preWide?2.35:(live&&inAir)?1.12:(live?1.55:3.2);const bbMin=preWide?0.18:0.32;
+  for(let bb=want;bb>=bbMin;bb-=0.04){camPose(CA,bb,want);if(camFits()){bf=bb;fitted=true;break}}
+  if(!fitted){bf=preWide?bbMin:(live?0.4:0);for(zt=1;zt<zCap;zt+=0.06){camPose(CA,bf,want,zt);if(camFits()){fitted=true;break}}}
+  if(live&&(inAir||(b3&&b3.caught))&&!ko){zt=Math.min(zt,1.02);const floor=bf;for(let bb=Math.min(want,0.9);bb>=floor;bb-=0.04){camPose(CA,bb,want,zt);if(camFits()){bf=bb;break}}}
   cam._zf=cam._zf||1;
   // Spring only — never hard-snap b/zf on pass (jump reserved for KO / menu)
   const passLock=live&&(inAir||(pass&&G.thrown));
   if(cam._b===undefined||(jump&&!passLock)){cam._b=bf;V.b=0}else{
-    const needOut=bf>cam._b+0.02;const unfit=(!needOut&&(()=>{camPose(CA,cam._b,want,cam._zf);return !camFits()})());
-    const stb=passLock?0.45:(needOut||unfit?(st==='live'?0.28:0.32):(st==='result'?0.35:0.2));
-    cam._b=sdamp(cam._b,unfit&&!passLock?Math.min(1,cam._b+0.05):bf,V,'b',stb,dt)}
+    const zoomIn=bf>cam._b+0.03;const widen=bf<cam._b-0.02;
+    const stb=passLock?(zoomIn?0.3:0.45):(widen?(st==='live'?0.28:0.32):(st==='result'?0.35:0.2));
+    cam._b=sdamp(cam._b,bf,V,'b',stb,dt)}
   if(jump&&!passLock){cam._zf=zt;V.zf=0}else{
     const needZ=zt>cam._zf+0.02;const unfitZ=(!needZ&&(()=>{camPose(CA,cam._b,want,cam._zf);return !camFits()})());
     const zst=passLock?0.5:(needZ||unfitZ?0.32:0.4);
@@ -412,6 +416,6 @@ window.R3D=()=>{if(!_pixDone)pixelize();const st=G.st;if(window.MENU_ST?window.M
   SPKT=CA.w.s+((CA.t.s+(CA.r.s-CA.t.s)*RR)-CA.w.s)*cam._b;
   cpos.copy(cam.position);_fv.set(0,0,-1).applyQuaternion(cam.quaternion);clook.copy(cam.position).addScaledVector(_fv,10)}
  if(G.shake>0){const s=Math.min(1,G.shake*4)*G.shake;cam.position.y+=Math.sin(G.t*53)*s;cam.position.z+=Math.sin(G.t*41+1)*s}
- cam.lookAt(clook);if(false&&fgB&&G.fg){const f=G.fg;const fly=f.ph==='fly'||G.st==='result';const by=fly?Math.min(fgB.y,100):f.y0;const tgt=fly?[Xw(fgB.x)*0.6,Math.min(9,Math.max(3,fgB.z*0.5+2)),Math.min(by-16,86),Xw(fgB.x)*0.4,Math.max(4,fgB.z*0.6),110]:[Xw(f.x0)+0.5,10,f.y0-17,0,6,111];fgC=fgC&&fly?fgC.map((v,i)=>v+(tgt[i]-v)*0.12):tgt;cam.position.set(fgC[0],fgC[1],Z(fgC[2]));cam.lookAt(fgC[3],fgC[4],Z(fgC[5]))}else fgC=null;{const prePass=(st==='live'||st==='presnap')&&!(G.play&&G.play.t==='ko')&&!G.thrown&&!(G.ball&&!G.ball.caught);if(on&&!ov&&!fgB&&G.players&&(prePass||(window.__clampOn&&(st==='live'||st==='result'))))clampView()}if(window.__camOv){const o=window.__camOv;cam.position.set(...o.p);cam.lookAt(...o.l)}
+ cam.lookAt(clook);if(false&&fgB&&G.fg){const f=G.fg;const fly=f.ph==='fly'||G.st==='result';const by=fly?Math.min(fgB.y,100):f.y0;const tgt=fly?[Xw(fgB.x)*0.6,Math.min(9,Math.max(3,fgB.z*0.5+2)),Math.min(by-16,86),Xw(fgB.x)*0.4,Math.max(4,fgB.z*0.6),110]:[Xw(f.x0)+0.5,10,f.y0-17,0,6,111];fgC=fgC&&fly?fgC.map((v,i)=>v+(tgt[i]-v)*0.12):tgt;cam.position.set(fgC[0],fgC[1],Z(fgC[2]));cam.lookAt(fgC[3],fgC[4],Z(fgC[5]))}else fgC=null;if(on&&!ov&&!fgB&&G.players&&window.__clampOn&&(st==='live'||st==='result'))clampView();if(window.__camOv){const o=window.__camOv;cam.position.set(...o.p);cam.lookAt(...o.l)}
  if(window.__fadeA>0){window.__fadeA=Math.max(0,window.__fadeA-1/60/0.38);const fe=_fadeEl||(_fadeEl=document.getElementById('fade'));if(fe){const a=window.__fadeA;fe.style.opacity=(a*a*(3-2*a)*0.9).toFixed(3)}}
  if(!window.__camOnly)ren.render(scene,cam)};let _fadeEl=null;

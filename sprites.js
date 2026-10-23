@@ -59,7 +59,7 @@ function fig(g,t,skin,line,dir,name,ti){const s=D[name];
  const side=dir===2,back=dir>=3,diag=dir===1||dir===3;
  const bw=line?11:8,cx=12;const fs=side?s:frontOf(s);
  const c=fs.c||0,j=fs.j||0,br=fs.br||0;const y0=1+c-j+br,ty=y0+8,py=ty+6,ly=py+2,fy=22-j;const ln=side?(s.ln||0):0;
- const J=t.c1,J2=shade(t.c1,.7),JL=shade(t.c1,1.2),H=t.h,HL=shade(t.h,1.45),H2=shade(t.h,.68),ST=H,
+ const J=t.c1,J2=shade(t.c1,.7),JL=shade(t.c1,1.2),H=t.h,HL=shade(t.h,1.45),H2=shade(t.h,.68),ST=lum(t.c1)-lum(t.h)>-40&&Math.abs(lum(t.c1)-lum(t.h))>40?t.c1:t.c2,
   PN=t.p,PN2=shade(t.p,.75),SK=skin,SK2=shade(skin,.8),MK='#d4d8e0',MK2='#8a909c',SH='#1a1a1a',SO=t.c2;
  const ballAt=(x,y,v)=>{if(v){r(x,y,2,3,BALL);r(x,y+1,1,1,LACE)}else{r(x,y,3,2,BALL);r(x+1,y,1,1,LACE)}};
  const after=[];
@@ -86,20 +86,15 @@ function fig(g,t,skin,line,dir,name,ti){const s=D[name];
   const up=A[0][1]<0||A[1][1]<0;const go=()=>{const a=arm(A[0],L,-1,SK),b=arm(A[1],R,1,SK);const bl=fs.ball;
    if(bl==='chest'&&!back){r(cx-3,ty+2,6,2,SK);ballAt(cx-1,ty+1,false)}else if(bl==='up')ballAt(cx-1,Math.min(a[1],b[1])-2,false);else if(bl==='r')ballAt(b[0]-1,b[1]-1,false);else if(bl==='l')ballAt(a[0]-1,a[1]-1,false)};
   if(up)after.push(go);else go()}
- // ---- helmet: cropped blank Rivalries shell (color only, no mark)
- const hx0=side?cx+Math.round(ln):cx;
- const blitShell=()=>{if(!window.HELM||!HELM.shell)return false;const src=HELM.shell(t,false);
-  let sx0=6,sy0=13,sw=81,sh=58,dw=14,dh=10;
-  if(back&&!diag){sx0=8;sw=40;dw=11}
-  else if(!side&&!back){sx0=48;sw=40;dw=11}
-  g.imageSmoothingEnabled=false;g.drawImage(src,sx0,sy0,sw,sh,Math.round(hx0-dw/2),y0+8-dh,dw,dh);return true};
- if(!blitShell()){const clr=(x,y)=>g.clearRect(x,y,1,1);const MKD='#1a1a22';
-  if(side){const cx=hx0;r(cx-4,y0,9,8,H);r(cx-5,y0+2,1,4,H);clr(cx-4,y0);clr(cx+4,y0);r(cx-4,y0+7,9,1,H2);r(cx+3,y0+1,1,6,H2);
-   r(cx-3,y0+1,3,1,HL);r(cx-2,y0,2,1,'#ffffff');r(cx-4,y0+6,2,1,H2);r(cx-3,y0+5,2,2,H2);
-   r(cx+3,y0+2,4,4,shade(H,.45));r(cx+5,y0+2,2,1,MKD);r(cx+5,y0+4,2,1,MKD);r(cx+5,y0+6,2,1,MKD);r(cx+7,y0+2,1,5,MKD);r(cx+4,y0+6,3,1,MKD)}
-  else if(back){r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-4,y0+1,2,1,HL)}
-  else{const o=diag?2:0,fw=6-(diag?1:0);r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-4+o,y0+1,1,1,HL);
-   r(cx-3+o,y0+3,fw,4,shade(H,.4));r(cx-3+o,y0+4,fw,1,MKD);r(cx-3+o,y0+6,fw,1,MKD);r(cx+o,y0+4,1,3,MKD)}}
+ // ---- helmet: v32 kid shell (shaded crown, visor, cage). Title shells stay in helmets.js.
+ const hx0=side?cx+Math.round(ln):cx;const clr=(x,y)=>g.clearRect(x,y,1,1);const MKD='#1a1a22';
+ if(side){const cx=hx0;r(cx-4,y0,9,8,H);r(cx-5,y0+2,1,4,H);clr(cx-4,y0);clr(cx+4,y0);r(cx-4,y0+7,9,1,H2);r(cx+3,y0+1,1,6,H2);
+  r(cx-3,y0+1,3,1,HL);r(cx-2,y0,2,1,'#ffffff');r(cx-1,y0,2,7,ST);r(cx-4,y0+6,2,1,H2);r(cx-3,y0+5,2,2,H2);
+  r(cx+3,y0+2,4,4,shade(ST,.45));r(cx+3,y0+2,4,1,'#d8f0ff');r(cx+4,y0+3,3,1,shade(ST,.3));r(cx+3,y0+5,4,1,shade(ST,.2));
+  r(cx+5,y0+2,2,1,MKD);r(cx+5,y0+4,2,1,MKD);r(cx+5,y0+6,2,1,MKD);r(cx+7,y0+2,1,5,MKD);r(cx+4,y0+6,3,1,MKD);r(cx-2,y0+4,2,2,'#141220')}
+ else if(back){r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-1,y0,2,7,ST);r(cx-1,y0,2,1,HL);r(cx-4,y0+1,2,1,HL);r(cx-5,y0+5,1,1,'#141220');r(cx+4,y0+5,1,1,'#141220')}
+ else{const o=diag?2:0,fw=6-(diag?1:0);r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-1+o,y0,2,7,ST);r(cx-1+o,y0,2,1,HL);r(cx-4+o,y0+1,1,1,HL);r(cx-3+o,y0+1,1,1,'#ffffff');
+  r(cx-3+o,y0+3,fw,4,shade(ST,.35));r(cx-3+o,y0+3,fw,1,'#b8e0ff');r(cx-3+o,y0+4,fw,1,MKD);r(cx-3+o,y0+6,fw,1,MKD);r(cx+o,y0+4,1,3,MKD);if(diag)r(cx-4,y0+4,1,1,'#141220')}
  after.forEach(f=>f());
  return {ty,cover:!side&&(fs.ball==='chest'||(A[0][1]>0&&A[0][1]<4&&fs.A&&fs.A[0][0]<0))}}
 function outline(c,W,Hh,col){const g=c.getContext('2d',{willReadFrequently:true}),d=g.getImageData(0,0,W,Hh),a=d.data;

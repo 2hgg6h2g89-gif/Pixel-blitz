@@ -201,7 +201,7 @@ function drawTitle(){const t=G.t;
  const saved=window.__season&&__season.get&&__season.get();
  const homeI=saved&&saved.team!=null?saved.team:titleTeams[0];
  const awayI=titleTeams[1]===homeI?titleTeams[0]:titleTeams[1];
- HELM.drawHelmet(X,W/2+12,518+bob,168,TEAMS[homeI],false,homeI);
+ HELM.drawHelmet(X,W/2-4,518+bob,168,TEAMS[homeI],false,homeI);
  HELM.drawHelmet(X,W-72,590+bob,78,TEAMS[awayI],true,awayI);
  // logo
  const s=Math.min(1,t/0.35);const sc=t<0.35?2.0-1.0*s*s:1;X.save();X.translate(W/2,210);X.scale(sc,sc);
