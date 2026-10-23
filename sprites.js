@@ -90,7 +90,9 @@ function fig(g,t,skin,line,dir,name){const s=D[name];
  const hx0=side?cx+Math.round(ln):cx;const clr=(x,y)=>g.clearRect(x,y,1,1);const MKD='#1a1a22';
  if(side){const cx=hx0;r(cx-4,y0,9,8,H);r(cx-5,y0+2,1,4,H);clr(cx-4,y0);clr(cx+4,y0);r(cx-4,y0+7,9,1,H2);r(cx+3,y0+1,1,6,H2);
   r(cx-3,y0+1,3,1,HL);r(cx-2,y0,2,1,'#ffffff');r(cx-1,y0,2,7,ST);r(cx-4,y0+6,2,1,H2);r(cx-3,y0+5,2,2,H2);
-  r(cx+3,y0+3,3,3,shade(ST,.4));r(cx+3,y0+3,3,1,'#9ad0ff');r(cx+4,y0+4,2,1,shade(ST,.25));r(cx+5,y0+3,2,1,MKD);r(cx+5,y0+5,2,1,MKD);r(cx+7,y0+3,1,4,MKD);r(cx+4,y0+6,3,1,MKD);r(cx-2,y0+4,2,2,'#141220')}
+  // tinted visor glass + solid cage (sprite-scale Rivalries cue)
+  r(cx+3,y0+2,4,4,shade(ST,.45));r(cx+3,y0+2,4,1,'#d8f0ff');r(cx+4,y0+3,3,1,shade(ST,.3));r(cx+3,y0+5,4,1,shade(ST,.2));
+  r(cx+5,y0+2,2,1,MKD);r(cx+5,y0+4,2,1,MKD);r(cx+5,y0+6,2,1,MKD);r(cx+7,y0+2,1,5,MKD);r(cx+4,y0+6,3,1,MKD);r(cx-2,y0+4,2,2,'#141220')}
  else if(back){r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-1,y0,2,7,ST);r(cx-1,y0,2,1,HL);r(cx-4,y0+1,2,1,HL);r(cx-5,y0+5,1,1,'#141220');r(cx+4,y0+5,1,1,'#141220')}
  else{const o=diag?2:0,fw=6-(diag?1:0);r(cx-5,y0,10,8,H);clr(cx-5,y0);clr(cx+4,y0);r(cx-5,y0+7,10,1,H2);r(cx+4,y0+2,1,5,H2);r(cx-1+o,y0,2,7,ST);r(cx-1+o,y0,2,1,HL);r(cx-4+o,y0+1,1,1,HL);r(cx-3+o,y0+1,1,1,'#ffffff');
   r(cx-3+o,y0+3,fw,4,shade(ST,.35));r(cx-3+o,y0+3,fw,1,'#b8e0ff');r(cx-3+o,y0+4,fw,1,MKD);r(cx-3+o,y0+6,fw,1,MKD);r(cx+o,y0+4,1,3,MKD);if(diag)r(cx-4,y0+4,1,1,'#141220')}

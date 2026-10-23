@@ -21,10 +21,13 @@ const lam=c=>new THREE.MeshLambertMaterial({color:c});
 const PX=16,fc=document.createElement('canvas');fc.width=Math.round(FW*PX);fc.height=120*PX;const f=fc.getContext('2d');
 const T=window.TEAMS,home=()=>T[G.home],away=()=>T[G.away];
 function paintField(){const W2=fc.width;
- for(let yd=0;yd<100;yd+=5){f.fillStyle=(yd/5)%2?'#2a8237':'#1f672b';f.fillRect(0,(110-yd-5)*PX,W2,5*PX)}
- {let s=1234567;const R=()=>(s=(s*16807)%2147483647)/2147483647;for(let i=0;i<23000;i++){const x=R()*W2|0,y=(10+R()*100)*PX|0,v=R();f.fillStyle=v<.55?'#1a5a26':v<.9?'#3a9a44':'#4fae52';f.fillRect(x,y,1,v<.55?2:1)}
-  for(let yd=0;yd<100;yd+=10){const y=(110-yd-10)*PX;const g=f.createLinearGradient(0,y,0,y+10*PX);g.addColorStop(0,'rgba(255,255,255,.035)');g.addColorStop(.5,'rgba(0,0,0,.03)');g.addColorStop(1,'rgba(255,255,255,.035)');f.fillStyle=g;f.fillRect(0,y,W2,10*PX)}}
- for(let x=0;x<FW;x+=FW/8){f.fillStyle='rgba(255,255,255,.035)';if(Math.round(x/(FW/8))%2)f.fillRect(x*PX,10*PX,FW/8*PX,100*PX)}
+ // Real gridiron: alternating mowing stripes every 5 yards + subtle grain
+ for(let yd=0;yd<100;yd+=5){f.fillStyle=(yd/5)%2?'#2f8f3c':'#247a32';f.fillRect(0,(110-yd-5)*PX,W2,5*PX)}
+ {let s=1234567;const R=()=>(s=(s*16807)%2147483647)/2147483647;for(let i=0;i<18000;i++){const x=R()*W2|0,y=(10+R()*100)*PX|0,v=R();f.fillStyle=v<.5?'#1c6230':v<.85?'#3aa84a':'#55b85e';f.fillRect(x,y,1,v<.5?2:1)}
+  // soft mowing sheen every 10 yards
+  for(let yd=0;yd<100;yd+=10){const y=(110-yd-10)*PX;const g=f.createLinearGradient(0,y,0,y+10*PX);g.addColorStop(0,'rgba(255,255,255,.05)');g.addColorStop(.5,'rgba(0,0,0,.04)');g.addColorStop(1,'rgba(255,255,255,.05)');f.fillStyle=g;f.fillRect(0,y,W2,10*PX)}}
+ // lengthwise mow bands
+ for(let x=0;x<FW;x+=FW/10){f.fillStyle='rgba(255,255,255,.03)';if(Math.round(x/(FW/10))%2)f.fillRect(x*PX,10*PX,FW/10*PX,100*PX)}
  const ez=(tm,y0,flip,ti)=>{f.fillStyle=tm.c1;f.fillRect(0,y0,W2,10*PX);
   f.save();f.beginPath();f.rect(0,y0,W2,10*PX);f.clip();
   // pixel stripe pattern
@@ -41,12 +44,20 @@ function paintField(){const W2=fc.width;
   // v29: no coin/medallion logos in end zones — wordmark only
   f.restore()};
  ez(away(),0,false,G.away);ez(home(),110*PX,false,G.home);
- f.fillStyle='#f4f8f2';
- for(let yd=0;yd<=100;yd+=5){const y=(110-yd)*PX;f.fillRect(0,y-2,W2,yd%50&&yd%100?4:5)}f.fillRect(0,0,W2,4);f.fillRect(0,120*PX-4,W2,4);
- for(let yd=1;yd<100;yd++){if(yd%5==0)continue;const y=(110-yd)*PX;for(const hx of[1,22.9,29.4,FW-2.6])f.fillRect(Math.round(hx*PX),y-2,Math.round(1.2*PX),4)}
- f.font=`700 ${2.6*PX}px "Arial Black", Arial`;f.textAlign='center';f.textBaseline='middle';
+ // Goal lines + 5-yard lines (crisp white)
+ f.fillStyle='#f7faf6';
+ for(let yd=0;yd<=100;yd+=5){const y=(110-yd)*PX;const thick=(yd===0||yd===100)?7:(yd%10===0?5:3);f.fillRect(0,y-thick/2,W2,thick)}
+ f.fillRect(0,0,W2,5);f.fillRect(0,120*PX-5,W2,5);
+ // Hash marks every yard
+ for(let yd=1;yd<100;yd++){if(yd%5===0)continue;const y=(110-yd)*PX;
+  for(const hx of[1.2,23.5,29.8,FW-2.4]){f.fillRect(Math.round(hx*PX),y-2,Math.round(1.4*PX),4)}}
+ // Yard numbers — larger, outlined for readability
+ f.font=`900 ${3.2*PX}px "Arial Black", Arial`;f.textAlign='center';f.textBaseline='middle';
  for(let yd=10;yd<100;yd+=10){const n=yd<=50?yd:100-yd,y=(110-yd)*PX;
-  for(const [hx,r] of [[9,Math.PI/2],[FW-9,-Math.PI/2]]){f.save();f.translate(hx*PX,y);f.rotate(r);f.fillText(String(n),0,0);f.restore()}}
+  for(const [hx,r] of [[8.5,Math.PI/2],[FW-8.5,-Math.PI/2]]){
+   f.save();f.translate(hx*PX,y);f.rotate(r);
+   f.lineWidth=Math.max(2,PX*0.35);f.strokeStyle='rgba(10,40,18,.55)';f.strokeText(String(n),0,0);
+   f.fillStyle='#f7faf6';f.fillText(String(n),0,0);f.restore()}}
  // midfield mark — light emblem only (no coin disc)
  f.save();f.translate(W2/2,60*PX);f.globalAlpha=.55;f.rotate(Math.PI);if(HELM.drawLogo)HELM.drawLogo(f,0,0,PX*4.2,G.home,home().c1,HELM.mix(home().c1,.35));f.restore();
  f.fillStyle='#f4f8f2';f.fillRect(0,0,6,fc.height);f.fillRect(W2-6,0,6,fc.height);quantField();buildMips()}

@@ -84,122 +84,128 @@ wheel:[[2,8],[3,8],[4,4],[4,5],[4,6],[4,7],[4,8],[4,9],[4,10],[4,11],[4,12],[5,4
 };
 
 function pxHelm(t,ti,left){
- const W=48,H=36,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+ // Rivalries-Drop craft: denser shell, tinted visor, solid cage, crisp original marks
+ const W=80,H=60,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
  const shell=t.h,stripe=t.c1===t.h?t.c2:t.c1,trim=(t.c2===stripe||t.c2===shell)?'#f4f8f2':t.c2;
  const id=OLD[EMB[(ti|0)%EMB.length]]||EMB[(ti|0)%EMB.length];
  const P=(x,y,w,h,col)=>{if(w>0&&h>0){g.fillStyle=col;g.fillRect(x|0,y|0,w|0,h|0)}};
- const shi=mix(shell,1.38),shi2=mix(shell,1.18),sho=mix(shell,.68),sho2=mix(shell,.48),sho3=mix(shell,.32);
- const mkFill=best(shell,[stripe,trim,t.c1,t.c2,'#ffffff','#ffd23f','#f4f8f2']);
- const mkOut=lum(mkFill)>160?'#121018':(lum(shell)>140?'#121018':'#f4f8f2');
- // visor tint from secondary / dark glass
- const vBase=lum(shell)>150?mix(stripe,.45):mix(stripe,.55);
- const vHi=mix(vBase,1.55),vLo=mix(vBase,.35),vEdge='#0a0a10';
- // facemask: dark by default; metallic trim when shell is dark and trim is bright
- const goldMask=lum(shell)<95&&lum(trim)>155;
- const fm=goldMask?mix(trim,.82):(lum(shell)>140?'#14141c':'#0a0a10');
- const fmHi=goldMask?mix(trim,1.2):'#2e2e3a';
- // ---- side silhouette facing RIGHT (jaw tuck) — denser craft than v26
- // mask: 1 = shell pixel
+ const shi=mix(shell,1.42),shi2=mix(shell,1.22),shi3=mix(shell,1.1),sho=mix(shell,.72),sho2=mix(shell,.52),sho3=mix(shell,.34),sho4=mix(shell,.22);
+ const mkFill=best(shell,[stripe,trim,t.c1,t.c2,'#ffffff','#ffd23f','#f4f8f2','#ffe566']);
+ const mkOut=lum(mkFill)>155?'#0c0c12':(lum(shell)>130?'#0c0c12':'#f6f8fc');
+ // Visor tint — team-colored glass (quality-bar signature)
+ const vHue=best(shell,[stripe,trim,t.c2,t.c1]);
+ const vBase=mix(vHue,lum(shell)>140?.42:.55);
+ const vHi=mix(vBase,1.65),vMid=mix(vBase,1.1),vLo=mix(vBase,.32),vEdge='#07070c';
+ const goldMask=lum(shell)<90&&lum(trim)>160;
+ const fm=goldMask?mix(trim,.78):(lum(shell)>150?'#12121a':'#08080e');
+ const fmHi=goldMask?mix(trim,1.25):'#343444';
+ const fmLo=goldMask?mix(trim,.55):'#050508';
  const mask=new Uint8Array(W*H);
  const put=(x,y)=>{if(x>=0&&y>=0&&x<W&&y<H)mask[y*W+x]=1};
- // row spans [x0,x1] inclusive at y — sculpted dome + jaw
+ // Higher-res side silhouette facing RIGHT
  const rows={
-  5:[16,30],6:[12,34],7:[10,36],8:[8,38],9:[7,39],10:[6,40],11:[5,41],12:[5,41],
-  13:[4,42],14:[4,42],15:[4,42],16:[4,41],17:[5,40],18:[5,39],19:[6,37],20:[7,35],
-  21:[8,33],22:[10,30],23:[12,28],24:[14,26],25:[17,24]
+  8:[26,50],9:[20,56],10:[17,59],11:[14,62],12:[12,64],13:[11,66],14:[10,67],15:[9,68],
+  16:[8,69],17:[8,69],18:[7,70],19:[7,70],20:[7,70],21:[7,69],22:[7,68],23:[8,66],
+  24:[8,64],25:[9,61],26:[10,58],27:[12,54],28:[14,50],29:[17,46],30:[20,43],31:[24,40],32:[28,38],33:[31,37]
  };
- for(let y=5;y<=25;y++){const r=rows[y];if(!r)continue;for(let x=r[0];x<=r[1];x++)put(x,y)}
- // jaw tuck forward under face opening
- for(const[x,y]of[[34,18],[35,18],[36,18],[34,19],[35,19],[33,20],[34,20],[35,20],[32,21],[33,21],[34,21],[31,22],[32,22],[33,22],[30,23],[31,23],[32,23],[29,24],[30,24],[31,24]])put(x,y);
- // fill shell base
+ for(let y=8;y<=33;y++){const r=rows[y];if(!r)continue;for(let x=r[0];x<=Math.min(r[1],W-1);x++)put(x,y)}
+ // jaw tuck
+ for(let y=24;y<=32;y++)for(let x=58;x<=Math.min(72,W-1);x++){
+  const jx=58+(y-24)*1.2; if(x>=jx&&x<=jx+10+(32-y))put(x,y)}
  for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(mask[y*W+x])P(x,y,1,1,shell);
- // spherical shading: darken lower-back, lighten upper-front
+ // Multi-band spherical shading
  for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(mask[y*W+x]){
-  const nx=(x-22)/22,ny=(y-14)/12;
-  const d=nx*nx+ny*ny;
+  const nx=(x-38)/34,ny=(y-20)/18;
   let col=shell;
-  if(ny>0.35||(nx<-0.35&&ny>0.05))col=sho;
-  if(ny>0.55||(nx<-0.55&&ny>0.2))col=sho2;
-  if(ny>0.72||(nx<-0.7&&ny>0.35))col=sho3;
-  if(ny<-0.25&&nx>-0.1)col=shi2;
-  if(ny<-0.45&&nx>0)col=shi;
-  if(d>0.95&&ny>0.2)col=sho2;
+  if(ny<-0.55&&nx>0.05)col=shi;
+  else if(ny<-0.3&&nx>-0.05)col=shi2;
+  else if(ny<-0.1&&nx>0)col=shi3;
+  if(ny>0.25||(nx<-0.35&&ny>0))col=sho;
+  if(ny>0.45||(nx<-0.5&&ny>0.15))col=sho2;
+  if(ny>0.65||(nx<-0.65&&ny>0.3))col=sho3;
+  if(ny>0.8||nx<-0.78)col=sho4;
+  if(nx*nx+ny*ny>1.05&&ny>0.15)col=sho2;
   P(x,y,1,1,col);
  }
- // top gloss streak
- for(const[x,y]of[[18,6],[19,6],[20,6],[21,6],[22,6],[23,6],[24,6],[25,6],[26,6],[17,7],[18,7],[19,7],[20,7],[21,7],[22,7],[16,8],[17,8],[18,8]])if(mask[y*W+x])P(x,y,1,1,shi);
- P(20,6,4,1,'#ffffff');P(19,7,3,1,mix(shell,1.55));
- // rim light on lower front jaw
- for(const[x,y]of[[30,22],[31,22],[32,22],[29,23],[30,23],[31,23],[28,24],[29,24]])if(mask[y*W+x])P(x,y,1,1,shi2);
- // crown stripe (most teams)
+ // Top gloss streak + white specular
+ for(let x=28;x<=48;x++){if(mask[9*W+x])P(x,9,1,1,shi);if(mask[10*W+x])P(x,10,1,1,shi2)}
+ P(34,9,10,1,'#ffffff');P(33,10,8,1,mix(shell,1.6));P(36,11,5,1,shi);
+ // Front jaw rim light
+ for(const[x,y]of[[58,28],[59,28],[60,28],[57,29],[58,29],[59,29],[56,30],[57,30],[58,30],[55,31],[56,31]])if(mask[y*W+x])P(x,y,1,1,shi2);
+ // Crown stripe
  if(((ti|0)%3)!==2){
-  for(let y=6;y<=22;y++){
-   if(!mask[y*W+24])continue;
-   P(24,y,2,1,trim);P(24,y,2,1,stripe);
-   if(y===6)P(24,y,2,1,shi);
-   if(y>=20)P(24,y,2,1,sho);
+  for(let y=9;y<=30;y++){
+   if(!mask[y*W+40])continue;
+   P(39,y,3,1,stripe);
+   if(y<=11)P(39,y,3,1,mix(stripe,1.25));
+   if(y>=27)P(39,y,3,1,mix(stripe,.7));
+   P(39,y,1,1,mix(trim,1.1));P(41,y,1,1,mix(trim,.85));
   }
-  P(24,6,2,1,mix(trim,1.2));
  }
- // earhole + rivets
- P(18,15,5,5,sho2);P(19,16,3,3,sho3);P(20,17,1,1,'#0a0a10');
- P(16,14,2,2,fmHi);P(27,14,2,2,fmHi);P(16,20,2,2,fmHi); // screws
- // side mark — stamp 16x16 into ~14x14 with outline for readability
+ // Earhole + rivets
+ P(28,20,8,8,sho2);P(30,22,4,4,sho3);P(31,23,2,2,'#06060a');
+ P(26,18,3,3,fmHi);P(44,18,3,3,fmHi);P(26,28,3,3,fmHi);P(44,28,3,3,fmHi);
+ // Side mark — larger stamp with outline
  const mk=MARK[id]||MARK.star;
- const ox=10,oy=8,sc=16;
+ const ox=16,oy=12,sc=22;
  const cells=[];
  mk.forEach(([dx,dy])=>{
   const x=ox+Math.floor(dx*sc/16),y=oy+Math.floor(dy*sc/16);
-  if(x>=7&&x<28&&y>=6&&y<21&&mask[y*W+x])cells.push([x,y]);
+  if(x>=12&&x<46&&y>=10&&y<28&&mask[y*W+x])cells.push([x,y]);
  });
- // outline
- cells.forEach(([x,y])=>{for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const X=x+dx,Y=y+dy;if(mask[Y*W+X])P(X,Y,1,1,mkOut)}});
+ cells.forEach(([x,y])=>{for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1]]){const X=x+dx,Y=y+dy;if(X>=0&&Y>=0&&X<W&&Y<H&&mask[Y*W+X])P(X,Y,1,1,mkOut)}});
  cells.forEach(([x,y])=>P(x,y,1,1,mkFill));
- // tiny top sheen on mark
- cells.forEach(([x,y])=>{if(y<=oy+4)P(x,y,1,1,mix(mkFill,1.35))});
- // ---- TINTED VISOR (quality-bar signature)
- // opening at front face: clear a shallow eye bay then paint glass
- const vCells=[[32,11],[33,11],[34,11],[35,11],[36,11],[31,12],[32,12],[33,12],[34,12],[35,12],[36,12],[37,12],
-  [30,13],[31,13],[32,13],[33,13],[34,13],[35,13],[36,13],[37,13],[38,13],
-  [30,14],[31,14],[32,14],[33,14],[34,14],[35,14],[36,14],[37,14],[38,14],
-  [31,15],[32,15],[33,15],[34,15],[35,15],[36,15],[37,15],[38,15],
-  [32,16],[33,16],[34,16],[35,16],[36,16],[37,16]];
- vCells.forEach(([x,y],i)=>{
-  const row=y-11;
-  const col=row<=1?vHi:(row===2?vBase:(row===3?mix(vBase,.7):vLo));
+ cells.forEach(([x,y])=>{if(y<=oy+5)P(x,y,1,1,mix(mkFill,1.4))});
+ // ---- TINTED VISOR (gradient glass)
+ const vCells=[];
+ for(let y=14;y<=22;y++)for(let x=52;x<=68;x++){
+  const row=y-14,col=x-52;
+  if(row===0&&(col<2||col>12))continue;
+  if(row===1&&(col<1||col>14))continue;
+  if(row>=2&&row<=5&&col>15)continue;
+  if(row===6&&(col<2||col>13))continue;
+  if(row===7&&(col<4||col>11))continue;
+  if(row===8&&(col<6||col>10))continue;
+  vCells.push([x,y,row]);
+ }
+ vCells.forEach(([x,y,row])=>{
+  let col=row<=1?vHi:row<=3?vMid:row<=5?vBase:vLo;
+  if(row===2&&x>=56&&x<=60)col=mix(vHi,1.5);
   P(x,y,1,1,col);
  });
- // glass specular
- P(33,12,3,1,'#ffffff');P(34,13,2,1,mix(vHi,1.4));
- P(32,11,5,1,vEdge); // top lid
- // ---- FACEMASK cage (solid quality-bar bars)
- P(36,10,5,2,fm);P(35,11,2,1,fm);P(39,11,3,1,fm);
- P(38,12,4,1,fm);P(39,13,4,1,fm);P(39,14,4,1,fm);
- P(36,15,6,2,fm);
- P(34,17,7,1,fm);P(33,18,7,1,fm);P(32,19,7,1,fm);P(31,20,6,1,fm);
- P(41,11,2,9,fm);P(38,12,2,8,fmHi);P(36,15,2,6,fm);
- P(34,12,3,1,fm);
+ // Specular sweep on glass
+ P(55,15,6,1,'#ffffff');P(56,16,5,1,mix(vHi,1.5));P(57,17,3,1,'rgba(255,255,255,.55)');
+ P(52,14,14,1,vEdge); // lid
+ // ---- SOLID FACEMASK CAGE
+ // top bar
+ P(58,13,12,2,fm);P(58,13,12,1,fmHi);
+ // horizontal bars
+ for(const yy of[16,18,20,22,24]){P(56,yy,14,2,fm);P(56,yy,14,1,fmHi)}
+ // verticals / cage posts
+ P(68,14,3,12,fm);P(68,14,1,12,fmHi);P(64,15,2,11,fm);P(60,16,2,10,fm);P(56,17,2,9,fm);
+ // lower bar / chin
+ P(52,25,16,2,fm);P(50,27,14,2,fm);P(48,29,12,2,fm);P(47,31,10,1,fmLo);
  // chinstrap buckle
- P(28,22,3,2,fmHi);P(29,22,1,1,'#e8ecf2');
- // bottom padding / liner peek
- for(let x=14;x<=28;x++)if(mask[24*W+x]||mask[25*W+x])P(x,25,1,1,mix(shell,.4));
- P(18,25,8,1,'#d8dce4');P(20,25,4,1,'#f4f8f2');
- // crisp outline pass — darken silhouette edge
+ P(44,30,5,3,fmHi);P(45,31,2,1,'#eef2f8');
+ // liner peek
+ for(let x=22;x<=48;x++)if(mask[33*W+x]||mask[32*W+x])P(x,33,1,1,mix(shell,.38));
+ P(28,33,14,1,'#d8dce6');P(32,33,6,1,'#f4f8f2');
+ // Crisp dark outline
  for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(mask[y*W+x]){
   let edge=false;
   for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=W||Y>=H||!mask[Y*W+X])edge=true}
-  if(edge&&y>6){const cur=sho3;/* soft rim */ if(x<10||y>22)P(x,y,1,1,sho3)}
+  if(edge)P(x,y,1,1,sho4);
  }
  if(left){const f=document.createElement('canvas');f.width=W;f.height=H;const fg=f.getContext('2d');fg.translate(W,0);fg.scale(-1,1);fg.drawImage(c,0,0);return f}
  return c}
 const _helmCache=new Map();
 function drawHelmet(g,x,y,size,t,left,ti){
- const key=(ti|0)+':'+(left?1:0)+':'+(t.h||'')+':'+(t.c1||'')+':'+(t.c2||'')+':v30';
+ const key=(ti|0)+':'+(left?1:0)+':'+(t.h||'')+':'+(t.c1||'')+':'+(t.c2||'')+':v31';
  let src=_helmCache.get(key);if(!src){src=pxHelm(t,ti,!!left);_helmCache.set(key,src)}
  const s=Math.max(12,Math.round(size));
- const dw=s,dh=Math.round(s*36/48);
+ const dw=s,dh=Math.round(s*60/80);
  g.save();g.imageSmoothingEnabled=false;
- g.globalAlpha=.28;g.fillStyle='#000';g.fillRect(Math.round(x-dw/2)+2,Math.round(y+dh*0.28)+2,dw,Math.max(2,dh*0.16|0));g.globalAlpha=1;
+ g.globalAlpha=.3;g.fillStyle='#000';g.fillRect(Math.round(x-dw/2)+2,Math.round(y+dh*0.28)+2,dw,Math.max(2,dh*0.16|0));g.globalAlpha=1;
  g.drawImage(src,Math.round(x-dw/2),Math.round(y-dh*0.55),dw,dh);
  g.restore()}
 
@@ -208,9 +214,9 @@ function drawLogo(g,x,y,size,ti,fill,stroke){
  const mk=MARK[id]||MARK.star;const s=Math.max(1,Math.round(size/16));
  const cx=Math.round(x-8*s),cy=Math.round(y-8*s);
  g.save();g.imageSmoothingEnabled=false;
- if(stroke){g.fillStyle=stroke;mk.forEach(([dx,dy])=>g.fillRect(cx+dx*s-s,cy+dy*s-s,s*3,s*3))}
+ if(stroke){g.fillStyle=stroke;mk.forEach(([dx,dy])=>{for(const[ox,oy]of[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,1]])g.fillRect(cx+dx*s+ox*s,cy+dy*s+oy*s,s,s)})}
  g.fillStyle=fill||'#fff';mk.forEach(([dx,dy])=>g.fillRect(cx+dx*s,cy+dy*s,s,s));
- g.fillStyle='rgba(255,255,255,.35)';mk.forEach(([dx,dy])=>{if(dy<=5)g.fillRect(cx+dx*s,cy+dy*s,s,Math.max(1,s>>1))});
+ g.fillStyle='rgba(255,255,255,.4)';mk.forEach(([dx,dy])=>{if(dy<=5)g.fillRect(cx+dx*s,cy+dy*s,s,Math.max(1,s>>1))});
  g.restore()}
 function clearHelmCache(){_helmCache.clear()}
 window.HELM={drawHelmet,drawLogo,emblem,EMB,MARK,mix,clearHelmCache};

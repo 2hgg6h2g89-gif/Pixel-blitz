@@ -169,6 +169,7 @@ window.drawCallout=function(){const b=G.banner;let t=b.t,sub=b.sub||'';const up=
  if(sub&&a>0.18){X.save();X.globalAlpha=(1-out)*Math.min(1,(a-0.18)/0.12);arcTxt(sub,W/2-out*W*0.6,y+sz*0.62+8,15,['#ffffff','#dfe8ff'],{rim:false,shine:false,sk:0.14});X.restore()}};
 // ---------- title ----------
 let titleTeams=null;
+function recOf(ti){try{const S=window.__season&&window.__season.get();if(S&&S.rec&&S.rec[ti]){const r=S.rec[ti];return r.w+'-'+r.l+(r.t?'-'+r.t:'')}}catch(e){}return '0-0'}
 function drawTitle(){const t=G.t;
  // Stadium field look — green turf + stands (no neon grid / sunburst)
  const sky=X.createLinearGradient(0,0,0,H*0.55);sky.addColorStop(0,'#0a1430');sky.addColorStop(.6,'#1a2850');sky.addColorStop(1,'#2a6a38');
@@ -176,15 +177,29 @@ function drawTitle(){const t=G.t;
  // stands bands
  for(let i=0;i<8;i++){const y=40+i*28;X.fillStyle=i%2?'#3a2048':'#2a1538';X.fillRect(0,y,W,28);
   X.fillStyle='rgba(255,80,100,.12)';for(let x=i%2*6;x<W;x+=12)X.fillRect(x,y+4,3,3);X.fillStyle='rgba(80,160,255,.1)';for(let x=4;x<W;x+=14)X.fillRect(x,y+14,2,2)}
- // field
- const turf=X.createLinearGradient(0,H*0.48,0,H);turf.addColorStop(0,'#1f672b');turf.addColorStop(1,'#2a8237');X.fillStyle=turf;X.fillRect(0,H*0.48,W,H*0.52);
- X.strokeStyle='rgba(244,248,242,.55)';X.lineWidth=2;
- for(let i=0;i<7;i++){const y=H*0.52+i*(H*0.07);X.beginPath();X.moveTo(0,y);X.lineTo(W,y);X.stroke()}
- X.fillStyle='rgba(244,248,242,.35)';X.fillRect(W*0.2,H*0.52,2,H*0.4);X.fillRect(W*0.8,H*0.52,2,H*0.4);
- // light beams (subtle stadium, not synthwave)
- for(let i=0;i<3;i++){X.save();X.translate(i===1?W/2:(i?W+20:-20),20);X.rotate((i-1)*0.2);const lg=X.createLinearGradient(0,0,0,500);lg.addColorStop(0,'rgba(255,245,210,.22)');lg.addColorStop(1,'rgba(255,245,210,0)');X.fillStyle=lg;X.beginPath();X.moveTo(-10,0);X.lineTo(10,0);X.lineTo(70,520);X.lineTo(-70,520);X.fill();X.restore()}
+ // Seamless stadium field — one continuous canvas, integer Y only
+ const fy0=Math.round(H*0.50);
+ // full-width mowing stripes (never split L/R)
+ const band=Math.round((H-fy0)/12);
+ for(let i=0;i<12;i++){X.fillStyle=i%2?'#2a8237':'#1f672b';X.fillRect(0,fy0+i*band,W,band+1)}
+ // end-zone band
+ X.fillStyle='rgba(20,50,110,.4)';X.fillRect(0,fy0,W,band);
+ // yard lines — single stroke each, shared Y
+ X.strokeStyle='rgba(247,250,246,.9)';X.lineWidth=2;
+ X.beginPath();
+ for(let i=1;i<=10;i++){const y=fy0+i*band+0.5;X.moveTo(0,y);X.lineTo(W,y)}
+ X.stroke();
+ // hash ticks on the SAME y (short, not a center seam)
+ X.fillStyle='rgba(247,250,246,.75)';
+ for(let i=1;i<=10;i++){const y=fy0+i*band;X.fillRect(Math.round(W*0.32)-8,y-1,16,2);X.fillRect(Math.round(W*0.68)-8,y-1,16,2)}
+ // sidelines
+ X.fillStyle='#f7faf6';X.fillRect(8,fy0,3,H-fy0);X.fillRect(W-11,fy0,3,H-fy0);
+ // light beams
+ for(let i=0;i<3;i++){X.save();X.translate(i===1?W/2:(i?W+20:-20),20);X.rotate((i-1)*0.2);const lg=X.createLinearGradient(0,0,0,500);lg.addColorStop(0,'rgba(255,245,210,.16)');lg.addColorStop(1,'rgba(255,245,210,0)');X.fillStyle=lg;X.beginPath();X.moveTo(-10,0);X.lineTo(10,0);X.lineTo(70,520);X.lineTo(-70,520);X.fill();X.restore()}
  if(!titleTeams){const a=Math.floor(Math.random()*32);let b=(a+1+Math.floor(Math.random()*31))%32;titleTeams=[a,b]}
- const bob=Math.sin(t*2.2)*4;HELM.drawHelmet(X,96,520+bob,160,TEAMS[titleTeams[0]],false,titleTeams[0]);HELM.drawHelmet(X,W-96,520-bob,160,TEAMS[titleTeams[1]],true,titleTeams[1]);
+ const bob=Math.round(Math.sin(t*2.2)*2); // tiny shared bob — no opposite occlusion
+ HELM.drawHelmet(X,100,520+bob,150,TEAMS[titleTeams[0]],false,titleTeams[0]);
+ HELM.drawHelmet(X,W-100,520+bob,150,TEAMS[titleTeams[1]],true,titleTeams[1]);
  // logo
  const s=Math.min(1,t/0.35);const sc=t<0.35?2.0-1.0*s*s:1;X.save();X.translate(W/2,210);X.scale(sc,sc);
  arcTxt('PIXEL',0,-40,72,CHROME,{sk:0.12,out:'#0b0614',rim:'#3fd0ff'});arcTxt('BLITZ',2,32,84,FIRE,{sk:0.12,out:'#0b0614',rim:'#fff6a0'});X.restore();

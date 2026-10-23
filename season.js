@@ -1,7 +1,7 @@
 // PIXEL BLITZ v15: 32-team season mode (original team names), standings, schedule, playoffs
 (function(){
 const CITY=["Phoenix", "Atlanta", "Baltimore", "Buffalo", "Charlotte", "Chicago", "Cincinnati", "Cleveland", "Arlington", "Denver", "Detroit", "Green Bay", "Houston", "Indianapolis", "Jacksonville", "Kansas City", "Las Vegas", "Los Angeles", "Anaheim", "Miami", "Minneapolis", "Boston", "New Orleans", "Brooklyn", "Jersey City", "Philadelphia", "Pittsburgh", "San Francisco", "Seattle", "Tampa", "Nashville", "Washington"];
-const NICK=["Emberhawks", "Nightstrike", "Ironwake", "Frontier", "Volt", "Windfall", "Riverfangs", "Forge", "Stampede", "Peakrunners", "Motorknights", "Timberline", "Sunrail", "Gridlock", "Breakwater", "Railhorns", "Neonjacks", "Pacifire", "Goldrush", "Gulfstream", "Northwall", "Harborguard", "Jazzfire", "Colossus", "Stormrail", "Bellforge", "Riveters", "Fogline", "Rainforge", "Stormcap", "Soundwave", "Monumentals"];
+const NICK=["Outlaws", "Aces", "Clippers", "Bison", "Charge", "Skyline", "Kings", "Cliffs", "Summit", "Ridges", "Gears", "Pines", "Drillers", "Racers", "Coast", "Rails", "Lights", "Wave", "Grove", "Reef", "Lakes", "Harbor", "Bayou", "Heights", "Meadows", "Liberty", "Bridges", "Gates", "Sound", "Storm", "Notes", "Capitol"];
 const AB=["PHX", "ATL", "BAL", "BUF", "CHA", "CHI", "CIN", "CLE", "ARL", "DEN", "DET", "GB", "HOU", "IND", "JAX", "KC", "LV", "LA", "ANA", "MIA", "MIN", "BOS", "NO", "BKN", "JC", "PHI", "PIT", "SF", "SEA", "TB", "NSH", "WAS"];
 const COL=[['#9b1b30','#111111','#ffffff','#ffffff'],['#d1102f','#111111','#111111','#c0c4c8'],['#3b1f73','#c9a227','#111111','#111111'],['#1f4fbf','#d6202f','#ffffff','#ffffff'],['#4fa3e0','#111111','#c0c4c8','#c0c4c8'],['#0e1f3d','#e05a12','#0e1f3d','#ffffff'],['#f26a1b','#111111','#111111','#ffffff'],['#4a2b1a','#f25c19','#f25c19','#ffffff'],
  ['#0b2a55','#1f5fbf','#c0c4c8','#c0c4c8'],['#f2611d','#0a2246','#0a2246','#ffffff'],['#0076b6','#b0b7bc','#b0b7bc','#b0b7bc'],['#1f4a2f','#ffb81c','#ffb81c','#ffb81c'],['#0b2240','#c8102e','#0b2240','#ffffff'],['#0a4a9a','#ffffff','#ffffff','#ffffff'],['#00788c','#d4a12a','#111111','#ffffff'],['#e31837','#ffb612','#e31837','#ffffff'],
@@ -132,12 +132,12 @@ function drawStandings(){bg();hdr('STANDINGS');back();btn(W/2-150,92,148,34,'BLI
  DIVS[tab].forEach((d,di)=>{const y0=146+di*170;pill(12,y0,W-24,160,'rgba(18,10,36,.92)','#4a3a8a');
   uiTxt(DIVN[di],28,y0+16,13,PAL.yel,'left',false);
   uiTxt('W-L-T',W-118,y0+16,10,'#9fb3ff','center',false);uiTxt('PF',W-70,y0+16,10,'#9fb3ff','center',false);uiTxt('PA',W-34,y0+16,10,'#9fb3ff','center',false);
-  sortTeams(d).forEach((ti,i)=>{const y=y0+40+i*31,me=ti===S.team;if(me)rect(16,y-13,W-32,27,'rgba(255,79,163,.25)');rect(22,y-8,6,16,TEAMS[ti].c1);
+  sortTeams(d).forEach((ti,i)=>{const y=y0+40+i*31,me=ti===S.team;if(me)rect(16,y-13,W-32,27,'rgba(255,79,163,.25)');HELM.drawHelmet(X,28,y,24,TEAMS[ti],false,ti);
    const s=sd.indexOf(ti);let nm=(s>=0?(s+1)+'. ':'')+TEAMS[ti].a+' '+TEAMS[ti].nick;
    // truncate so never overlaps record column
    X.font='800 12px "Trebuchet MS",Arial';while(X.measureText(nm).width>nameW-50&&nm.length>6)nm=nm.slice(0,-1);
    if(nm.length<((s>=0?(s+1)+'. ':'')+TEAMS[ti].a+' '+TEAMS[ti].nick).length)nm=nm.replace(/\.?$/,'');
-   uiTxt(nm,36,y,12,me?PAL.yel:'#fff','left',false);
+   uiTxt(nm,46,y,12,me?PAL.yel:'#fff','left',false);
    const r=S.rec[ti];uiTxt(r.w+'-'+r.l+'-'+r.t,W-118,y,12,'#fff','center',false);uiTxt(String(r.pf),W-70,y,11,'#c9d4ff','center',false);uiTxt(String(r.pa),W-34,y,11,'#c9d4ff','center',false)})});
  uiTxt('Number = current playoff seed',W/2,H-24,11,'#8a7ab0','center',false)}
 function drawSchedule(){bg();hdr('SCHEDULE');back();for(let w=0;w<17;w++){const g=S.sched[w].find(p=>p.includes(S.team));const opp=g[0]===S.team?g[1]:g[0],home=g[0]===S.team;const y=112+w*40;const cur=w===S.week&&S.phase==='reg';
