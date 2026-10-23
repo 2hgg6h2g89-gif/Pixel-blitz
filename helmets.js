@@ -52,66 +52,136 @@ const SHELL_RGBA=b64u8(SHELL_B64), ROLE=b64u8(ROLE_B64);
 function pxHelm(t,ti,left){
   const c=document.createElement('canvas');c.width=SHELL_W;c.height=SHELL_H;const g=c.getContext('2d');
   const img=g.createImageData(SHELL_W,SHELL_H),d=img.data;
-  const shell=hex(t.h), stripe=hex(t.c1===t.h?t.c2:t.c1), trim=hex((t.c2&&t.c2!==t.h&&t.c2!==(t.c1===t.h?t.c2:t.c1))?t.c2:'#f4f8f2');
-  // Visor tint from team secondary
+  const shell=hex(t.h), stripe=hex(t.c1===t.h?t.c2:t.c1);
   const vHue=hex(best(t.h,[t.c2,t.c1,t.h,'#3fd0ff']));
-  const id=OLD[EMB[(ti|0)%EMB.length]]||EMB[(ti|0)%EMB.length];
-  const mk=MARK[id]||MARK.star;
-  const mkFill=hex(best(t.h,[t.c1,t.c2,'#ffffff','#ffd23f','#f4f8f2']));
-  const mkOut=lum(t.h)>140?[12,12,18]:[244,248,252];
-  // Template orange body luminance reference
   const ref=[245,107,78]; const refL=.3*ref[0]+.59*ref[1]+.11*ref[2];
+  const role=SCRUB;
   for(let i=0;i<SHELL_W*SHELL_H;i++){
     const o=i*4,r0=SHELL_RGBA[o],g0=SHELL_RGBA[o+1],b0=SHELL_RGBA[o+2],a0=SHELL_RGBA[o+3];
     if(a0<8){d[o+3]=0;continue}
-    const role=ROLE[i], L=.3*r0+.59*g0+.11*b0, shade=L/refL;
-    let r,g,b;
-    if(role===2){r=g=b=Math.max(8,Math.min(40,L*0.35));} // cage/outline
-    else if(role===4){r=g=b=Math.min(255,L*1.05);} // rivets
-    else if(role===5){r=Math.min(255,220*shade);g=Math.min(255,224*shade);b=Math.min(255,230*shade);}
-    else if(role===3){
-      // tinted visor — keep template sheen, hue-shift to team
+    const rl=role[i], L=.3*r0+.59*g0+.11*b0, shade=L/refL;
+    let r,gc,b;
+    if(rl===2){r=gc=b=Math.max(8,Math.min(40,L*0.35));}
+    else if(rl===4){r=gc=b=Math.min(255,L*1.05);}
+    else if(rl===5){r=Math.min(255,220*shade);gc=Math.min(255,224*shade);b=Math.min(255,230*shade);}
+    else if(rl===3){
       const k=Math.min(1.4,Math.max(0.25,shade));
       r=Math.min(255,vHue[0]*k*(0.45+0.55*(b0/255)));
-      g=Math.min(255,vHue[1]*k*(0.45+0.55*(g0/255)));
+      gc=Math.min(255,vHue[1]*k*(0.45+0.55*(g0/255)));
       b=Math.min(255,vHue[2]*k*(0.55+0.5*(r0/255)));
-      // specular from bright template pixels
-      if(L>200){r=Math.min(255,r+80);g=Math.min(255,g+90);b=Math.min(255,b+100)}
+      if(L>200){r=Math.min(255,r+80);gc=Math.min(255,gc+90);b=Math.min(255,b+100)}
     }
     else {
-      // shell recolor preserving gloss/shade
       const k=Math.min(1.55,Math.max(0.22,shade));
-      r=Math.min(255,shell[0]*k);g=Math.min(255,shell[1]*k);b=Math.min(255,shell[2]*k);
-      // crown stripe
+      r=Math.min(255,shell[0]*k);gc=Math.min(255,shell[1]*k);b=Math.min(255,shell[2]*k);
       const x=i%SHELL_W,y=(i/SHELL_W)|0;
-      if(((ti|0)%3)!==2 && x>=46&&x<=50 && y>=8&&y<=52 && role===1){
-        const sk=k*0.95;r=Math.min(255,stripe[0]*sk);g=Math.min(255,stripe[1]*sk);b=Math.min(255,stripe[2]*sk);
+      if(((ti|0)%3)!==2 && x>=46&&x<=50 && y>=8&&y<=52 && rl===1){
+        const sk=k*0.95;r=Math.min(255,stripe[0]*sk);gc=Math.min(255,stripe[1]*sk);b=Math.min(255,stripe[2]*sk);
       }
     }
-    d[o]=r|0;d[o+1]=g|0;d[o+2]=b|0;d[o+3]=255;
+    d[o]=r|0;d[o+1]=gc|0;d[o+2]=b|0;d[o+3]=255;
   }
-  // Stamp original side mark (no NFL)
-  const ox=18,oy=14,sc=2; // 16*2=32px mark on shell
-  const cells=[];
-  mk.forEach(([dx,dy])=>{
-    for(let py=0;py<sc;py++)for(let px=0;px<sc;px++){
-      const x=ox+dx*sc+px,y=oy+dy*sc+py; if(x<0||y<0||x>=SHELL_W||y>=SHELL_H)continue;
-      const i=y*SHELL_W+x; if(ROLE[i]!==1&&ROLE[i]!==0)continue; if(SHELL_RGBA[i*4+3]<8)continue;
-      cells.push(i);
-    }
-  });
-  // outline
-  const NBR=[1,-1,SHELL_W,-SHELL_W];
-  cells.forEach(i=>{for(const n of NBR){const j=i+n;if(j<0||j>=ROLE.length)continue;if(ROLE[j]===1){const o=j*4;d[o]=mkOut[0];d[o+1]=mkOut[1];d[o+2]=mkOut[2]}}});
-  cells.forEach(i=>{const o=i*4;d[o]=mkFill[0];d[o+1]=mkFill[1];d[o+2]=mkFill[2];
-    const y=(i/SHELL_W)|0; if(y<=oy+6){d[o]=Math.min(255,d[o]+40);d[o+1]=Math.min(255,d[o+1]+40);d[o+2]=Math.min(255,d[o+2]+40)}});
+  stampMark(d,role,t,ti);
   g.putImageData(img,0,0);
   if(left){const f=document.createElement('canvas');f.width=SHELL_W;f.height=SHELL_H;const fg=f.getContext('2d');fg.translate(SHELL_W,0);fg.scale(-1,1);fg.drawImage(c,0,0);return f}
   return c;
 }
+const SCRUB=(()=>{
+  const role=new Uint8Array(ROLE),W=SHELL_W,H=SHELL_H;
+  const inW=(x,y)=>x>=14&&x<=47&&y>=18&&y<=48;
+  const trans=(x,y)=>x<0||y<0||x>=W||y>=H||SHELL_RGBA[(y*W+x)*4+3]<8;
+  const seeds=[];
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    if(!inW(x,y)||role[y*W+x]!==4)continue;
+    let n=0;
+    for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,yy=y+dy;if(xx>=0&&yy>=0&&xx<W&&yy<H&&role[yy*W+xx]===4)n++}
+    if(n>1)seeds.push(y*W+x);
+  }
+  const seen=new Uint8Array(W*H),q=seeds.slice();seeds.forEach(i=>seen[i]=1);
+  while(q.length){
+    const i=q.pop(),x=i%W,y=(i/W)|0;
+    if(role[i]===2||role[i]===4)role[i]=1;
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+      if(!dx&&!dy)continue;const xx=x+dx,yy=y+dy;if(!inW(xx,yy)||trans(xx,yy))continue;
+      const j=yy*W+xx;if(seen[j])continue;const r=role[j];
+      if(r===2||r===4){seen[j]=1;q.push(j)}
+    }
+  }
+  return role;
+})();
+// 12x12 original marks. '#' primary, 'A' accent, '.' empty. Tied to nicknames, not league marks.
+const ART={
+hawk:['..######....','.##AAAA##...','#AA#AA#AA#..','#AA#AA#AA#..','#AAAAAAAA#..','.##AAAA##...','...####.....','...#AA#.....','...####.....','..#....#....','.##....##...','#........#..'],
+wing:['.....AA.....','....AAAA....','...AAAAAA...','..AAAAAAAA..','..AAA##AAA..','...AA##AA...','....AAAA....','.....AA.....','.....##.....','....####....','...######...','....####....'],
+rook:['......A#....','....AA##....','...AA#A#....','..AA#A.A#...','.AA#A...A#..','AA#A....A#..','AAAAAAAAA#..','.########...','############','.##########.','..########..','...######...'],
+horns:['#..........#','##........##','A##......##A','.##A....A##.','..##A..A##..','...######...','..##AAAA##..','..##A..A##..','..##AAAA##..','...######...','..###..###..','.##......##.'],
+paw:['......AAAA..','.....AAAAA..','....AAAAAA..','...AAAAAAAA.','..AAAAAAAAAA','.AAAAAAAAAA.','..AAAAAA....','...AAAAA....','....AAAA....','.....AAAA...','......AAA...','.......AA...'],
+claws:['..AA....AA..','..AA.#..AA..','..AA.#..AA..','#####.#####.','#####.#####.','############','############','.##......##.','.##..AA..##.','.##..AA..##.','############','############'],
+stripes:['A..A..A..A..','#A.#A.#A.#A.','############','.##########.','..A..A..A.A.','..########..','...######...','..########..','.##########.','############','..##....##..','.##########.'],
+spike:['####........','#####.......','######..AA..','#######.AA..','########AA..','#########A..','##########..','.#########..','..########..','...#######..','....######..','.....#####..'],
+lasso:['......AA....','.....AAAA...','....AAAAAA..','...AAA##AA..','..AAA####A..','.AAA######A.','AAA########A','############','.##########.','..########..','...######...','....####....'],
+horse:['...AA...AA..','..AAAA.AAAA.','.AAAAA.AAAAA','AA###A.A###A','#####A.A####','.##########.','..########..','...######...','....####....','...######...','..########..','.##########.'],
+talons:['..A....A....','A#A....A#A..','A########AA.','.A######A...','..A#AA#A....','..A#AA#A....','.A######A...','A########AA.','A#A....A#A..','..A....A....','...A..A.....','....AA......'],
+gear:['......A.....','.....AAA....','....AAAAA...','...AAAAAAA..','..AAA#AAAA..','.AAAA#AAAAA.','AAAAA#AAAAAA','.AAAA#AAAA..','..AAA#AAA...','...AA#AA....','...####.....','..######....'],
+star:['.....AA.....','....A##A....','...A#..#A...','..A#....#A..','.A########A.','...#....#...','..A#....#A..','.A########A.','...#....#...','...#....#...','..########..','.##########.'],
+shoe:['.....AA.....','....AAAA....','...AA..AA...','..AA....AA..','.AA......AA.','#AA......AA.','##AA....AA..','###AA..AA...','####AAAA....','#####AA.....','####AA......','###AA.......'],
+spots:['............','...AAA......','..AAAAA.....','..AAA..AAA..','.AAA....AAA.','##AA....AAA.','####AA...AA#','######AAAA##','.###########','..#########.','...#######..','....#####...'],
+crown:['############','.#.#.#.#.#.#','############','............','AA........AA','AA..####..AA','AA..#AA#..AA','AA..#AA#..AA','AA..####..AA','AA........AA','############','.#.#.#.#.#.#'],
+cutlass:['....AAAA....','...AAAAAA...','..AA.AA.AA..','..AA.AA.AA..','..AA....AA..','...AAAAAA...','....####....','....#AA#....','....####....','.....##.....','...######...','..########..'],
+bolt:['.......AAA..','.....AAAAA..','...AAAA.AA..','.AAAA...AA..','AAA.....AA..','AA......AA..','A......AAA..','AA....AAA...','.AA..AAA....','..AAAAA.....','...AAA......','....A.......'],
+ram:['.....AAA....','....AAAAA...','...AA##AA#..','..AAA##AAA#.','.AAAAAAAAA..','.AA.AAAA.AA.','.AAAAAAAAA..','.AAAAAAAAA..','..AAAAAAAA..','...AAAAAA...','....AAAA....','.....AA.....'],
+fin:['......AA....','....AAAAA...','..AAA.AAAA..','.AAA...AAAA.','#AAA....AAA#','AAAA....AAAA','.AAA...AAAA.','..AAA.AAAA..','....AAAAA...','......AA....','.......A....','......AA....'],
+axe:['...A....A...','..AAA..AAA..','.AAAAAAAAA..','############','AAAAAAAAAAAA','.AAAAAAAAA..','..AAAAAAAA..','...AAAAAA...','....AAAA....','.....AA.....','......A.....','............'],
+tricorn:['.....AA.....','....AAAA....','...AA##AA...','..AA#..#AA..','.AA#....#AA.','AA#..##..#AA','A#..####..#A','....#AA#....','....#AA#....','...##AA##...','..###AA###..','...######...'],
+halo:['.....AA.....','....AAAA....','...AAAAAA...','..AAA#AAA...','.AAAA#AAAA..','AAAAA#AAAAAA','....###.....','...#####....','..#######...','############','A.A.A.A.A.A.','.A...A...A..'],
+pillar:['....AAAA....','...AAAAAA...','..########..','..#......#..','..#.AAAA.#..','..#.AAAA.#..','..#......#..','..#.AAAA.#..','..#.AAAA.#..','..#......#..','.##########.','############'],
+rocket:['....AA......','...AAAA.....','..AA..AA....','.AA....AA...','AA..##..AA..','.AA.##.AA...','..AA##AA....','...AAAA.....','....##......','....##......','...####.....','..######....'],
+wings:['....AAAA....','...AAAAAA...','..AAA..AAA..','.AAA....AAA.','..AAA..AAA..','...AAAAAA...','....A##A....','.....##.....','....####....','....####....','...######...','..########..'],
+anvil:['..A......A..','.AAA....AAA.','AAAAA..AAAAA','############','#..######..#','#..........#','#..#....#..#','#..#....#..#','#..#....#..#','#..######..#','############','############'],
+pick:['.##########.','.#........#.','.#...AA...#.','.#..AAAA..#.','.#.AA..AA.#.','.#.AA..AA.#.','.#.AA..AA.#.','.#.AA..AA.#.','.#.AA..AA.#.','.#.AA..AA.#.','############','############'],
+osprey:['.....AAA....','....AAAAA...','...AA.A.AA..','..AA.AAA.AA.','..A.A.A.A.A.','A.A.AAA.A.AA','.A.A.A.A.A..','..A.AAA.A...','...A.A.A....','....AAA.....','.....A......','....AAA.....'],
+sail:['...AAAAAAAA.','.AAAAAAAAAAA','AAAAAAAAAAAA','.AAA####AAA.','..AA#AA#AA..','...A#AA#A...','....#AA#....','.....#A#....','......##....','.....##.....','....##......','...##.......'],
+peak:['......AAAA..','.....AAAAA..','......A.AA..','......A..A..','......A.....','......A.....','....AAA.....','...AAAAA....','..AAAAAAA...','...AAAAA....','....AAA.....','............'],
+wheel:['.....AA.....','....AAAA....','...AAAAAA...','..AAA##AAA..','.AAA####AAA.','AAA######AAA','############','#..#....#..#','#..#....#..#','#..#....#..#','############','############']
+};
+function artRows(id){return ART[id]||ART.star}
+function cellsOf(id){const rows=artRows(id),out=[];for(let y=0;y<12;y++)for(let x=0;x<12;x++){const ch=rows[y][x];if(ch&&ch!=='.')out.push([x,y,ch])}return out}
+const LOGO_CELLS=(()=>{const m={};for(const id of EMB)m[id]=cellsOf(id).map(([x,y])=>[x,y]);return m})();
+function liftRGB(c,f){return c.map(v=>Math.max(0,Math.min(255,Math.round(f>1?v+(255-v)*(f-1):v*f))))}
+function toHex(c){return '#'+c.map(v=>Math.max(0,Math.min(255,v|0)).toString(16).padStart(2,'0')).join('')}
+function markCols(t){
+  const fill=best(t.h,[t.c1,t.c2,'#ffffff','#ffd23f','#141018']);
+  let accent=best(t.h,[t.c2,t.c1,'#ffffff','#ffd23f','#141018']);
+  if(accent===fill){accent=['#ffffff','#ffd23f','#141018','#e8eef8'].find(c=>c!==fill)||'#ffffff'}
+  const hi=toHex(liftRGB(hex(fill),1.55));
+  const out=lum(t.h)>150?'#121016':'#f4f8fc';
+  return {fill,accent,hi,out};
+}
+function stampMark(d,role,t,ti){
+  const rows=artRows(EMB[(ti|0)%EMB.length]);
+  const col=markCols(t),fill=hex(col.fill),acc=hex(col.accent),hi=hex(col.hi),out=hex(col.out);
+  const sc=2,ox=16,oy=18,W=SHELL_W,H=SHELL_H,ink=[];
+  const put=(x,y,c)=>{if(x<0||y<0||x>=W||y>=H)return;const i=y*W+x;if(role[i]!==1||SHELL_RGBA[i*4+3]<8)return;const o=i*4;d[o]=c[0];d[o+1]=c[1];d[o+2]=c[2];d[o+3]=255};
+  for(let y=0;y<12;y++)for(let x=0;x<12;x++){
+    const ch=rows[y][x];if(!ch||ch==='.')continue;
+    for(let py=0;py<sc;py++)for(let px=0;px<sc;px++){
+      const X=ox+x*sc+px,Y=oy+y*sc+py;
+      if(X<0||Y<0||X>=W||Y>=H)continue;
+      const i=Y*W+X;if(role[i]!==1||SHELL_RGBA[i*4+3]<8)continue;
+      ink.push(i);
+    }
+  }
+  const seen=new Set(ink);
+  for(const i of ink){const x=i%W,y=(i/W)|0;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const j=i+dy*W+dx;if(j<0||j>=role.length||seen.has(j))continue;if(role[j]===1&&SHELL_RGBA[j*4+3]>=8)put(x+dx,y+dy,out)}}
+  for(let y=0;y<12;y++)for(let x=0;x<12;x++){
+    const ch=rows[y][x];if(!ch||ch==='.')continue;
+    const c=ch==='A'?acc:(y<=2?hi:fill);
+    for(let py=0;py<sc;py++)for(let px=0;px<sc;px++)put(ox+x*sc+px,oy+y*sc+py,c);
+  }
+}
 const _helmCache=new Map();
 function drawHelmet(g,x,y,size,t,left,ti){
-  const key=(ti|0)+':'+(left?1:0)+':'+(t.h||'')+':'+(t.c1||'')+':'+(t.c2||'')+':v32shell';
+  const key=(ti|0)+':'+(left?1:0)+':'+(t.h||'')+':'+(t.c1||'')+':'+(t.c2||'')+':v33logo';
   let src=_helmCache.get(key);if(!src){src=pxHelm(t,ti,!!left);_helmCache.set(key,src)}
   const s=Math.max(12,Math.round(size));
   const dw=s,dh=Math.round(s*SHELL_H/SHELL_W);
@@ -121,15 +191,22 @@ function drawHelmet(g,x,y,size,t,left,ti){
   g.restore();
 }
 function drawLogo(g,x,y,size,ti,fill,stroke){
-  const id=OLD[EMB[(ti|0)%EMB.length]]||EMB[(ti|0)%EMB.length];
-  const mk=MARK[id]||MARK.star;const s=Math.max(1,Math.round(size/16));
-  const cx=Math.round(x-8*s),cy=Math.round(y-8*s);
+  const cells=cellsOf(EMB[(ti|0)%EMB.length]);const s=Math.max(1,Math.round(size/16));
+  const cx=Math.round(x-6*s),cy=Math.round(y-6*s);
   g.save();g.imageSmoothingEnabled=false;
-  if(stroke){const sc=hex(stroke);g.fillStyle=`rgb(${sc[0]},${sc[1]},${sc[2]})`;mk.forEach(([dx,dy])=>{for(const[ox,oy]of[[-1,0],[1,0],[0,-1],[0,1]])g.fillRect(cx+dx*s+ox*s,cy+dy*s+oy*s,s,s)})}
-  g.fillStyle=fill||'#fff';mk.forEach(([dx,dy])=>g.fillRect(cx+dx*s,cy+dy*s,s,s));
-  g.fillStyle='rgba(255,255,255,.4)';mk.forEach(([dx,dy])=>{if(dy<=5)g.fillRect(cx+dx*s,cy+dy*s,s,Math.max(1,s>>1))});
+  if(stroke){g.fillStyle=stroke;cells.forEach(([dx,dy])=>{for(const[ox,oy]of[[-1,0],[1,0],[0,-1],[0,1]])g.fillRect(cx+(dx+ox)*s,cy+(dy+oy)*s,s,s)})}
+  cells.forEach(([dx,dy,ch])=>{g.fillStyle=ch==='A'?mix(fill||'#ffffff',1.35):(fill||'#fff');g.fillRect(cx+dx*s,cy+dy*s,s,s)});
   g.restore();
 }
+const GLY={};
+function glyph(ti){
+  const id=EMB[(ti|0)%EMB.length];if(GLY[id])return GLY[id];
+  const rows=artRows(id),g=[];
+  for(let gy=0;gy<4;gy++){const row=[];for(let gx=0;gx<4;gx++){let ink=0,acc=0;
+    for(let y=gy*3;y<gy*3+3;y++)for(let x=gx*3;x<gx*3+3;x++){const ch=rows[y][x];if(ch==='#')ink++;else if(ch==='A')acc++}
+    row.push((ink+acc)>=3?(acc>ink?2:1):0)}g.push(row)}
+  return GLY[id]=g;
+}
 function clearHelmCache(){_helmCache.clear()}
-window.HELM={drawHelmet,drawLogo,emblem,EMB,MARK,mix,clearHelmCache};
+window.HELM={drawHelmet,drawLogo,emblem,EMB,MARK:LOGO_CELLS,ART,glyph,markCols,mix,clearHelmCache};
 })();
