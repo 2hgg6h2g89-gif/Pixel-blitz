@@ -98,7 +98,7 @@ window.bevPanel=bevPanel;
 const flashT={};function pf(k,pr){const n=performance.now();if(pr&&!flashT[k])flashT[k]=n;if(!pr&&flashT[k]&&n-flashT[k]>160)flashT[k]=0;return flashT[k]?Math.max(0,1-(n-flashT[k])/160)*0.5:0}
 btn=function(x,y,w,h,label,fill,stroke,sz,sub){const pr=pressed(x,y,w,h);const o=pr?3:0;const k='b'+x+'_'+y;
  bevPanel(x,y+o,w,h,fill,{drop:pr?1:5,edge:stroke,flash:pf(k,pr)});
- arcTxt(label,x+w/2,y+o+h/2-(sub?7:0)+1,Math.min(sz||16,(w-10)/Math.max(4,label.length)*1.7),['#ffffff','#ffffff','#dfe8ff'],{out:'#0b0614',rim:false,sk:0.12});
+ arcTxt(label,x+w/2,y+o+h/2-(sub?7:0)+1,Math.min(sz||16,(w-10)/Math.max(4,label.length)*1.7),['#ffffff','#ffffff','#dfe8ff'],{out:'#0b0614',rim:false,sk:0.12,px:true});
  if(sub)txt(sub,x+w/2,y+o+h/2+12,10,'rgba(255,255,255,.85)','center',false)};
 // round arcade push-button with metal bezel
 function pxDisc(x,y,r,g,fn){x=Math.round(x/g)*g;y=Math.round(y/g)*g;for(let dy=-r;dy<r;dy+=g){const m=dy+g/2,hw=Math.floor(Math.sqrt(Math.max(0,r*r-m*m))/g)*g;if(hw<=0)continue;X.fillStyle=fn(m/r);X.fillRect(x-hw,y+dy,hw*2,g)}}
@@ -108,11 +108,11 @@ function arcRound(x,y,r,fill,pr,label,sz,icon,sub){const k='r'+x+'_'+y;const fl=
  const d=pr?3:0,S=pxShade(fill);pxDisc(x,y+d,R-3,g,v=>v<-0.62?S[0]:v<-0.2?S[1]:v<0.45?S[2]:v<0.78?S[3]:S[4]);
  X.fillStyle='rgba(255,255,255,.55)';const hx=Math.round((x-R*0.45)/g)*g,hy=Math.round((y-R*0.62+d)/g)*g;X.fillRect(hx,hy,g*4,g);X.fillRect(hx-g,hy+g,g*2,g);
  if(fl){X.globalAlpha=fl;pxDisc(x,y,R+3,g,()=>'#ffffff');X.globalAlpha=1}
- if(label)arcTxt(label,x,y+d+(icon?-6:1),sz||Math.min(16,r*0.5),['#ffffff','#ffffff','#e6ecff'],{out:'#0b0614',rim:false,shine:false});
+ if(label)arcTxt(label,x,y+d+(icon?-6:1),sz||Math.min(16,r*0.5),['#ffffff','#ffffff','#e6ecff'],{out:'#0b0614',rim:false,shine:false,px:true,sk:0.1});
  if(icon){X.translate(x,y+d);icon()}X.restore()}
 window.arcRound=arcRound;
 rbtn=function(k,on,x,y,r,fill,stroke,label,icon){const a=ease(k,on);if(a<=0)return;const pr=on&&pressed(x-r,y-r,2*r,2*r);const e=1-Math.pow(1-a,3);
- X.save();X.globalAlpha=e;X.translate(x,y);const s=0.7+0.3*e;X.scale(s,s);X.translate(-x,-y);arcRound(x,y,r-4,fill,pr,label,r>30?15:11,icon?()=>{X.translate(0,4);icon()}:null);X.restore()};
+ X.save();X.globalAlpha=e;X.translate(x,y);const s=0.7+0.3*e;X.scale(s,s);X.translate(-x,-y);arcRound(x,y,Math.max(24,r-2),fill,pr,label,18,icon?()=>{X.translate(0,4);icon()}:null);X.restore()};
 drawAudible=function(){const x=60,y=H-84;arcRound(x,y,32,'#2a56d6',pressed(24,H-120,72,72),'',0,()=>{X.fillStyle='#fff';X.strokeStyle='#0b0614';X.lineWidth=2;X.beginPath();X.moveTo(-13,-10);X.lineTo(7,-20);X.lineTo(7,4);X.lineTo(-13,-4);X.closePath();X.stroke();X.fill();X.fillRect(-17,-10,5,6)});
  arcTxt('AUDIBLE',x,y+15,10,['#fff','#dfe8ff'],{rim:false,shine:false});X.save();bevPanel(x+14,y-44,26,22,'#ffd23f',{c:5,drop:2});X.restore();txt(String(G.aud),x+27,y-33,13,'#141a36','center',false)};
 // ---------- fighter HUD ----------

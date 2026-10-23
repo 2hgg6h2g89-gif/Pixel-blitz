@@ -284,15 +284,14 @@ function updatePlayers(){SPK+=(SPKT-SPK)*0.25;window.__SPK=SPK;{const bs=Math.ma
   const s=2.8*SPK*(line?1.18:1);sc.set(s*mir*(1+sq),s*(1-sq)*p._sy,1);qR.setFromAxisAngle(zAx,p._r);qC.copy(cam.quaternion).multiply(qR);pm.compose(v3.set(Xw(p.x),0.02+p._lf,Z(p.y)),qC,sc);T.m.setMatrixAt(i,pm);
   T.uo.setXY(i,pose*CU,1-((dir*10+p.skin*2+line)+1)*CV);
   const M=S.META[dir*S.POSES+pose]||S.META[dir*S.POSES+N_.idle0]||{ty:9};p._ny=p._ny===undefined?M.ty:p._ny+(M.ty-p._ny)*Math.min(1,dt*14);
-  // Numbers parented to CHARACTER SPRITE (never field plane). Mid-upper torso under helmet.
-  // Same qC as body so they move/roll with the player; camUp = up the billboard, not world ground.
-  const noNum=p.fallen>0.25||p.dive>0||Math.abs(p._r)>1.2||p._sy<0.45;
+  // Numbers: same qC as body (tracks roll/anim) + camUp mid-upper (v30 proven, no turf float)
+  const noNum=p.fallen>0.3||p.dive>0.2||Math.abs(p._r)>1.35||p._sy<0.4;
   if(!noNum){const Nm=NM[p.team],j=nc[p.team]++;
-   const ly=0.22*s*(p._sy||1); // mid-upper (center=0, head~0.45s)
+   const ly=0.23*s*(p._sy||1);
    v3.set(Xw(p.x),0.02+p._lf,Z(p.y));
    v3.addScaledVector(camUp,ly);
-   v3.addScaledVector(camBk,0.06); // sit on jersey surface toward camera
-   const nw=0.42*s*(line?1.15:1)*(dir===2?0.9:1),nh=0.32*s*(dir===2?0.92:1);
+   v3.addScaledVector(camBk,0.08);
+   const nw=0.42*s*(line?1.15:1),nh=0.32*s;
    pm.compose(v3,qC,sc.set(nw*Math.sign(mir||1),nh,1));Nm.m.setMatrixAt(j,pm);
    const n=Math.max(0,Math.min(99,p.num|0));Nm.uo.setXY(j,(n%10)*0.1,1-(Math.floor(n/10)+1)*0.1)}
   m4.makeRotationX(-Math.PI/2);m4.setPosition(Xw(p.x),.02,Z(p.y));shadow.setMatrixAt(si,m4)});
@@ -366,11 +365,12 @@ window.R3D=()=>{if(!_pixDone)pixelize();const st=G.st;if(window.MENU_ST?window.M
      for(const w of P)if(w.team===0&&w.wp&&w.wp.length&&(w.role==='WR'||w.role==='TE'||w.role==='RB')){const e=w.wp[w.wp.length-1];rq(e.x,Math.min(e.y,G.los+(window.RDEEP||26)),0.05)}}
     }
    else if(inAir){let tg=aimT;if(ko)tg=c3;else if(!tg){let bd=1e9;for(const q of P)if(q.team===0&&q!==G.qb){const d=Math.hypot(q.x-b3.tx,q.y-b3.ty);if(d<bd){bd=d;tg=q}}}
-     const k=Math.min(1,b3.t/b3.T);fy=b3.y+(b3.ty-b3.y)*Math.min(1,0.2+0.8*k);fx=b3.x+(b3.tx-b3.x)*0.55;yN=-0.1;want=1;stF=0.28;
+     // Follow ball along trajectory (spring-smooth, never stadium cut)
+     const k=Math.min(1,b3.t/b3.T);fy=b3.y+(b3.ty-b3.y)*Math.min(1,0.15+0.75*k);fx=b3.x+(b3.tx-b3.x)*0.5;yN=-0.08;want=1;stF=0.42;
      const bz=(b3.h0||1.6)*(1-k)+1.6*k+b3.z*0.9;rq(b3.x,b3.y,0.3);rq(b3.x,b3.y,bz+0.6);
-     const k2=Math.min(1,(b3.t+LA*1.2)/b3.T);rq(b3.x+(b3.tx-b3.x)*(k2-k)/Math.max(0.05,1-k),b3.y+(b3.ty-b3.y)*(k2-k)/Math.max(0.05,1-k),0.3);
-     // After throw: intended receiver + ball + carrier on screen
-     if(tg){rqP(tg,LA*1.3);fy=fy*0.55+tg.y*0.45;fx=fx*0.6+tg.x*0.4}if(c3&&c3!==tg)rqP(c3,0.2)}
+     const k2=Math.min(1,(b3.t+LA*0.9)/b3.T);rq(b3.x+(b3.tx-b3.x)*(k2-k)/Math.max(0.05,1-k),b3.y+(b3.ty-b3.y)*(k2-k)/Math.max(0.05,1-k),0.3);
+     // Intended receiver stays framed but do NOT yank focus to stadium
+     if(tg){rqP(tg,LA*0.85);fy=fy*0.7+tg.y*0.3;fx=fx*0.72+tg.x*0.28}if(c3&&c3!==tg)rqP(c3,0.15)}
    else{fy=c3.y;fx=c3.x;yN=-0.12;want=1;stF=0.32;rqP(c3,LA);const dw=deepW();if(pass&&dw&&dw.y>c3.y+8){rqP(dw,0.4);fy=fy*0.65+dw.y*0.35}}
    cam._Rt=after?1:0}
   if(!live&&st!=='result')cam._Rt=0;
@@ -380,15 +380,22 @@ window.R3D=()=>{if(!_pixDone)pixelize();const st=G.st;if(window.MENU_ST?window.M
   if(cam._yW===undefined)cam._yW=CA.w.yN;if(jump&&camFy!==undefined&&!window.__hold)window.__fadeA=1;if(jump){camFy=fy;camX=fx;cam._yN=yN;cam._yW=want===0?yN:CA.w.yN;V.yW=0;V.fy=V.fx=V.yN=0;cam._R=cam._Rt||0;V.R=0;V.b=0;V.zf=0}
   else{camFy=sdamp(camFy,fy,V,'fy',stF,dt);camX=sdamp(camX,fx,V,'fx',0.42,dt);cam._yN=sdamp(cam._yN,yN,V,'yN',0.36,dt);cam._R=sdamp(cam._R,cam._Rt||0,V,'R',0.28,dt);cam._yW=sdamp(cam._yW,want===0?yN:CA.w.yN,V,'yW',0.4,dt)}
   RR=CA.ref?1:cam._R;
-  let bf=0,zt=1;for(let bb=want;bb>0;bb-=0.04){camPose(CA,bb,want);if(camFits()){bf=bb;break}}if(bf===0){for(zt=1;zt<3.6;zt+=0.08){camPose(CA,0,want,zt);if(camFits())break}}cam._zf=cam._zf||1;
-  // Always spring toward fit — never hard-snap zoom/pan (deep routes stay smooth)
-  if(cam._b===undefined||jump){cam._b=bf;V.b=0}else{
+  // Fit zoom: NEVER pull to stadium overview mid-pass (cap zt, floor bf while live)
+  let bf=want,zt=1;const zCap=(live&&(inAir||pass))?1.35:(live?1.55:3.2);
+  for(let bb=want;bb>=0.35;bb-=0.04){camPose(CA,bb,want);if(camFits()){bf=bb;break}}
+  if(bf<0.36){bf=live?Math.max(0.45,want*0.55):0;for(zt=1;zt<zCap;zt+=0.06){camPose(CA,bf,want,zt);if(camFits())break}}
+  if(live&&inAir){bf=Math.max(bf,0.55);zt=Math.min(zt,1.28)}
+  cam._zf=cam._zf||1;
+  // Spring only — never hard-snap b/zf on pass (jump reserved for KO / menu)
+  const passLock=live&&(inAir||(pass&&G.thrown));
+  if(cam._b===undefined||(jump&&!passLock)){cam._b=bf;V.b=0}else{
     const needOut=bf>cam._b+0.02;const unfit=(!needOut&&(()=>{camPose(CA,cam._b,want,cam._zf);return !camFits()})());
-    const stb=needOut||unfit?(st==='live'?0.22:0.28):(st==='result'?0.35:0.18);
-    cam._b=sdamp(cam._b,unfit?Math.min(1,cam._b+0.08):bf,V,'b',stb,dt)}
-  if(jump){cam._zf=zt;V.zf=0}else{
+    const stb=passLock?0.45:(needOut||unfit?(st==='live'?0.28:0.32):(st==='result'?0.35:0.2));
+    cam._b=sdamp(cam._b,unfit&&!passLock?Math.min(1,cam._b+0.05):bf,V,'b',stb,dt)}
+  if(jump&&!passLock){cam._zf=zt;V.zf=0}else{
     const needZ=zt>cam._zf+0.02;const unfitZ=(!needZ&&(()=>{camPose(CA,cam._b,want,cam._zf);return !camFits()})());
-    cam._zf=sdamp(cam._zf,unfitZ?cam._zf+0.06:zt,V,'zf',needZ||unfitZ?0.2:0.32,dt)}
+    const zst=passLock?0.5:(needZ||unfitZ?0.32:0.4);
+    cam._zf=sdamp(cam._zf,unfitZ&&!passLock?Math.min(zCap,cam._zf+0.04):Math.min(zCap,zt),V,'zf',zst,dt)}
   camPose(CA,cam._b,want,cam._zf);SPKT=CA.w.s+((CA.t.s+(CA.r.s-CA.t.s)*RR)-CA.w.s)*cam._b;
   cpos.copy(cam.position);_fv.set(0,0,-1).applyQuaternion(cam.quaternion);clook.copy(cam.position).addScaledVector(_fv,10)}
  if(G.shake>0){const s=Math.min(1,G.shake*4)*G.shake;cam.position.y+=Math.sin(G.t*53)*s;cam.position.z+=Math.sin(G.t*41+1)*s}
