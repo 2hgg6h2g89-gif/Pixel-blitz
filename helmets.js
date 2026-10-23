@@ -84,41 +84,54 @@ wheel:[[2,8],[3,8],[4,4],[4,5],[4,6],[4,7],[4,8],[4,9],[4,10],[4,11],[4,12],[5,4
 };
 
 function pxHelm(t,ti,left){
- const W=28,H=22,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+ const W=32,H=24,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
  const shell=t.h,stripe=t.c1===t.h?t.c2:t.c1,trim=(t.c2===stripe||t.c2===shell)?'#f4f8f2':t.c2;
- const mkC=lum(shell)>140?'#2a2a36':'#d6dbe6';
  const id=OLD[EMB[(ti|0)%EMB.length]]||EMB[(ti|0)%EMB.length];
- const P=(x,y,w,h,col)=>{g.fillStyle=col;g.fillRect(x,y,w,h)};
- const shi=mix(shell,1.28),sho=mix(shell,.62);
- // consistent side silhouette (faces right)
+ const P=(x,y,w,h,col)=>{g.fillStyle=col;g.fillRect(x,y,w|0,h|0)};
+ const shi=mix(shell,1.35),shm=mix(shell,1.12),sho=mix(shell,.55),shd=mix(shell,.38);
+ // Side silhouette facing LEFT (inspiration sheet craft)
+ // row: [x,y,w] filled shell pixels
  const rows=[
-  [8,1,12],[6,2,16],[5,3,18],[4,4,20],[3,5,21],[3,6,21],[2,7,22],[2,8,22],
-  [2,9,22],[2,10,22],[2,11,21],[3,12,20],[3,13,19],[4,14,17],[5,15,15],[7,16,12],[9,17,9]];
+  [10,2,14],[8,3,17],[7,4,19],[6,5,21],[5,6,22],[4,7,23],[4,8,23],[3,9,24],
+  [3,10,24],[3,11,23],[3,12,22],[4,13,20],[5,14,18],[6,15,16],[8,16,13],[10,17,10],[13,18,6]];
  rows.forEach(([x,y,w])=>P(x,y,w,1,shell));
- // highlight + shade
- P(8,2,10,1,shi);P(7,3,6,1,shi);P(3,13,18,1,sho);P(4,14,14,1,sho);P(2,8,1,4,sho);P(23,7,1,5,shi);
- // optional crown stripe (odd teams / when contrast ok)
- if(((ti|0)%3)!==2){P(14,1,2,15,trim);P(14,1,2,1,shi);P(14,2,2,13,stripe)}
+ // crown highlight band
+ P(11,3,10,1,shi);P(9,4,8,1,shm);P(8,5,5,1,shi);
+ // lower shade + jaw
+ P(4,13,20,1,sho);P(5,14,16,1,sho);P(6,15,14,1,shd);P(4,10,1,3,sho);P(26,8,1,5,shi);
+ // center stripe variants by team id
+ const stripeStyle=(ti|0)%4;
+ if(stripeStyle===0){P(15,2,3,15,trim);P(16,2,1,15,stripe)}
+ else if(stripeStyle===1){P(14,2,2,15,stripe);P(17,2,2,15,stripe)}
+ else if(stripeStyle===2){P(15,2,3,15,stripe)}
+ // else plain shell
  // ear hole
- P(10,9,3,3,sho);P(11,10,1,1,'#121018');
- // side mark (original)
- const ec=best(shell,[stripe,trim,t.c1,t.c2,'#ffffff','#ffd23f']);
+ P(18,9,3,3,sho);P(19,10,1,1,'#0e0c14');
+ // side mark — crisp 12x12 stamp on cheek
+ const ec=best(shell,[stripe,trim,t.c1,t.c2,'#ffffff','#ffd23f','#111111']);
  const mk=MARK[id]||MARK.star;
- // stamp 16x16 logo into ~10x10 region on shell
- mk.forEach(([dx,dy])=>{const x=7+Math.floor(dx*10/16),y=5+Math.floor(dy*10/16);if(x>=5&&x<20&&y>=3&&y<15)P(x,y,1,1,ec)});
- // facemask: thin dark bars + posts
- const fm=lum(shell)>100?'#1a1a22':'#8a909c';
- P(22,5,5,1,fm);P(21,8,6,1,fm);P(20,11,6,1,fm);P(25,5,1,8,fm);P(23,5,1,7,fm);
- // chin / jaw tip
- P(18,15,6,2,sho);P(20,16,5,1,mix(shell,.5));
+ mk.forEach(([dx,dy])=>{
+  const x=8+Math.floor(dx*12/16),y=5+Math.floor(dy*11/16);
+  if(x>=6&&x<=20&&y>=3&&y<=15)P(x,y,1,1,ec);
+ });
+ // facemask: grey bars + cage (inspiration thin bars)
+ const fmBase=lum(shell)>110?'#2a2e38':'#c5cad4';
+ const fmDark=lum(shell)>110?'#12141c':'#6a7080';
+ // horizontal bars
+ P(3,7,5,1,fmBase);P(2,9,6,1,fmBase);P(2,11,6,1,fmBase);P(3,13,5,1,fmBase);
+ // vertical posts
+ P(2,7,1,7,fmDark);P(5,7,1,7,fmBase);P(7,8,1,5,fmDark);
+ // chinstrap tip
+ P(8,16,8,2,sho);P(10,17,7,1,shd);P(9,18,5,1,mix(shell,.45));
  if(left){const f=document.createElement('canvas');f.width=W;f.height=H;const fg=f.getContext('2d');fg.translate(W,0);fg.scale(-1,1);fg.drawImage(c,0,0);return f}
  return c}
+
 const _helmCache=new Map();
 function drawHelmet(g,x,y,size,t,left,ti){
  const key=(ti|0)+':'+(left?1:0)+':'+(t.h||'')+':'+(t.c1||'')+':'+(t.c2||'');
  let src=_helmCache.get(key);if(!src){src=pxHelm(t,ti,!!left);_helmCache.set(key,src)}
  const s=Math.max(12,Math.round(size));
- const dw=s,dh=Math.round(s*22/28);
+ const dw=s,dh=Math.round(s*24/32);
  g.save();g.imageSmoothingEnabled=false;
  g.globalAlpha=.3;g.fillStyle='#000';g.fillRect(Math.round(x-dw/2)+2,Math.round(y+dh*0.25)+2,dw,Math.max(2,dh*0.18|0));g.globalAlpha=1;
  g.drawImage(src,Math.round(x-dw/2),Math.round(y-dh*0.55),dw,dh);

@@ -97,14 +97,13 @@ function bg(){const g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b0a26'
 function hdr(s){txt(s,W/2,62,24,PAL.yel)}
 function back(){btn(12,40,90,40,'< BACK','#2b3a7a','#8fc4ff',13)}
 function recStr(t){const r=S.rec[t];return r.w+'-'+r.l+(r.t?'-'+r.t:'')}
-function drawModeSel(){bg();txt('PIXEL BLITZ',W/2,120,28,PAL.yel);txt('CHOOSE YOUR PATH',W/2,160,14,PAL.cy,'center',false);
- btn(40,300,W-80,90,'ARCADE','#1f6fd6','#fff',26);txt('PICK A TEAM  ·  PLAY NOW',W/2,365,11,'#c9d4ff','center',false);
- btn(40,420,W-80,90,'CAREER','#c8102e','#fff',26);txt('COACH  ·  DRAFT  ·  BUILD YOUR DYNASTY',W/2,485,11,'#ffd0d6','center',false);
- txt('DRAFT · CONTRACTS · FREE AGENTS · TRADES',W/2,560,10,'#8a93b8','center',false)}
-function drawCareer(){bg();hdr('CAREER MODE');txt('YOU ARE THE COACH',W/2,120,16,PAL.cy,'center',false);
- txt('DRAFT  ·  CONTRACTS  ·  FREE AGENTS  ·  TRADES',W/2,160,11,'#9fb3ff','center',false);
- box(30,220,W-60,280,'#120a24',PAL.yel);
- txt('COMING IN V27',W/2,300,22,PAL.yel);txt('Build your roster every season.',W/2,340,13,PAL.txt);txt('Arcade stays ready to play now.',W/2,370,13,PAL.txt);
+function drawModeSel(){bg();
+ if(window.arcTxt){arcTxt('PIXEL BLITZ',W/2,110,34,['#fffbe0','#ffe14f','#e8a10a'],{sk:0.12,px:true})}else txt('PIXEL BLITZ',W/2,110,28,PAL.yel);
+ txt('CHOOSE YOUR PATH',W/2,148,13,PAL.cy,'center',false);
+ btn(36,280,W-72,88,'ARCADE','#1f6fd6','#8fc4ff',24);txt('PRESET TEAM  ·  INSTANT GRIDIRON',W/2,345,11,'#c9d4ff','center',false);
+ btn(36,400,W-72,88,'CAREER','#c8102e','#ffd0d6',24);txt('COACH  ·  DRAFT  ·  CONTRACTS  ·  TRADES',W/2,465,11,'#ffd0d6','center',false);
+ pill(40,540,W-80,56,'rgba(18,10,36,.9)','#3a2a6a');txt('ORIGINAL TEAMS  ·  NO LICENSED MARKS',W/2,568,11,'#9fb3ff','center',false)}
+function drawCareer(){bg();hdr('CAREER MODE');txt('RESUME OR START FROM MODE SELECT',W/2,120,13,PAL.cy,'center',false);
  btn(40,700,W-80,56,'BACK TO MODES','#2b3a7a','#8fc4ff',16)}
 function drawTeam(){bg();txt('PICK YOUR TEAM',W/2,60,24,PAL.yel);txt('32 TEAMS  -  17 GAMES  -  PLAYOFFS',W/2,92,11,PAL.cy,'center',false);txt('TAP A HELMET',W/2,118,10,'#9fb3ff','center',false);
  for(let i=0;i<32;i++){const[a,b,w,h]=gridPos(i);const on=i===sel;pill(a,b,w,h,on?'#2a1450':'rgba(18,10,36,.9)',on?PAL.yel:TEAMS[i].c1);HELM.drawHelmet(X,a+w/2,b+19,30,TEAMS[i],false,i);txt(TEAMS[i].a,a+w/2,b+h-9,11,on?PAL.yel:'#fff','center',false)}

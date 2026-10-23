@@ -63,7 +63,8 @@ function arcBtn(b,label,sub,fill,stroke,on){btn(b.x,b.y,b.w,b.h,label,fill,strok
 function v2a(v){return Math.PI+(v+20)/140*Math.PI}
 function needPow(){const f=G.fg;if(f._np!==undefined&&f._npL===G.los)return f._np;let np=121;for(let pw=40;pw<=120;pw+=1){const r=judgeWith(f,pw,0,{x:0,y:0});if(r.good){np=pw+4;break}}f._np=Math.min(np,100);f._npL=G.los;return f._np}
 function drawMeter(){const f=G.fg,c=MC;X.save();
- if(window.bevPanel)bevPanel(c.x-c.r-20,c.y-c.r-34,2*c.r+40,c.r+58,'#141a3a',{c:9,edge:'#ffd23f'});else{X.fillStyle='#141a3a';X.fillRect(c.x-c.r-20,c.y-c.r-34,2*c.r+40,c.r+58)}
+ {const mx=Math.round(c.x-c.r-20),my=Math.round(c.y-c.r-34),mw=Math.round(2*c.r+40),mh=Math.round(c.r+58);
+  X.fillStyle='rgba(0,0,0,.5)';X.fillRect(mx+3,my+mh,mw,4);X.fillStyle='#0b0614';X.fillRect(mx-2,my-2,mw+4,mh+4);X.fillStyle='#141a3a';X.fillRect(mx,my,mw,mh);X.fillStyle='rgba(255,255,255,.18)';X.fillRect(mx,my,mw,3);X.strokeStyle='#ffd23f';X.lineWidth=2;X.strokeRect(mx+1,my+1,mw-2,mh-2)}
  const band=(a,b,col,w)=>{X.beginPath();X.arc(c.x,c.y,c.r-4,v2a(a),v2a(b));X.lineWidth=w||12;X.strokeStyle=col;X.stroke()};
  band(-20,100,'#1d2a5e');band(0,100,'rgba(80,140,255,.55)');band(100,120,'#e8344e');band(-FGT.zone*2,FGT.zone*2,'#e8c31f',14);band(-FGT.zone,FGT.zone,'#2fd35f',16);{const np=needPow();if(np<=120){band(Math.max(0,np),Math.min(100,np+12),'rgba(47,211,95,.9)',8);const a=v2a(np);X.beginPath();X.moveTo(c.x+Math.cos(a)*(c.r-20),c.y+Math.sin(a)*(c.r-20));X.lineTo(c.x+Math.cos(a)*(c.r+10),c.y+Math.sin(a)*(c.r+10));X.lineWidth=3;X.strokeStyle='#5dff8a';X.stroke()}}
  for(let v=0;v<=100;v+=25){const a=v2a(v);X.beginPath();X.moveTo(c.x+Math.cos(a)*(c.r-14),c.y+Math.sin(a)*(c.r-14));X.lineTo(c.x+Math.cos(a)*(c.r+4),c.y+Math.sin(a)*(c.r+4));X.lineWidth=2;X.strokeStyle='rgba(255,255,255,.6)';X.stroke()}

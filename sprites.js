@@ -75,6 +75,8 @@ function fig(g,t,skin,line,dir,name){const s=D[name];
  const tw=side?(line?8:6):bw,tx=Math.round(cx-tw/2+ln*0.6);
  r(Math.round(cx-tw/2),py,tw,2,PN);r(Math.round(cx-tw/2),py+1,tw,1,PN2);
  r(tx,ty,tw,6,J);r(tx-(side?0:1),ty,tw+(side?1:2),2,J);r(tx,ty,tw,1,JL);r(tx+tw-1,ty+2,1,4,J2);r(tx,ty+5,tw,1,J2);if(side)r(tx+1,ty+1,1,4,SO);
+ // number plate on back/side so digits lock to jersey fabric
+ if(back||side){const nx=Math.round(cx-2),ny=ty+2;r(nx,ny,4,3,shade(t.c1,.55));}
  // ---- arms
  const A=fs.A||[[0,5],[0,5]];
  if(side){const shX=tx+tw-2,shY=ty+1;const arm=(h,col,front)=>{const hx=shX+h[0],hy=shY+h[1];seg(shX,shY,shX+(h[0])*0.35,shY+(h[1])*0.35,2,J);seg(shX+h[0]*0.35,shY+h[1]*0.35,hx,hy,2,col);return[hx,hy]};
@@ -113,9 +115,32 @@ function buildAtlas(t){const at=document.createElement('canvas');at.width=CELL*P
 // jersey numbers: 3x5 pixel digits, 10x10 grid of 9x7 cells
 const DG=['111101101101111','010110010010111','111001111100111','111001111001111','101101111001001','111100111001111','111100111101111','111001010010010','111101111101111','111101111001111'];
 function buildNumbers(t){const c=document.createElement('canvas');c.width=90;c.height=70;const g=c.getContext('2d',{willReadFrequently:true});
- const fg=Math.abs(lum(t.c2)-lum(t.c1))>60?t.c2:(lum(t.c1)>140?'#1a1a2a':'#ffffff');
- for(let n=0;n<100;n++){const ox=(n%10)*9,oy=Math.floor(n/10)*7;const s=String(n);const digs=s.length===1?[s]:[s[0],s[1]];const x0=s.length===1?ox+3:ox+1;
-  digs.forEach((d,k)=>{const b=DG[+d];for(let i=0;i<15;i++)if(b[i]==='1'){g.fillStyle=fg;g.fillRect(x0+k*4+i%3,oy+1+Math.floor(i/3),1,1)}})}
- const sh=hx(shade(t.c1,.45));outline(c,90,70,sh);return c}
-window.SPR={CELL,DIRS,POSES,P,NAMES,META,buildAtlas,buildNumbers};
+ // high-contrast digit vs jersey for readability on backs
+ const fg=lum(t.c1)>130?'#1a1428':'#ffffff';
+ const outC=lum(t.c1)>130?'#f4f8ff':shade(t.c1,.35);
+ for(let n=0;n<100;n++){const ox=(n%10)*9,oy=Math.floor(n/10)*7;const s=String(n);const digs=s.length===1?[s]:[s[0],s[1]];
+  // keep two digits tight (3px glyph + 1px gap) so they read as one jersey number
+  const x0=s.length===1?ox+3:ox+1;
+  digs.forEach((d,k)=>{const b=DG[+d],bx=x0+k*4;for(let i=0;i<15;i++)if(b[i]==='1'){const px=bx+i%3,py=oy+1+Math.floor(i/3);
+   // 1px outline so digits never blend into jersey
+   g.fillStyle=outC;g.fillRect(px-1,py,1,1);g.fillRect(px+1,py,1,1);g.fillRect(px,py-1,1,1);g.fillRect(px,py+1,1,1);
+   g.fillStyle=fg;g.fillRect(px,py,1,1)}})}
+ return c}
+
+function stampNum(at,t,dir,pose,skin,line,num){
+ if(dir<2)return; // front views: no back number
+ const CELL=24;const g=at.getContext('2d');g.imageSmoothingEnabled=false;
+ const ox=pose*CELL,oy=(dir*10+skin*2+line)*CELL;
+ // jersey torso approx
+ const side=dir===2,back=dir>=3;
+ const y0=side?2:2;const ty=y0+8;const cx=12;
+ const fg=lum(t.c1)>130?'#1a1428':'#ffffff';
+ const n=Math.max(0,Math.min(99,num|0));const s=String(n);const digs=s.length===1?[s]:[s[0],s[1]];
+ const x0=s.length===1?cx-1:cx-3;
+ digs.forEach((d,k)=>{const b=DG[+d];for(let i=0;i<15;i++)if(b[i]==='1'){
+  const px=ox+x0+k*4+(i%3),py=oy+ty+1+Math.floor(i/3);
+  g.fillStyle=fg;g.fillRect(px,py,1,1);
+ }});
+}
+window.SPR={CELL,DIRS,POSES,P,NAMES,META,buildAtlas,buildNumbers,stampNum};
 })();

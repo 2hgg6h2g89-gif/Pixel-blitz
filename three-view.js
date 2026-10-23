@@ -218,11 +218,12 @@ function mkTeamMesh(){const tex=new THREE.CanvasTexture(document.createElement('
  const m=new THREE.InstancedMesh(bgeo,mat,N);m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);const uo=new THREE.InstancedBufferAttribute(new Float32Array(N*2),2);uo.setUsage(THREE.DynamicDrawUsage);m.geometry=bgeo.clone();m.geometry.setAttribute('uvOff',uo);m.frustumCulled=false;scene.add(m);return{m,mat,uo}}
 const TM=[mkTeamMesh(),mkTeamMesh()];
 const ngeo=new THREE.PlaneGeometry(1,1);
-function mkNumMesh(){const mat=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(document.createElement('canvas')),alphaTest:.5,depthTest:true,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+function mkNumMesh(){const mat=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(document.createElement('canvas')),alphaTest:.3,depthTest:false,depthWrite:false,transparent:true});
  mat.onBeforeCompile=sh=>{sh.vertexShader='attribute vec2 uvOff;\n'+sh.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\n vMapUv = vMapUv*vec2(0.1,0.1) + uvOff;')};
  const g=ngeo.clone();const uo=new THREE.InstancedBufferAttribute(new Float32Array(N*2),2);uo.setUsage(THREE.DynamicDrawUsage);g.setAttribute('uvOff',uo);const m=new THREE.InstancedMesh(g,mat,N);m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);m.frustumCulled=false;scene.add(m);return{m,mat,uo}}
 const NM=[mkNumMesh(),mkNumMesh()];NM.forEach(n=>n.m.renderOrder=3);const camUp=new THREE.Vector3(),camBk=new THREE.Vector3();window.__atlases=[];
-let atlasKey='';function ensureAtlas(){const k=G.home+'-'+G.away;if(k===atlasKey)return;atlasKey=k;[home(),away()].forEach((t,i)=>{const c=S.buildAtlas(t);window.__atlases[i]=c;const tx=new THREE.CanvasTexture(c);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;tx.generateMipmaps=false;tx.colorSpace=THREE.SRGBColorSpace;TM[i].mat.map=tx;TM[i].mat.needsUpdate=true;const nc=S.buildNumbers(t);const nt=new THREE.CanvasTexture(nc);nt.magFilter=nt.minFilter=THREE.NearestFilter;nt.generateMipmaps=false;nt.colorSpace=THREE.SRGBColorSpace;NM[i].mat.map=nt;NM[i].mat.needsUpdate=true})}
+
+let atlasKey='';function ensureAtlas(){const k=G.home+'-'+G.away;if(k===atlasKey)return;atlasKey=k;if(window.HELM&&HELM.clearHelmCache)HELM.clearHelmCache();[home(),away()].forEach((t,i)=>{const c=S.buildAtlas(t);window.__atlases[i]=c;const tx=new THREE.CanvasTexture(c);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;tx.generateMipmaps=false;tx.colorSpace=THREE.SRGBColorSpace;TM[i].mat.map=tx;TM[i].mat.needsUpdate=true;const nc=S.buildNumbers(t);const nt=new THREE.CanvasTexture(nc);nt.magFilter=nt.minFilter=THREE.NearestFilter;nt.generateMipmaps=false;nt.colorSpace=THREE.SRGBColorSpace;NM[i].mat.map=nt;NM[i].mat.needsUpdate=true})}
 const pm=new THREE.Matrix4(),v3=new THREE.Vector3(),sc=new THREE.Vector3();
 // ===== v17 animation state machine: pose + roll + squash + lift, eased per player =====
 const N_=S.P;let animT=performance.now();const qR=new THREE.Quaternion(),qC=new THREE.Quaternion(),zAx=new THREE.Vector3(0,0,1);
@@ -275,15 +276,15 @@ function updatePlayers(){SPK+=(SPKT-SPK)*0.25;window.__SPK=SPK;{const bs=Math.ma
   const s=2.8*SPK*(line?1.18:1);sc.set(s*mir*(1+sq),s*(1-sq)*p._sy,1);qR.setFromAxisAngle(zAx,p._r);qC.copy(cam.quaternion).multiply(qR);pm.compose(v3.set(Xw(p.x),0.02+p._lf,Z(p.y)),qC,sc);T.m.setMatrixAt(i,pm);
   T.uo.setXY(i,pose*CU,1-((dir*10+p.skin*2+line)+1)*CV);
   const M=S.META[dir*S.POSES+pose]||S.META[dir*S.POSES+N_.idle0]||{ty:9};p._ny=p._ny===undefined?M.ty:p._ny+(M.ty-p._ny)*Math.min(1,dt*14);
-  // Numbers always on jersey BACK (player-facing). Hide only when front-on to camera, fallen, or dive.
-  const backVis=dir>=2;const noNum=!backVis||Math.abs(p._r)>0.7||p._sy<0.7||p.fallen>0||p.dive>0;
-  if(!noNum){const Nm=NM[p.team],j=nc[p.team]++;const hpx=24-(p._ny+3.2)+(dir===2?0.4:0);const u=s/24;
-   const fa=p.fa||0,bx=-Math.sin(fa)*0.55,bz=Math.cos(fa)*0.55; // field back → world (Xw uses x, Z=-y)
-   v3.set(Xw(p.x)+bx,0.02+p._lf,Z(p.y)+bz).addScaledVector(camUp,hpx*u);
-   // slight camBk so it sits on the sprite surface from behind
-   v3.addScaledVector(camBk,0.05);
-   const nw=9*u*(line?1.08:0.98)*(dir===2?0.78:1),nh=7*u*(dir===2?0.82:1);
-   pm.compose(v3,cam.quaternion,sc.set(nw,nh,1));Nm.m.setMatrixAt(j,pm);const n=Math.max(0,Math.min(99,p.num|0));Nm.uo.setXY(j,(n%10)*0.1,1-(Math.floor(n/10)+1)*0.1)}
+  // Numbers LOCKED to jersey back — same billboard qC as body (zero drift).
+  const backVis=dir>=2;const noNum=!backVis||Math.abs(p._r)>0.9||p._sy<0.5||p.fallen>0||p.dive>0;
+  if(!noNum){const Nm=NM[p.team],j=nc[p.team]++;
+   const torsoY=(24-(p._ny+0.6))/24;
+   const side=dir===2;const nw=(line?0.85:0.72)*s*(side?0.85:1),nh=(line?0.62:0.55)*s*(side?0.9:1);
+   v3b.set(0,torsoY,0.07);v3b.applyQuaternion(qC);
+   v3.set(Xw(p.x),0.02+p._lf,Z(p.y)).add(v3b);
+   pm.compose(v3,qC,sc.set(nw,nh*p._sy,1));Nm.m.setMatrixAt(j,pm);
+   const n=Math.max(0,Math.min(99,p.num|0));Nm.uo.setXY(j,(n%10)*0.1,1-(Math.floor(n/10)+1)*0.1)}
   m4.makeRotationX(-Math.PI/2);m4.setPosition(Xw(p.x),.02,Z(p.y));shadow.setMatrixAt(si,m4)});
  TM.forEach((T,k)=>{T.m.count=cnt[k];T.m.instanceMatrix.needsUpdate=true;T.uo.needsUpdate=true});NM.forEach((T,k)=>{T.m.count=nc[k];T.m.instanceMatrix.needsUpdate=true;T.uo.needsUpdate=true});shadow.count=G.players.length;shadow.instanceMatrix.needsUpdate=true}
 // route ribbons
@@ -321,7 +322,7 @@ window.R3D=()=>{if(!_pixDone)pixelize();const st=G.st;if(window.MENU_ST?window.M
  paintSB();const fk=G.home+'-'+G.away;if(fk!==fieldKey){fieldKey=fk;paintField();ftex.needsUpdate=true;restyleStadium();paintSideline();setDay(window.__forceDay!==undefined?window.__forceDay:Math.random()<0.35)}
  {const now=performance.now(),dt=Math.min(0.05,(now-(window.__lt||now))/1000);window.__lt=now;const big=G.celeb||(G.banner&&G.banner.a<2&&/TOUCHDOWN|FIRST DOWN|GOOD!|INTERCEPT/.test(G.banner.t+' '+G.banner.sub));const tc=big?1:0;cCheer.value+=(tc-cCheer.value)*0.06;if(G.celeb&&!window.__fwDone){window.__fwDone=true;window.__fireworks()}if(!G.celeb)window.__fwDone=false;fwStep(window.__hold?1/30:dt);SL.update(now/1000,cCheer.value)}if(ledMat.map)ledMat.map.offset.x=(performance.now()/1000*0.02)%1;
  const on=st==='live'||st==='result'||st==='presnap'||st==='fg'||st==='patpick';const fgB=(st==='fg'||st==='result'&&G.fgDone)&&G.fgBall;
- cam.updateMatrixWorld();if(on)updatePlayers();TM.forEach(T=>T.m.visible=on);NM.forEach(T=>T.m.visible=on);cU.value=performance.now()/1000;shadow.visible=on;
+ cam.updateMatrixWorld();if(on)updatePlayers();TM.forEach(T=>T.m.visible=on);NM.forEach(T=>T.m.visible=false);cU.value=performance.now()/1000;shadow.visible=on;
  if(G.routeVer!==routeVer){routeVer=G.routeVer;buildRoutes()}
  routeGrp.visible=st==='presnap'||(st==='live'&&!G.thrown&&G.carrier&&G.carrier.role==='QB'&&G.play.t==='pass');
  los.position.z=Z(G.los);fd.position.z=Z(Math.min(G.los+G.togo,100));fd.visible=G.los+G.togo<100;
@@ -351,7 +352,7 @@ window.R3D=()=>{if(!_pixDone)pixelize();const st=G.st;if(window.MENU_ST?window.M
   // smooth the target point itself (critically damped), then the camera follows it
   const jump=camFy===undefined||(st==='presnap'||G.st==='fg')&&Math.abs(camFy-fy)>40||ko&&live&&b3&&b3.t<0.12;
   if(cam._yW===undefined)cam._yW=CA.w.yN;if(jump&&camFy!==undefined&&!window.__hold)window.__fadeA=1;if(jump){camFy=fy;camX=fx;cam._yN=yN;cam._yW=want===0?yN:CA.w.yN;V.yW=0;V.fy=V.fx=V.yN=0;cam._R=cam._Rt||0;V.R=0}
-  else{camFy=sdamp(camFy,fy,V,'fy',stF,dt);camX=sdamp(camX,fx,V,'fx',0.35,dt);cam._yN=sdamp(cam._yN,yN,V,'yN',0.3,dt);cam._R=sdamp(cam._R,cam._Rt||0,V,'R',0.22,dt);cam._yW=sdamp(cam._yW,want===0?yN:CA.w.yN,V,'yW',0.35,dt)}
+  else{camFy=sdamp(camFy,fy,V,'fy',Math.max(stF,0.32),dt);camX=sdamp(camX,fx,V,'fx',0.38,dt);cam._yN=sdamp(cam._yN,yN,V,'yN',0.34,dt);cam._R=sdamp(cam._R,cam._Rt||0,V,'R',0.22,dt);cam._yW=sdamp(cam._yW,want===0?yN:CA.w.yN,V,'yW',0.35,dt)}
   RR=CA.ref?1:cam._R;
   let bf=0,zt=1;for(let bb=want;bb>0;bb-=0.05){camPose(CA,bb,want);if(camFits()){bf=bb;break}}if(bf===0){for(zt=1;zt<4;zt+=0.1){camPose(CA,0,want,zt);if(camFits())break}}cam._zf=cam._zf||1;
   if(cam._b===undefined||jump){cam._b=bf;V.b=0}else{const up=bf>cam._b;cam._b=sdamp(cam._b,bf,V,'b',up?(st==='live'?0.4:0.32):(st==='result'?0.4:0.12),dt);

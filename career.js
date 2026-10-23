@@ -220,7 +220,7 @@ function drawCHub(){
   btn(20,520,W-40,48,'STANDINGS / SCHEDULE','#3a2a6a','#c9d4ff',13);
   if(S&&S.phase==='done'&&C.phase==='reg')btn(20,580,W-40,48,'ENTER OFFSEASON (DRAFT)','#c8102e','#fff',13);
   if(C.phase==='fa'||C.phase==='resign')btn(20,580,W-40,48,'START YEAR '+(C.year+1),'#2fd35f','#0a2a14',14);
-  btn(W/2-80,760,160,34,'QUIT CAREER','#3a2a6a','#8a7ab0',11);
+  btn(W/2-90,772,180,36,'QUIT CAREER','#3a2a6a','#8a7ab0',11);
   toast();
 }
 
@@ -312,7 +312,7 @@ function careerTap(t){
     return;
   }
   if(G.st==='chub'){
-    if(hit(t,W/2-80,760,160,34)){clearC();G.career=false;G.st='modesel';return}
+    if(hit(t,W/2-90,772,180,36)){clearC();G.career=false;G.st='modesel';return}
     if(hit(t,20,300,W-40,56)){
       if(C.phase==='draft'){G.st='cdraft';advanceDraftAI();return}
       if(C.phase==='fa'){G.st='cfa';return}
