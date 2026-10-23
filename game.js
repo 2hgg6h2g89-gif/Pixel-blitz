@@ -27,8 +27,26 @@ window.G=G;G.bulletPref=localStorage.getItem('pb_bullet')!=='0';G.adv=false;
 // ---------- input ----------
 const IN={jx:0,jy:0,taps:[],keyp:[],flick:0,truck:false,sprint:false,aimP:null};
 function pos(e){const r=C.getBoundingClientRect();const p=e.touches?e.touches[0]||e.changedTouches[0]:e;return[(p.clientX-r.left)*W/r.width,(p.clientY-r.top)*H/r.height]}
-const JB={x:W-150,y:H-130},DB={x:W-62,y:H-200},TB={x:154,y:H-112},BB={x:116,y:H-262};const PT=new Map(),STK={x:W-84,y:H-170,r:56},LJ={x:84,y:H-170,r:56};
-// Thumb stays inside the dark base: base radius minus knob radius minus a 3px lip.
+const JB={x:W-150,y:H-130},DB={x:W-62,y:H-200},TB={x:180,y:H-62},BB={x:116,y:H-262};const PT=new Map(),STK={x:W-84,y:H-170,r:56},LJ={x:84,y:H-170,r:56};
+function hudZones(){const z=[];const live=G.st==='live'&&!G.paused;
+ if(G.st==='presnap'&&!G.audOpen){z.push({x:W-64,y:H-84,r:52});z.push({x:60,y:H-84,r:42})}
+ const tuckOn=live&&passerPhase()&&G.carrier===G.qb&&!G.pend&&!G.ball;
+ const carOn=live&&(G.tuck||!passerPhase())&&!G.pend&&(!G.ball||G.ball.caught)&&G.carrier&&G.carrier.team===0&&!(G.carrier.fallen>0);
+ if(tuckOn||carOn)z.push({x:LJ.x,y:LJ.y,r:LJ.r+36});
+ if(tuckOn)z.push({x:TB.x,y:TB.y,r:68});
+ if(carOn){z.push({x:JB.x,y:JB.y,r:74});z.push({x:DB.x,y:DB.y,r:74})}
+ return z}
+function hudPush(sx,sy){let x=sx,y=sy;const zones=hudZones();
+ for(let n=0;n<5;n++)for(const z of zones){let dx=x-z.x,dy=y-z.y,d=Math.hypot(dx,dy);if(d>=z.r)continue;if(d<0.01){dx=0;dy=-1;d=1}const push=z.r-d+1.5;x+=dx/d*push;y+=dy/d*push;if(y>z.y-4){const span=Math.sqrt(Math.max(0,z.r*z.r-(x-z.x)*(x-z.x)));y=Math.min(y,z.y-span-1)}}
+ return{x,y,dx:x-sx,dy:y-sy}}
+window.hudPush=hudPush;
+function holdOffHud(p){if(!p||p.team||G.st!=='live'||!window.PROJ||!hudZones().length)return;
+ for(let it=0;it<3;it++){const q=scr(p.x,p.y,0.2);const o=hudPush(q[0],q[1]);const m=Math.hypot(o.dx,o.dy);if(m<2)return;
+  const qx=scr(p.x+0.5,p.y,0.2),qy=scr(p.x,p.y+0.5,0.2);
+  const jxx=(qx[0]-q[0])/0.5,jxy=(qy[0]-q[0])/0.5,jyx=(qx[1]-q[1])/0.5,jyy=(qy[1]-q[1])/0.5,det=jxx*jyy-jxy*jyx;
+  if(Math.abs(det)<0.8)return;let wx=(o.dx*jyy-o.dy*jxy)/det,wy=(jxx*o.dy-jyx*o.dx)/det;const um=Math.hypot(wx,wy)||1,ux=wx/um,uy=wy/um,step=Math.min(um,0.55);
+  p.x+=ux*step;p.y+=uy*step;const vn=p.vx*ux+p.vy*uy;if(vn<0){p.vx-=vn*ux;p.vy-=vn*uy}}
+ p.x=cl(p.x,0.6,FIELDW-0.6)}
 function stickLimit(baseR,knob){return Math.max(10,baseR-knob-3)}
 const LMAX=stickLimit(LJ.r-2,20),JMAX=stickLimit(50,22);
 function ptsOf(e){const r=C.getBoundingClientRect();const L=e.changedTouches?[...e.changedTouches]:[e];return L.map(p=>({id:e.changedTouches?p.identifier:'m',x:(p.clientX-r.left)*W/r.width,y:(p.clientY-r.top)*H/r.height}))}
@@ -265,6 +283,7 @@ function update(dt){
  if(G.pend){G.qb.vx*=0.88;G.qb.vy*=0.88;G.pend.t-=dt;if(G.pend.t<=0){releaseBall();if(G.st!=='live')return}}
  if(G.ball&&!G.ball.caught&&G.play.t!=='ko'&&G.ball.tip){const b=G.ball,rem=Math.max(0.12,b.T-b.t);for(const q of P)if(q.team===(b.tip?q.team:0)&&(q.role==='WR'||q.role==='RB'||(b.tip&&q.team===1&&q.role!=='DL'))&&!(q.fallen>0)&&!(q.dive>0)&&q!==G.qb){const d=Math.hypot(q.x-b.tx,q.y-b.ty);if(d<8.5&&d>0.3&&!(q.stun>0))steer(q,b.tx,b.ty,Math.min(9,d/rem+1.5),dt,12)}}
  for(const q of P){if(q.throwT>0)q.throwT-=dt;q.x+=q.vx*dt;q.y+=q.vy*dt;if(q.team===0&&(q.role==='WR'||q.role==='RB'||q.role==='TE')&&q!==G.carrier&&G.play.t!=='ko'){if(!G.ball&&!G.pend&&G.carrier===G.qb)q.x=cl(q.x,RX0-0.6,RX1+0.6);else q.x=cl(q.x,1.5,FIELDW-1.5)}q.x=cl(q.x,0.5,FIELDW-0.5);if(q!==G.carrier||G.play.t==='ko')q.y=Math.min(q.y,109.4); {const sp=Math.hypot(q.vx,q.vy);q.anim+=(sp>0.35?sp:0)*dt}}
+ if(G.qb)holdOffHud(G.qb);if(G.rb&&G.rb!==G.qb)holdOffHud(G.rb);if(G.carrier&&G.carrier!==G.qb&&G.carrier!==G.rb)holdOffHud(G.carrier);
  // OL vs DL separation
  const ballAir=G.ball&&!G.ball.caught;for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const a=P[i],b=P[j];if(a.fallen>0||b.fallen>0)continue;
   if((a===G.carrier||b===G.carrier)&&a.team!==b.team)continue;const ra=(a.role==='OL'||a.role==='DL')?0.68:0.45,rb=(b.role==='OL'||b.role==='DL')?0.68:0.45;
@@ -357,12 +376,10 @@ function canHand(){return passerPhase()&&!G.tuck&&!G.pend&&!G.handed&&G.snapT<2.
 // Compact capsule in the name-pill family. Arial Black, not the name plate's pixel glyphs.
 const HFONT='900 10px "Arial Black", Impact, "Trebuchet MS", sans-serif';
 function handoffMetrics(){const h=16;X.save();X.font=HFONT;const tw=Math.ceil(X.measureText('HANDOFF').width);X.restore();const r=h/2,pad=4,w=Math.ceil(r+pad+tw+pad+r);return{w,h,tw}}
-function handoffGeom(){const {w,h}=handoffMetrics(),rb=G.rb,m=4;
- // Helmet screen point is written by the billboard (same quaternion as the sprite). No dodge, no side offset.
- let cx,top;if(rb&&rb._hx!=null){cx=rb._hx;top=rb._hy}else{const s=scr(rb.x,rb.y,2.4);cx=s[0];top=s[1]-18}
- let x=Math.round(cx-w/2),y=Math.round(top-h);
- x=cl(x,m,W-m-w);y=cl(y,m,H-m-h);
- return{x,y,w,h}}
+function handoffGeom(){const {w,h}=handoffMetrics(),rb=G.rb;
+ let cx,cy;if(rb&&rb._hx!=null){cx=rb._hx;cy=rb._hy+Math.round(h*0.85)}else{const s=scr(rb.x,rb.y,2.5);cx=s[0];cy=s[1]}
+ const o=hudPush(cx,cy);
+ let x=Math.round(o.x-w/2),y=Math.round(o.y-h/2);x=cl(x,6,W-6-w);y=cl(y,124,H-28-h);return{x,y,w,h}}
 function handoffHit(px,py,g){const s=3;return px>=g.x-s&&px<=g.x+g.w+s&&py>=g.y-s&&py<=g.y+g.h+s}
 function drawHandoffPill(x,y,w,h){const cap=(px,py,pw,ph)=>{const rr=ph/2;X.beginPath();X.moveTo(px+rr,py);X.lineTo(px+pw-rr,py);X.arc(px+pw-rr,py+rr,rr,-Math.PI/2,Math.PI/2);X.lineTo(px+rr,py+ph);X.arc(px+rr,py+rr,rr,Math.PI/2,Math.PI*1.5);X.closePath()};
  cap(x-2,y-2,w+4,h+4);X.fillStyle='#0b0614';X.fill();cap(x,y,w,h);
@@ -478,12 +495,8 @@ function helmet(x,y,t,flip){// clean side-profile helmet facing toward center (f
  X.fillStyle=t.h;X.fill();X.lineWidth=1.5;X.strokeStyle='rgba(0,0,0,.55)';X.stroke();
  // highlight
  X.beginPath();X.moveTo(-8,-6);X.quadraticCurveTo(-5,-11,2,-11.5);X.lineWidth=2;X.strokeStyle='rgba(255,255,255,.45)';X.stroke();
- // center stripe
- X.beginPath();X.moveTo(-11,-1);X.bezierCurveTo(-11,-9,-5,-13,2,-13);X.lineWidth=3;X.strokeStyle=t.c1===t.h?t.c2:t.c1;X.stroke();
  // ear hole
  X.beginPath();X.arc(-2,1,2.2,0,7);X.fillStyle='rgba(0,0,0,.6)';X.fill();
- // team mark (initial)
- X.fillStyle=t.c1===t.h?t.c2:t.c1;X.font='900 7px Arial';X.textAlign='center';X.textBaseline='middle';X.fillText(t.a[0],-6,-5);
  // facemask
  X.strokeStyle='#d7dbe2';X.lineWidth=1.8;X.lineCap='round';X.beginPath();X.moveTo(8,-2);X.lineTo(17,-2);X.moveTo(9,3);X.lineTo(17,3);X.moveTo(17,-3);X.lineTo(17,7);X.lineTo(8,8);X.moveTo(13,-2);X.lineTo(13,7);X.stroke();
  X.restore()}
@@ -517,7 +530,7 @@ function drawHUD2(){const h=TEAMS[G.home],a=TEAMS[G.away];
  const ord=['1ST','2ND','3RD','4TH'][Math.min(G.down,4)-1]||'4TH';const tg=G.los+G.togo>=100?'GOAL':Math.max(1,Math.round(G.togo));
  pill(W/2-56,122,112,28,'rgba(14,18,40,.95)','#2b3a7a');pill(W/2-52,125,46,22,'#ffd23f');txt(ord,W/2-29,136,12,'#141a36','center',false);txt('& '+tg,W/2+24,136,14,'#fff','center',false);
  
- if(G.st==='live'&&G.carrier.role==='QB'&&G.play.t==='pass'&&!G.thrown){const pr=Math.min(1,G.snapT/4.5);pill(20,H-44,W-140,16,'rgba(16,20,44,.9)');rect(23,H-41,(W-146)*pr,10,pr>.7?'#ff4d5e':'#4fa3ff')}
+ if(G.st==='live'&&G.carrier.role==='QB'&&G.play.t==='pass'&&!G.thrown){const pr=Math.min(1,G.snapT/4.5);pill(20,H-44,112,16,'rgba(16,20,44,.9)');rect(23,H-41,106*pr,10,pr>.7?'#ff4d5e':'#4fa3ff')}
 }
 const AP_H=228;function audGeom(c,r){const g=8,bw=(W-24-3*g)/4;return[12+c*(bw+g),H-AP_H+54+r*64,bw,54]}
 function audBtn(x,y){for(let c=0;c<4;c++)for(let r=0;r<2;r++){const[a,b,w,h]=audGeom(c,r);if(x>=a&&x<=a+w&&y>=b&&y<=b+h)return{c,r}}return null}

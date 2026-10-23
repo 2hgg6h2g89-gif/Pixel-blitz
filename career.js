@@ -248,7 +248,9 @@ function drawCHub(){
     const g=S.sched[w].find(p=>p.includes(C.team));if(!g)continue;
     const opp=g[0]===C.team?g[1]:g[0],home=g[0]===C.team;
     strip.push('W'+(w+1)+(home?' vs ':' @ ')+TEAMS[opp].a)}
-    uiTxt(strip.join('   '),W/2,112,11,'#9fb3ff','center',false)}
+    let line=strip.join('  ·  ');X.font='800 11px "Trebuchet MS","Segoe UI",Arial,sans-serif';
+    while(strip.length>1&&X.measureText(line).width>W-40){strip.pop();line=strip.join('  ·  ')}
+    uiTxt(line,W/2,112,11,'#9fb3ff','center',false)}
   const di=(window.divOf||(x=>x%4))(C.team);
   const conf=(window.confOf||(x=>0))(C.team);
   const divTeams=(window.DIVS&&window.DIVS[conf]?window.DIVS[conf][di]:null)||[C.team,(C.team+1)%32,(C.team+2)%32,(C.team+3)%32];
@@ -284,11 +286,11 @@ function drawCHub(){
   const rec=S?S.rec[C.team].w+'-'+S.rec[C.team].l+'-'+S.rec[C.team].t:'0-0-0';
   uiTxt('OVR '+TEAMS[C.team].rat+'   Cap '+salaryUsed()+'/'+C.cap+'   Rec '+rec,W/2,354,11,'#c9d4ff','center',false);
   if(g){const opp=TEAMS[g.opp];
-    HELM.drawHelmet(X,86,430,128,t,false,C.team);
-    uiTxt('VS',W/2,420,28,PAL.pink,'center');
-    HELM.drawHelmet(X,W-86,430,128,opp,true,g.opp);
-    uiTxt(t.a+'  '+t.nick,86,495,12,'#fff','center',false);
-    uiTxt(opp.a+'  '+opp.nick,W-86,495,12,'#fff','center',false);
+    HELM.drawHelmet(X,W/2+10,438,140,t,false,C.team);
+    HELM.drawHelmet(X,W-64,392,56,opp,true,g.opp);
+    uiTxt('VS',W-64,440,12,PAL.pink,'center');
+    uiTxt(t.a+'  '+t.nick,W/2,508,12,'#fff','center',false);
+    uiTxt(opp.a,W-64,424,11,'#fff','center',false);
   }else{
     HELM.drawHelmet(X,W/2,430,140,t,false,C.team);
   }
