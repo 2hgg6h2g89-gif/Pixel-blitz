@@ -1,7 +1,7 @@
 // Original 16-bit style football sprites, drawn pixel-by-pixel in code from a small pose rig (v17).
 (function(){
 const CELL=24,DIRS=5,SKIN=['#5a3a26','#8a5a3c','#c08a5e','#e0b48c','#f1cfb0'];
-const BALL='#7a3f17',LACE='#f4efe4',OUT=[22,18,34];
+const BALL='#8a4a1f',LACE='#f4efe4',OUT=[22,18,34];
 function hx(h){const n=parseInt(h.slice(1),16);return[n>>16,n>>8&255,n&255]}
 function shade(hex,f){let[r,g,b]=hx(hex);const m=v=>Math.max(0,Math.min(255,Math.round(f>1?v+(255-v)*(f-1):v*f)));return'#'+((1<<24)|(m(r)<<16)|(m(g)<<8)|m(b)).toString(16).slice(1)}
 function lum(h){const[r,g,b]=hx(h);return .3*r+.59*g+.11*b}
@@ -16,7 +16,7 @@ RUN.forEach((l,i)=>{{const q=l.map(v=>Math.round(v*0.6));add('qrun'+i,{ln:0,c:BO
 const SPR_=[[5,0,-5,2],[1,0,-2,5],[-5,2,5,0],[-2,5,1,0]],SPA=[[[-4,2],[4,0]],[[0,4],[0,4]],[[4,0],[-4,2]],[[0,4],[0,4]]];
 SPR_.forEach((l,i)=>{add('sprint'+i,{ln:2,c:i%2,L:l,A:SPA[i]});add('scarry'+i,{ln:2,c:i%2,L:l,A:[[2,3],SPA[i][1]],ball:'tuck'})});
 [[1,0,-2,2],[-1,2,1,0],[-2,0,1,2],[1,2,-1,0]].forEach((l,i)=>{add('bp'+i,{ln:-1,c:1,L:l,A:[[2,3],[2,4]]});add('drop'+i,{ln:-1,c:1,L:l,A:[[0,-1],[2,2]],ball:'n',F:{L:[l[1],l[3]],sp:0,A:[[1,3],[0,-2]],ball:'r'}})});
-add('cut',{ln:3,c:2,L:[5,0,-3,2],A:[[-3,2],[4,1]]});
+add('cut',{ln:3,c:2,L:[5,0,-3,2],A:[[-3,2],[4,1]],ball:'tuck',F:{L:[0,2],sp:1,A:[[2,2],[3,1]],ball:'chest'}});
 add('stiff0',{ln:1,L:[3,0,-3,2],A:[[6,-1],[2,3]],ball:'tuck2',F:{L:[0,2],sp:0,A:[[0,-4],[1,3]],ball:'chest'}});add('stiff1',{ln:1,L:[-2,2,3,0],A:[[7,-1],[2,3]],ball:'tuck2',F:{L:[2,0],sp:0,A:[[0,-4],[1,3]],ball:'chest'}});
 add('catchUp',{j:1,L:[2,0,-2,1],A:[[2,-7],[3,-6]],ball:'hi',F:{L:[0,1],sp:0,A:[[0,-8],[0,-8]],ball:'up'}});
 add('catchTuck',{L:[2,0,-2,0],A:[[2,3],[1,3]],ball:'tuck'});
