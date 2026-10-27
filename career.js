@@ -64,7 +64,7 @@ function initCareer(team,diff,coach){
   // seed FA
   for(let i=0;i<40;i++)C.fa.push(mkPlayer(POS[ri(0,POS.length-1)],rnd(68,88),ri(24,32)));
   // sync arcade season
-  if(window.__season)window.__season.newSeason(team,diff);
+  if(window.__season)window.__season.newSeason(team,diff,true);
   const S=window.__season.get();if(S){S.career=true;S.year=1;if(window.__season.save)window.__season.save()}
   applyRatings();saveC();G.career=true;G.st='chub';
 }
@@ -157,8 +157,7 @@ function advanceDraftAI(){
 
 // ---------- FREE AGENTS ----------
 function openFA(){
-  if(!C)return;C.phase='fa';
-  // age out / release some to FA
+  if(!C)return;
   if(C.fa.length<25){for(let i=0;i<20;i++)C.fa.push(mkPlayer(POS[ri(0,POS.length-1)],rnd(70,90),ri(25,33)))}
   ui.sel=0;ui.scroll=0;G.st='cfa';saveC();
 }
@@ -171,7 +170,7 @@ function signFA(idx,yrs){
 }
 
 // ---------- CONTRACTS / RESIGN ----------
-function openContracts(){C.phase='resign';ui.sel=0;ui.scroll=0;G.st='ccontract';saveC()}
+function openContracts(){ui.sel=0;ui.scroll=0;G.st='ccontract';saveC()}
 function resignPlayer(idx,yrs){
   const R=myRoster();const p=R[idx];if(!p)return;
   if((p.yLeft||0)>1){ui.msg='STILL UNDER CONTRACT';ui.msgT=1.4;return}
@@ -195,7 +194,7 @@ function tickContracts(){
 }
 
 // ---------- TRADES ----------
-function openTrades(){C.phase='trade';ui.sel=0;ui.pick=null;ui.offer=null;ui.review=null;ui.scroll=0;G.st='ctrade';saveC()}
+function openTrades(){ui.sel=0;ui.pick=null;ui.offer=null;ui.review=null;ui.scroll=0;G.st='ctrade';saveC()}
 function tradeValue(p){return p.ovr*p.ovr/100+(p.yLeft||1)*2}
 function tryTrade(myIdx,theirTi,theirIdx){
   const mine=myRoster()[myIdx],theirs=C.rosters[theirTi][theirIdx];
@@ -216,7 +215,7 @@ function finishCareerSeason(){
 }
 function newCareerYear(){
   C.year++;C.phase='reg';
-  if(window.__season){window.__season.newSeason(C.team,C.diff);const S=window.__season.get();if(S){S.career=true;S.year=C.year;if(window.__season.save)window.__season.save()}}
+  if(window.__season){window.__season.newSeason(C.team,C.diff,true);const S=window.__season.get();if(S){S.year=C.year;if(window.__season.save)window.__season.save()}}
   applyRatings();saveC();G.st='chub';ui.msg='YEAR '+C.year;ui.msgT=2;
 }
 
@@ -270,12 +269,12 @@ function drawCHub(){
   const prog=phase==='reg'?wk/17:phase==='po'?0.9:phase==='done'||(S&&S.phase==='done')?1:0.05;
   meter(28,172,W-56,8,prog,'#4fa3ff');
   let sub='Build your dynasty',playLab='PLAY';
-  if(C.draft||C.phase==='draft'){sub='Draft is open';playLab='ENTER DRAFT'}
+  if(g)sub=(g.atHome?'HOME':'AWAY')+' vs '+TEAMS[g.opp].city+' '+TEAMS[g.opp].nick;
+  else if(C.draft||C.phase==='draft'){sub='Draft is open';playLab='ENTER DRAFT'}
   else if(C.phase==='fa'){sub='Sign free agents';playLab='FREE AGENTS'}
   else if(C.phase==='resign'){sub='Renew expiring deals';playLab='CONTRACTS'}
   else if(S&&S.phase==='done'){sub='Season complete';playLab='START DRAFT'}
-  else if(S&&S.phase==='po'&&!(window.__season.myGame&&window.__season.myGame())){sub='Eliminated';playLab='PLAYOFFS'}
-  else if(g)sub=(g.atHome?'HOME':'AWAY')+' vs '+TEAMS[g.opp].city+' '+TEAMS[g.opp].nick;
+  else if(S&&S.phase==='po'){sub='Eliminated';playLab='PLAYOFFS'}
   pill(12,192,W-24,108,'rgba(22,14,42,.95)',PAL.pink);
   uiTxt('NEXT',W/2,208,11,'#9fb3ff','center',false);
   uiTxt(sub,W/2,230,14,PAL.yel,'center',false);
@@ -515,11 +514,13 @@ function rowHit(t,x,y,w,h,top,bot){return y<bot&&y+h>top&&hit(t,x,y,w,h)}
 function readCoach(){const el=document.getElementById('coachIn');return String((el&&el.value)||ui.coach||'COACH').toUpperCase().replace(/[^A-Z0-9 .'-]/g,'').slice(0,16)||'COACH'}
 function hubPlay(){
   const S=window.__season&&window.__season.get();
+  const g=S&&window.__season.myGame&&window.__season.myGame();
+  if(g){G.career=true;if(window.startMyGame)window.startMyGame();return}
   if(C.draft){G.st='cdraft';advanceDraftAI();return}
   if(C.phase==='draft'||(S&&S.phase==='done')){startDraft();return}
   if(C.phase==='fa'){openFA();return}
   if(C.phase==='resign'){openContracts();return}
-  if(S&&S.phase==='po'&&!(window.__season.myGame&&window.__season.myGame())){G.st='bracket';return}
+  if(S&&S.phase==='po'){G.st='bracket';return}
   if(window.startMyGame){G.career=true;window.startMyGame()}
 }
 function goDraft(){

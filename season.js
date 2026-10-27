@@ -14,9 +14,10 @@ TEAMS.length=0;CITY.forEach((c,i)=>TEAMS.push({n:(c+' '+NICK[i]).toUpperCase(),c
 const confOf=t=>DIVS[0].flat().includes(t)?0:1,divOf=t=>DIVS[confOf(t)].findIndex(d=>d.includes(t));
 window.SEASON_TEAMS=()=>TEAMS.map((t,i)=>({i,name:t.city+' '+t.nick,a:t.a,conf:CABR[confOf(i)],div:DIVN[divOf(i)]}));
 // ---------- season data ----------
-const KEY='pb_season';let S=null;
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const KEY='pb_season';const AKEY='pb_season_arcade';const CKEY='pb_season_career';let S=null;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));if(S&&S.career)localStorage.setItem(CKEY,JSON.stringify(S));else if(S)localStorage.setItem(AKEY,JSON.stringify(S))}catch(e){}}
 function load(){try{S=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){S=null}return S}
+function loadSlot(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function makeSchedule(){const weeks=[];
  // 6 division weeks (double round robin inside each 4-team division)
@@ -26,7 +27,7 @@ function makeSchedule(){const weeks=[];
  const ids=shuffle([...Array(32).keys()]);const rounds=[];for(let r=0;r<31;r++){const wk=[];for(let i=0;i<16;i++){const a=ids[i],b=ids[31-i];wk.push(r%2?[a,b]:[b,a])}rounds.push(wk);ids.splice(1,0,ids.pop())}
  const sameDiv=(a,b)=>confOf(a)===confOf(b)&&divOf(a)===divOf(b);rounds.sort((x,y)=>x.filter(p=>sameDiv(...p)).length-y.filter(p=>sameDiv(...p)).length);
  for(let r=0;r<11;r++)weeks.push(rounds[r]);return shuffle(weeks)}
-function newSeason(team,diff){S={v:1,team,diff,week:0,sched:makeSchedule(),res:[],rec:TEAMS.map(()=>({w:0,l:0,t:0,pf:0,pa:0})),phase:'reg',po:null,champ:null,last:null};save()}
+function newSeason(team,diff,career){S={v:1,team,diff,week:0,sched:makeSchedule(),res:[],rec:TEAMS.map(()=>({w:0,l:0,t:0,pf:0,pa:0})),phase:'reg',po:null,champ:null,last:null,career:!!career};save()}
 function teamScore(r,oppR){let p=0;const tdP=0.21+(r-oppR)*0.008,fgP=0.17;for(let d=0;d<11;d++){const x=Math.random();if(x<tdP)p+=Math.random()<0.94?7:(Math.random()<0.5?8:6);else if(x<tdP+fgP)p+=3}return p}
 function simGame(a,b,po){let sa=teamScore(TEAMS[a].rat+1.5,TEAMS[b].rat),sb=teamScore(TEAMS[b].rat,TEAMS[a].rat);if(sa===sb&&(po||Math.random()<0.85)){if(Math.random()<0.5+(TEAMS[a].rat-TEAMS[b].rat)*0.02)sa+=3;else sb+=3}return[sa,sb]}
 function record(a,b,sa,sb){const A=S.rec[a],B=S.rec[b];A.pf+=sa;A.pa+=sb;B.pf+=sb;B.pa+=sa;if(sa>sb){A.w++;B.l++}else if(sb>sa){B.w++;A.l++}else{A.t++;B.t++}}
@@ -67,7 +68,7 @@ const MENU=['modesel','team','hub','standings','schedule','bracket','career','ct
 let sel=0,tab=0,scroll=0,teamDiff=1;
 function hitR(t,x,y,w,h){return t&&t[0]>=x&&t[0]<=x+w&&t[1]>=y&&t[1]<=y+h}
 function gridPos(i){const cols=4,cw=(W-24)/cols,rh=54;return[12+(i%cols)*cw,136+Math.floor(i/cols)*rh,cw-6,rh-6]}
-function startMyGame(){const g=myGame();if(!g)return;G.season=true;if(window.__career&&window.__career.get())G.career=true;G.home=S.team;G.away=g.opp;G.atHome=!!g.atHome;G.diff=S.diff;G.lvl=1;
+function startMyGame(){const g=myGame();if(!g)return;G.season=true;G.career=!!(S&&S.career&&window.__career&&window.__career.get());G.home=S.team;G.away=g.opp;G.atHome=!!g.atHome;G.diff=S.diff;G.lvl=1;
  Object.assign(G,{sh:0,sa:0,drive:0,q:1,clock:QLEN,aud:4,los:25,down:1,togo:10,log:[],stats:{py:0,ry:0,td:0,int:0,sack:0},two:false,fgDone:false,paused:false});G.st='vs';G.vsT=0}
 window.startMyGame=startMyGame;
 const _u=update;update=function(dt){
@@ -78,8 +79,8 @@ const _u=update;update=function(dt){
  if(G.otFlag&&G.st==='result'){G.otFlag=false}
  _u(dt)};
 function menuTap(t){const[x,y]=t;
- if(G.st==='modesel'){const b=pathBoxes();if(hitR(t,b.x,b.ay,b.w,b.h)){G.career=false;load();if(S&&S.v===1)G.st='hub';else{sel=0;G.st='team'}return}
-  if(hitR(t,b.x,b.cy,b.w,b.h)){G.career=true;load();const C=window.__career&&window.__career.load();if(C&&C.v>=2){G.st='chub';window.__career.applyRatings();if(!S||!S.v){window.__season.newSeason(C.team,C.diff||1);const Ss=window.__season.get();if(Ss){Ss.career=true;Ss.year=C.year||1;window.__season.save()}}}else G.st='ccoach';return}return}
+ if(G.st==='modesel'){const b=pathBoxes();if(hitR(t,b.x,b.ay,b.w,b.h)){G.career=false;const arc=loadSlot(AKEY);S=(arc&&arc.v===1&&!arc.career)?arc:null;if(S){save();G.st='hub'}else{sel=0;G.st='team'}return}
+  if(hitR(t,b.x,b.cy,b.w,b.h)){G.career=true;const C=window.__career&&window.__career.load();if(C&&C.v>=2){const cs=loadSlot(CKEY);S=(cs&&cs.v&&cs.career)?cs:(S&&S.career?S:null);if(!S||S.team!==C.team){newSeason(C.team,C.diff||1,true);S.year=C.year||1;save()}else save();G.st='chub';window.__career.applyRatings()}else G.st='ccoach';return}return}
  if(G.st==='career'){if(hitR(t,40,700,W-80,56)){G.career=false;G.st='modesel'}return}
  if(G.st==='team'){for(let i=0;i<32;i++){const[a,b,w,h]=gridPos(i);if(hitR(t,a,b,w,h)){sel=i;return}}
   const bw=(W-32)/4;for(let i=0;i<4;i++)if(hitR(t,16+i*bw,690,bw,40)){teamDiff=i;return}
@@ -87,7 +88,7 @@ function menuTap(t){const[x,y]=t;
   if(hitR(t,12,40,90,40)){if(S&&S.v===1)G.st='hub';else{G.career=false;G.st='modesel'}}return}
  if(G.st==='hub'){if(hitR(t,30,520,W-60,64)){if(S.phase==='done'||(S.phase==='po'&&!alive())){finishOutPlayoffs();return}startMyGame();return}
   const bw=(W-60-16)/3;['standings','schedule','bracket'].forEach((s,i)=>{if(hitR(t,30+i*(bw+8),604,bw,52))G.st=s,scroll=0});
-  if(hitR(t,W/2-80,780,160,34)){S=null;localStorage.removeItem(KEY);sel=0;G.st='team'}return}
+  if(hitR(t,W/2-80,780,160,34)){S=null;localStorage.removeItem(KEY);localStorage.removeItem(AKEY);sel=0;G.st='team'}return}
  if(hitR(t,12,40,90,40)){G.st=G.career?'chub':'hub';return}
  if(G.st==='standings'){if(hitR(t,W/2-150,92,150,34))tab=0;if(hitR(t,W/2,92,150,34))tab=1;return}
  if(G.st==='schedule'){return}
