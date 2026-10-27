@@ -240,15 +240,16 @@ const NM=[mkNumMesh(),mkNumMesh()];NM.forEach(n=>n.m.renderOrder=3);const camUp=
 let atlasKey='';function ensureAtlas(){const k=G.home+'-'+G.away+'-v37';if(k===atlasKey)return;atlasKey=k;[home(),away()].forEach((t,i)=>{const c=S.buildAtlas(t,i?G.away:G.home);window.__atlases[i]=c;const tx=new THREE.CanvasTexture(c);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;tx.generateMipmaps=false;tx.colorSpace=THREE.SRGBColorSpace;TM[i].mat.map=tx;TM[i].mat.needsUpdate=true;const nc=S.buildNumbers(t);const nt=new THREE.CanvasTexture(nc);nt.magFilter=nt.minFilter=THREE.NearestFilter;nt.generateMipmaps=false;nt.flipY=true;nt.colorSpace=THREE.SRGBColorSpace;NM[i].mat.map=nt;NM[i].cv=nc;NM[i].tex=nt;NM[i].mat.needsUpdate=true})}
 const pm=new THREE.Matrix4(),v3=new THREE.Vector3(),sc=new THREE.Vector3(),bUp=new THREE.Vector3(),bOut=new THREE.Vector3();
 // ===== v17 animation state machine: pose + roll + squash + lift, eased per player =====
-const N_=S.P;let animT=performance.now();const qR=new THREE.Quaternion(),qC=new THREE.Quaternion(),zAx=new THREE.Vector3(0,0,1);
+const N_=S.P;let animT=performance.now();const qR=new THREE.Quaternion(),qC=new THREE.Quaternion(),qPit=new THREE.Quaternion(),zAx=new THREE.Vector3(0,0,1),xAx=new THREE.Vector3(1,0,0);
 const ang=(a)=>{while(a>Math.PI)a-=2*Math.PI;while(a<-Math.PI)a+=2*Math.PI;return a};
 function animOf(p,dt){p._qbUp=false;const line=p.role==='OL'||p.role==='DL';const sp=Math.hypot(p.vx,p.vy);const o={pose:N_.idle0,roll:0,sy:1,lift:0,face:null};
  const sxv=()=>{const a=PROJ(p.x+p.vx*0.1+0.001,p.y+p.vy*0.1,1),b=PROJ(p.x,p.y,1);return[a[0]-b[0],a[1]-b[1]]};
  if(sp>3){const h=Math.atan2(p.vy,p.vx);if(p._hd!==undefined){const d=ang(h-p._hd);if(Math.abs(d)>0.12){p._cut=0.22;p._cutd=Math.sign(d)}}p._hd=h}else p._hd=undefined;if(p._cut>0)p._cut-=dt;
+ if(p.slide>0){o.pose=(Math.floor(G.t*9)%2)?N_.slide1:N_.slide0;o.sy=0.58;o.pitch=0.98;o.lift=0;return o}
  if(p.dive>0){p._dm=Math.max(p._dm||0,p.dive);const k=1-p.dive/p._dm;
-  if(k<0.18){o.pose=N_.dive0;return o}
+  if(k<0.18){o.pose=N_.dive0;o.lift=0.12;return o}
   const v=sxv(),horiz=Math.abs(v[0])>Math.abs(v[1])*0.8;o.pose=(p===G.carrier&&G.dcatch)||(G.ball&&!G.ball.caught&&G.ball.tgt===p)?N_.dcatch:N_.dive1;
-  const kk=Math.min(1,(k-0.18)/0.82);o.lift=Math.sin(kk*Math.PI)*1.15;if(horiz){o.roll=-(v[0]>0?1:-1)*Math.PI/2*Math.min(1,kk*3)}else{o.sy=1-0.4*Math.min(1,kk*3)}return o}
+  const kk=Math.min(1,(k-0.18)/0.82);o.lift=Math.sin(kk*Math.PI)*0.85;if(horiz){o.roll=-(v[0]>0?1:-1)*Math.PI/2*Math.min(1,kk*3)}else{o.pitch=-1.05*Math.min(1,kk*1.35)}return o}
  p._dm=0;
  if(p.fallen>0){if(!(p._fm>0)||p.fallen>p._fm+0.01){p._fm=p.fallen;const v=sxv();p._rd=(v[0]>=0?1:-1)}const e=p._fm-p.fallen,rd=p._rd||1;
   if(p.tackler&&e<0.2){o.pose=N_.wrap;o.roll=-rd*0.5*(e/0.2);return o}
@@ -267,6 +268,7 @@ function animOf(p,dt){p._qbUp=false;const line=p.role==='OL'||p.role==='DL';cons
  if(p.eng){o.pose=N_.blk0+(sp>1.2?Math.floor(p.anim/0.5)%3:(Math.floor(G.t*3+ph)%2)+1);return o}
  const car=p===G.carrier&&(!G.ball||G.ball.caught)&&!G.pend;
  if(car&&G.juke>0){const e=0.28-G.juke;o.pose=e<0.07?N_.jplant:e<0.16?N_.jfake:N_.jcut;o.roll=(G.jukeS||1)*(e<0.07?0:e<0.16?0.16:-0.22);o.lift=e<0.16?0.15:0;return o}
+ if(car&&(G.truck||p.stiffT>0)){if(p.stiffT>0&&!G.truck)p.stiffT-=dt;o.pose=Math.floor(G.t*8)%2?N_.stiff1:N_.stiff0;o.pitch=-0.28;o.lift=0.06;return o}
  if(car&&p===G.qb&&passerPhase()&&!G.tuck){p._qbUp=false;
   if(G.aim){o.pose=N_.thr1;if(G.aim.tx!==undefined)o.face=[G.aim.tx-p.x,G.aim.ty-p.y];return o}if(sp<0.35){o.pose=N_.hold;return o}const fw=p.team===0?1:-1;if(p.vy*fw<-0.5*sp){o.face=[0,fw];o.pose=N_.drop0+Math.floor(p.anim/0.38)%4;return o}{const n=Math.hypot(p.vx*0.35,fw);o.face=[p.vx*0.35/n,fw/n]}o.pose=N_.qrun0+Math.floor(p.anim/0.3)%6;return o}
  if(sp<0.35){o.pose=car?N_.catchTuck:(Math.floor(G.t*1.3+ph)%2?N_.idle1:N_.idle0);return o}
@@ -276,6 +278,7 @@ function animOf(p,dt){p._qbUp=false;const line=p.role==='OL'||p.role==='DL';cons
  if(p._cut>0&&sp>3){o.pose=N_.cut;o.roll=(p._cutd||1)*0.14;return o}
  if(sp>7.4){o.pose=(car?N_.scarry0:N_.sprint0)+Math.floor(p.anim/0.55)%4;return o}
  o.pose=(car?N_.carry0:N_.run0)+Math.floor(p.anim/0.33)%6;return o}
+window.__animOf=animOf;
 function updatePlayers(){SPK+=(SPKT-SPK)*0.25;window.__SPK=SPK;{const bs=Math.max(0.8,Math.min(SPK,1.6));ball.scale.set(1.25*bs,1.25*bs,1.95*bs)};ensureAtlas();const now=performance.now();const dt=window.__hold?1/30:Math.min(0.05,(now-animT)/1000);animT=now;const cnt=[0,0],nc=[0,0];camUp.set(0,1,0).applyQuaternion(cam.quaternion);camBk.set(0,0,1).applyQuaternion(cam.quaternion);
  G.players.forEach((p,si)=>{const sp=Math.hypot(p.vx,p.vy);let fx=p.vx,fy=p.vy;
   if(p.throwT>0&&p.throwDir){fx=p.throwDir.x;fy=p.throwDir.y}else if(p.eng&&p.blk){fx=p.blk.x-p.x;fy=p.blk.y-p.y}
@@ -285,9 +288,9 @@ function updatePlayers(){SPK+=(SPKT-SPK)*0.25;window.__SPK=SPK;{const bs=Math.ma
   const a=p.fa,aa=Math.abs(a)*180/Math.PI;const cand=aa<22.5?4:aa<67.5?3:aa<112.5?2:aa<157.5?1:0;const mirC=a<0?-1:1;
   {let d0=p._dir;if(d0===undefined||Math.abs(aa-[180,135,90,45,0][d0])>29.5)d0=cand;p._dir=d0;if(p._mir===undefined||d0===0||d0===4)p._mir=mirC;else if(mirC!==p._mir&&aa>12&&aa<168)p._mir=mirC}
   const dir=p._dir,mir=p._mir;
-  const rk=Math.min(1,dt*18);p._r=(p._r||0)+(A.roll-(p._r||0))*rk;p._sy=(p._sy??1)+(A.sy-(p._sy??1))*rk;p._lf=(p._lf||0)+(A.lift-(p._lf||0))*Math.min(1,dt*22);
+  const rk=Math.min(1,dt*18);p._r=(p._r||0)+(A.roll-(p._r||0))*rk;p._sy=(p._sy??1)+(A.sy-(p._sy??1))*rk;p._lf=(p._lf||0)+(A.lift-(p._lf||0))*Math.min(1,dt*22);p._pit=(p._pit||0)+((A.pitch||0)-(p._pit||0))*Math.min(1,dt*14);p._an=S.NAMES[A.pose];
   let sq=0;if(p===G.carrier&&G.juke>0)sq=G.jukeCut?0.06:0.1;const line=(p.role==='OL'||p.role==='DL')?1:0;const T=TM[p.team],i=cnt[p.team]++;const pose=A.pose;
-  const s=2.8*SPK*(line?1.18:1);sc.set(s*mir*(1+sq),s*(1-sq)*p._sy,1);qR.setFromAxisAngle(zAx,p._r);qC.copy(cam.quaternion).multiply(qR);pm.compose(v3.set(Xw(p.x),0.02+p._lf,Z(p.y)),qC,sc);T.m.setMatrixAt(i,pm);
+  const s=2.8*SPK*(line?1.18:1);sc.set(s*mir*(1+sq),s*(1-sq)*p._sy,1);qPit.setFromAxisAngle(xAx,p._pit||0);qR.setFromAxisAngle(zAx,p._r);qC.copy(cam.quaternion).multiply(qPit).multiply(qR);pm.compose(v3.set(Xw(p.x),0.02+p._lf,Z(p.y)),qC,sc);T.m.setMatrixAt(i,pm);
   T.uo.setXY(i,pose*CU,1-((dir*10+p.skin*2+line)+1)*CV);
   const M=S.META[dir*S.POSES+pose]||S.META[dir*S.POSES+N_.idle0]||{ty:9};p._ny=p._ny===undefined?M.ty:p._ny+(M.ty-p._ny)*Math.min(1,dt*14);
   // Billboard local axes (includes roll). Body origin is the feet.
@@ -349,7 +352,7 @@ window.R3D=()=>{if(!_pixDone)pixelize();const st=G.st;if(window.MENU_ST?window.M
  if(G.routeVer!==routeVer){routeVer=G.routeVer;buildRoutes()}
  routeGrp.visible=st==='presnap'||(st==='live'&&!G.thrown&&G.carrier&&G.carrier.role==='QB'&&G.play.t==='pass');
  los.position.z=Z(G.los);fd.position.z=Z(Math.min(G.los+G.togo,100));fd.visible=G.los+G.togo<100;
- const c=G.carrier;ring.visible=on&&!!c;star.visible=ring.visible;if(c){ring.position.set(Xw(c.x),.04,Z(c.y));star.position.set(Xw(c.x),.05,Z(c.y));star.rotation.z=G.t*2}
+ const c=G.carrier;const qbDone=!!(G.thrown&&G.play&&G.play.t==='pass'&&G.ball&&!G.ball.caught&&c===G.qb);ring.visible=on&&!!c&&!qbDone;star.visible=ring.visible;if(c){ring.position.set(Xw(c.x),.04,Z(c.y));star.position.set(Xw(c.x),.05,Z(c.y));star.rotation.z=G.t*2}
  const b=G.ball;ball.visible=on&&!!b&&!b.caught;tgtMk.visible=false;if(fgB){ball.visible=true;ball.position.set(Xw(fgB.x),fgB.z+0.3,Z(fgB.y));ball.rotation.x=-(G.t*14)}
  ballSh.visible=false;if(fgB){ballSh.visible=true;ballSh.position.set(Xw(fgB.x),.07,Z(fgB.y));const s=Math.max(.6,1.5-fgB.z*0.05);ballSh.scale.set(s,s*.8,1);ballSh.material.opacity=.4}if(b&&!b.caught){{const kk=Math.min(1,b.t/b.T);ball.position.set(Xw(b.x),(b.h0||1.6)*(1-kk)+1.6*kk+b.z*0.9,Z(b.y))}ball.rotation.y=Math.atan2(-(b.tx-b.x0),(b.ty-b.y0));ball.rotation.x=-.5;ball.rotation.z=(b.t||0)*28;if(b.spin){ball.rotation.x=b.t*b.spin;ball.rotation.y=b.t*b.spin*0.6}tgtMk.visible=true;tgtMk.position.set(Xw(b.tx),.05,Z(b.ty));{const hz=ball.position.y;ballSh.visible=true;ballSh.position.set(Xw(b.x),.07,Z(b.y));const s=Math.max(.35,1.1-hz*0.06);ballSh.scale.set(s,s*0.8,1);ballSh.material.opacity=Math.max(.12,.55-hz*0.035)}}
  if(G.loose&&on){const L=G.loose;ball.visible=true;ball.position.set(Xw(L.x),L.z,Z(L.y));ball.rotation.set(L.rx,L.ry,L.rx*0.35);tgtMk.visible=false;ballSh.visible=true;ballSh.position.set(Xw(L.x),.07,Z(L.y));const s=Math.max(.35,1.0-L.z*0.07);ballSh.scale.set(s,s*0.8,1);ballSh.material.opacity=Math.max(.12,.5-L.z*0.04)}
