@@ -1,8 +1,45 @@
-<!doctype html><html><body style="margin:0;background:#141a3a"><canvas id="c"></canvas>
-<script src="../helmets.js"></script><script>
-const T=[{a:'NCY',c1:'#e8344e',c2:'#ffd23f',h:'#ffd23f'},{a:'IHR',c1:'#1f6fd6',c2:'#ffffff',h:'#d9e3ef'},{a:'DSK',c1:'#ff8a1f',c2:'#2a1450',h:'#2a1450'},{a:'GLY',c1:'#e9f6ff',c2:'#16a07a',h:'#16a07a'}];
-const c=document.getElementById('c'),d=devicePixelRatio;c.width=390*d;c.height=844*d;c.style.width='390px';c.style.height='844px';const g=c.getContext('2d');g.scale(d,d);
-g.fillStyle='#fff';g.font='800 14px Arial';g.fillText('HELMETS - ZOOM',20,24);
-T.forEach((t,i)=>{HELM.drawHelmet(g,110,110+i*150,170,t,false,i);HELM.drawHelmet(g,300,110+i*150,90,t,true,i);HELM.drawHelmet(g,300,180+i*150,50,t,false,i);
- g.save();g.translate(360,180+i*150);g.scale(.5,.5);HELM.emblem(g,HELM.EMB[i],t.c1,'#111');g.restore()});
+<!doctype html><html><body style="margin:0;background:#1a1030">
+<canvas id="c" width="1400" height="980"></canvas>
+<script src="../helmets.js"></script>
+<script src="../sprites.js"></script>
+<script>
+const T=[
+ {a:'NCY',c1:'#e8344e',c2:'#ffd23f',h:'#ffd23f'},
+ {a:'IHR',c1:'#1f6fd6',c2:'#ffffff',h:'#d9e3ef'},
+ {a:'DSK',c1:'#ff8a1f',c2:'#2a1450',h:'#2a1450'},
+ {a:'GLY',c1:'#e9f6ff',c2:'#16a07a',h:'#16a07a'},
+ {a:'RED',c1:'#b11226',c2:'#ffffff',h:'#b11226'},
+ {a:'WHT',c1:'#101820',c2:'#c8102e',h:'#f4f1ea'}
+];
+const c=document.getElementById('c'),g=c.getContext('2d');
+g.fillStyle='#120a24';g.fillRect(0,0,1400,980);
+g.fillStyle='#2f8f3c';g.fillRect(0,0,420,280);
+T.forEach((t,i)=>{
+  HELM.drawMark(g,70+i*60,70,96,t.c1);
+});
+g.fillStyle='#120a24';
+// big integer helmets
+T.forEach((t,i)=>{
+  const y=160+i*130;
+  HELM.drawHelmet(g,160,y,192,t,false,i);
+  HELM.drawHelmet(g,380,y,96,t,true,i);
+  HELM.drawHelmet(g,500,y,48,t,false,i);
+  HELM.drawHelmet(g,560,y,30,t,false,i);
+  HELM.drawHelmet(g,600,y,22,t,false,i);
+});
+// stamps 8x on green
+g.fillStyle='#247a32';g.fillRect(700,40,640,900);
+const views=['side','front','back','diag','diagB'];
+T.slice(0,4).forEach((t,ti)=>{
+  views.forEach((v,vi)=>{
+    const s=document.createElement('canvas');s.width=s.height=24;
+    const sg=s.getContext('2d');
+    HELM.stamp(sg,12,2,v,t);
+    g.imageSmoothingEnabled=false;
+    g.drawImage(s,720+vi*120,60+ti*160,24*4,24*4);
+    g.fillStyle='#fff';g.font='12px monospace';g.fillText(v,720+vi*120,60+ti*160-6);
+  });
+});
+g.fillStyle='#fff';g.font='14px monospace';
+g.fillText('LOGO row = home color silhouette. Then size 192 / flip 96 / 48 / 30 / 22',8,18);
 </script></body></html>
