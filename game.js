@@ -27,14 +27,13 @@ window.G=G;G.bulletPref=localStorage.getItem('pb_bullet')!=='0';G.adv=false;
 // ---------- input ----------
 const IN={jx:0,jy:0,taps:[],keyp:[],flick:0,truck:false,sprint:false,aimP:null,slide:0,truckTap:0};
 function pos(e){const r=C.getBoundingClientRect();const p=e.touches?e.touches[0]||e.changedTouches[0]:e;return[(p.clientX-r.left)*W/r.width,(p.clientY-r.top)*H/r.height]}
-const JB={x:W-150,y:H-130},DB={x:W-62,y:H-200},TB={x:W-46,y:H-52},SB={x:236,y:592},BB={x:116,y:H-262};const PT=new Map(),STK={x:W-84,y:H-170,r:56},LJ={x:84,y:H-170,r:56};
+const JB={x:W-150,y:H-130},DB={x:W-62,y:H-200},TB={x:W-46,y:H-52},BB={x:116,y:H-262};const PT=new Map(),STK={x:W-84,y:H-170,r:56},LJ={x:84,y:H-170,r:56};
 function hudZones(){const z=[];const live=G.st==='live'&&!G.paused;
  if(G.st==='presnap'&&!G.audOpen){z.push({x:W-64,y:H-84,r:52});z.push({x:60,y:H-84,r:42})}
- const tuckOn=live&&passerPhase()&&G.carrier===G.qb&&!G.pend&&!G.ball;
- const carOn=live&&(G.tuck||!passerPhase())&&!G.pend&&(!G.ball||G.ball.caught)&&G.carrier&&G.carrier.team===0&&!(G.carrier.fallen>0);
- if(tuckOn||carOn)z.push({x:LJ.x,y:LJ.y,r:LJ.r+36});
- if(tuckOn)z.push({x:TB.x,y:TB.y,r:68});
- if(carOn){z.push({x:JB.x,y:JB.y,r:74});z.push({x:DB.x,y:DB.y,r:74});z.push({x:SB.x,y:SB.y,r:74})}
+ const cm=cornerBtn(),carOn=live&&(G.tuck||!passerPhase()||cm==='slide'||cm==='truck')&&!G.pend&&(!G.ball||G.ball.caught)&&G.carrier&&G.carrier.team===0&&!(G.carrier.fallen>0);
+ if(cm||carOn)z.push({x:LJ.x,y:LJ.y,r:LJ.r+36});
+ if(cm)z.push({x:TB.x,y:TB.y,r:68});
+ if(carOn){z.push({x:JB.x,y:JB.y,r:74});z.push({x:DB.x,y:DB.y,r:74})}
  return z}
 function hudPush(sx,sy){let x=sx,y=sy;const zones=hudZones();
  for(let n=0;n<5;n++)for(const z of zones){let dx=x-z.x,dy=y-z.y,d=Math.hypot(dx,dy);if(d>=z.r)continue;if(d<0.01){dx=0;dy=-1;d=1}const push=z.r-d+1.5;x+=dx/d*push;y+=dy/d*push;if(y>z.y-4){const span=Math.sqrt(Math.max(0,z.r*z.r-(x-z.x)*(x-z.x)));y=Math.min(y,z.y-span-1)}}
@@ -64,15 +63,18 @@ const LMAX=stickLimit(LJ.r-2,20),JMAX=stickLimit(50,22);
 function ptsOf(e){const r=C.getBoundingClientRect();const L=e.changedTouches?[...e.changedTouches]:[e];return L.map(p=>({id:e.changedTouches?p.identifier:'m',x:(p.clientX-r.left)*W/r.width,y:(p.clientY-r.top)*H/r.height}))}
 // QB and WR give themselves up. TE and RB lower a shoulder.
 function runAct(p){return p&&(p.role==='RB'||p.role==='TE'||p.pos==='TE')?'truck':'slide'}
+// One corner button. QB behind the LOS keeps TUCK. Past the LOS that same slot becomes SLIDE. TE/RB get TRUCK there. Never both.
+function cornerBtn(){const c=G.carrier;if(!c||c.team||G.st!=='live'||G.paused||G.pend||(G.ball&&!G.ball.caught)||c.fallen>0||c.slide>0)return null;
+ if(c.role==='QB'&&G.play&&G.play.t==='pass'&&!G.thrown)return c.y>G.los+0.15?'slide':'tuck';
+ if(runAct(c)==='truck')return'truck';if(c.role==='WR')return'slide';return null}
 function actAt(x,y){
  if(Math.hypot(x-DB.x,y-DB.y)<50)return'diveb';
  if(Math.hypot(x-JB.x,y-JB.y)<50)return'jukeb';
- if(Math.hypot(x-SB.x,y-SB.y)<50)return runAct(G.carrier)==='truck'?'truckb':'slideb';
  return null}
 function kindFor(x,y){if(G.st!=='live'||G.paused)return'tap';if(x<52&&y<50)return'tap';
  if(G.play&&G.play.t==='ko'&&G.ko&&x<120&&y>H-140)return'tap';
+ {const cm=cornerBtn();if(cm&&Math.hypot(x-TB.x,y-TB.y)<46)return cm==='tuck'?'tuckb':cm==='slide'?'slideb':'truckb'}
  if(passerPhase()){
-  if(Math.hypot(x-TB.x,y-TB.y)<42)return'tuckb';
   if(canHand()){const g=handoffGeom();if(handoffHit(x,y,g))return'handb'}
   // Tucked = runner: no throw/aim; juke/dive/slide/move OK. Buttons beat the stick.
   if(G.tuck){const a=actAt(x,y);if(a)return a;if(x<W*0.45||Math.hypot(x-LJ.x,y-LJ.y)<100)return'ljoy';return'tap'}
@@ -295,17 +297,17 @@ function update(dt){
  G._ix=jx;G._iy=jy;
  const cur=G.carrier;if(G.slow>0){G.slow-=dt}
  if(cur===G.qb&&p.t==='pass'&&!G.thrown&&cur.y>G.los+0.5&&!G.qbRun){G.qbRun=true;say('QB RUN!',0.8)}
- const runner=(G.tuck||!passerPhase())&&!G.pend&&(!G.ball||G.ball.caught)&&!(cur.slide>0);let runMul=1;G.truck=false;
+ if(IN.truckTap){IN.truckTap=0;if(cornerBtn()==='truck'&&!(cur.dive>0)&&!(cur.slide>0)&&!(cur.fallen>0)){G.truckT=1.05;cur.stiffT=0.75;cur.catchT=0;cur.reach=0;cur.vy=Math.max(10.6,Math.abs(cur.vy)+1.6);cur.vx*=0.5;say('TRUCK!',0.7);dust(cur.x,cur.y,12)}}
+ const runner=(G.tuck||!passerPhase()||cornerBtn()==='slide'||cornerBtn()==='truck')&&!G.pend&&(!G.ball||G.ball.caught)&&!(cur.slide>0);let runMul=1;G.truck=false;
  if(G.truckT>0)G.truckT-=dt;
  const qbBurst=cur.role==='QB'&&!G.thrown&&!!G.tuck;
- if(runner){if(!G.runHinted){G.runHinted=true;hint('run','RIGHT STICK: RUN (FULL PUSH = SPRINT)|FLICK LEFT SIDE: JUKE|HOLD 2ND FINGER: TRUCK')}
+ if(runner){if(!G.runHinted){G.runHinted=true;hint('run','RIGHT STICK: RUN (FULL PUSH = SPRINT)|FLICK LEFT SIDE: JUKE|TRUCK LOWERS A SHOULDER')}
   const m=Math.hypot(jx,jy);const truckOk=runAct(cur)==='truck'&&G.stam>0.05&&(IN.truck||G.truckT>0);
-  if(truckOk){G.truck=true;if(!qbBurst)runMul=0.9;G.stam-=dt*0.45}else if(!qbBurst&&(IN.sprint||m>0.92)&&G.stam>0.02&&m>0.5){runMul=1.25;G.stam-=dt*0.28}else G.stam=Math.min(1,G.stam+dt*0.12);G.stam=Math.max(0,G.stam)}
+  if(truckOk){G.truck=true;runMul=1.28;G.stam-=dt*0.45}else if(!qbBurst&&(IN.sprint||m>0.92)&&G.stam>0.02&&m>0.5){runMul=1.25;G.stam-=dt*0.28}else G.stam=Math.min(1,G.stam+dt*0.12);G.stam=Math.max(0,G.stam)}
  if(IN.flick&&runner){jukeIt(IN.flick)}IN.flick=0;
  if(IN.jk){IN.jk=0;if(runner)jukeIt(jx>0.2?1:jx<-0.2?-1:0)}
- if(IN.dv){IN.dv=0;if(runner&&!(cur.dive>0)&&!(cur.fallen>0)&&(G.play.t!=='ko'||(G.ball&&G.ball.caught))){cur.dive=0.55;cur.vx=cur.vx*0.2+jx*1.5;cur.vy=Math.max(11,Math.abs(cur.vy)+3.5);G.cdive=true;dust(cur.x,cur.y,10);say('DIVE!',0.55)}}
- if(IN.slide){IN.slide=0;if(runner&&runAct(cur)==='slide'&&!(cur.dive>0)&&!(cur.fallen>0)){cur.slide=0.42;cur.vx=(G._ix||0)*3.2;cur.vy=Math.max(3.1,Math.min(6,(G._iy<0?1:0.3)*4));say('SLIDE',0.6);dust(cur.x,cur.y,8)}}
- if(IN.truckTap){IN.truckTap=0;if(runner&&runAct(cur)==='truck'&&!(cur.dive>0)){G.truckT=0.7;G.truck=true;say('TRUCK',0.45);dust(cur.x,cur.y,6)}}
+ if(IN.dv){IN.dv=0;if(runner&&!(cur.dive>0)&&!(cur.slide>0)&&!(cur.fallen>0)&&(G.play.t!=='ko'||(G.ball&&G.ball.caught))){cur.catchT=0;cur.reach=0;cur.dive=0.55;cur.vx=cur.vx*0.2+jx*1.5;cur.vy=Math.max(11,Math.abs(cur.vy)+3.5);G.cdive=true;dust(cur.x,cur.y,10);say('DIVE!',0.55)}}
+ if(IN.slide){IN.slide=0;if(cornerBtn()==='slide'&&!(cur.dive>0)&&!(cur.fallen>0)){cur.slide=0.9;cur.catchT=0;cur.reach=0;cur.stiffT=0;G.truckT=0;cur.vx*=0.12;cur.vy=Math.max(2.5,Math.min(4.4,Math.abs(cur.vy)*0.2+1.5));say('SLIDE!',0.9);dust(cur.x,cur.y,16)}}
  if(IN.tuck){IN.tuck=false;if(passerPhase()){G.tuck=!G.tuck;G.aim=null;G.relAim=false;G.lastAim=null;say(G.tuck?'TUCKED':'READY TO THROW',0.7)}}
  if(IN.hand){IN.hand=0;if(canHand())handoff()}
  if(IN.thr){const{w,ht}=IN.thr;IN.thr=null;if(passerPhase()&&!G.tuck){if(w===G.rb&&canHand())handoff();else throwTo(w,true,holdType(ht))}}
@@ -322,7 +324,7 @@ function update(dt){
  const qbPocket=cur.role==='QB'&&passerPhase()&&!G.tuck&&!G.thrown;
  let sp=(qbPocket?SPD_POCKET:qbBurst?SPD_TUCK:SPD_RUN)*(G.slow>0?0.7:1);if(G.juke>PUR.jukeT)sp*=PUR.juke;if(G.play.t==='ko'&&cur.catchT>0)sp*=0.62;
  const thrownQ=G.thrown&&cur===G.qb&&!(G.ball&&G.ball.caught);
- if(cur.slide>0){cur.slide-=dt;cur.vx*=0.9;cur.vy*=0.9;if(cur.slide<=0){cur.fallen=0.5;cur.vx*=0.2;cur.vy*=0.2;if(cur.y>=100){endPlay('td',100);return}endPlay('tackle',cur.y);return}}
+ if(cur.slide>0){cur.slide-=dt;cur.vx*=0.88;cur.vy=Math.max(2.05,Math.abs(cur.vy)*0.955);if(((G.snapT*60)|0)%3===0)dust(cur.x,cur.y,2);if(cur.slide<=0){cur.fallen=0.35;cur.vx*=0.2;if(cur.y>=100){endPlay('td',100);return}endPlay('tackle',cur.y);return}}
  else if(thrownQ){cur.vx*=0.8;cur.vy*=0.8}
  else if(G.play.t==='ko'&&G.ball&&!G.ball.caught&&!(cur.dive>0)&&!(cur.fallen>0)){const b=G.ball,k=Math.min(1,b.t/b.T);const nx=b.tx+(jx||0)*0.9,ny=b.ty-(jy||0)*0.9;const dd=Math.hypot(cur.x-nx,cur.y-ny);if(dd<0.35){cur.x=nx;cur.y=ny;cur.vx*=0.4;cur.vy*=0.4}else steer(cur,nx,ny,dd>3?(k<0.5?8:10):5.5,dt,20);if(k>0.58)cur.reach=Math.max(cur.reach||0,0.6);}
  else if((!G.ball||G.ball.caught)&&!(cur.dive>0)&&!(cur.fallen>0)&&!(G.juke>0)){
@@ -397,8 +399,9 @@ function update(dt){
    if(cc.catchT>0.27&&G.play.t!=='ko')continue;
    if(dd<(d.dive?1.4:1.15)+((d.y<cc.y-0.3&&cc.vy>2)?PUR.behind:0)){
    if(d.stun>0)continue;
-   const brk=(cc.role!=='QB'||G.qbRun)&&!d.brkTried&&Math.random()<(G.truck?0.55:PUR.brkP)+(cc.ovr-d.ovr)*0.01&&!G.players.some(q=>q.team!==cc.team&&q!==d&&!q.fallen&&dist(q,cc)<PUR.gang);d.brkTried=true;if(!brk&&G.players.some(q=>q.team!==cc.team&&q!==d&&!q.fallen&&dist(q,cc)<PUR.gang))G.gang=1;
-   if(brk){d.fallen=PUR.brk;d.dive=0;const u=1/(dd||1);d.vx=(d.x-cc.x)*u*6;d.vy=(d.y-cc.y)*u*6;G.slow=0.35;G.shake=0.2;dust(d.x,d.y,14);say(G.truck?'TRUCKED!':'BROKEN TACKLE!',0.9);G.brk=(G.brk||0)+1;continue}
+   const gang=G.players.some(q=>q.team!==cc.team&&q!==d&&!q.fallen&&dist(q,cc)<PUR.gang);
+   let brk=false;if(!d.brkTried||(G.truck&&!d._tr)){if(G.truck)brk=!gang;else if(!d.brkTried)brk=(cc.role!=='QB'||G.qbRun)&&!gang&&Math.random()<PUR.brkP+(cc.ovr-d.ovr)*0.01}d.brkTried=true;if(brk&&G.truck)d._tr=1;if(!brk&&gang)G.gang=1;
+   if(brk){d.fallen=PUR.brk;d.dive=0;const u=1/(dd||1);d.vx=(d.x-cc.x)*u*6;d.vy=(d.y-cc.y)*u*6;G.slow=G.truck?0.08:0.35;G.shake=G.truck?0.34:0.2;dust(d.x,d.y,G.truck?22:14);if(G.truck){cc.stiffT=0.7;cc.vy=Math.max(cc.vy,9.2);cc.vx*=0.4}say(G.truck?'TRUCKED!':'BROKEN TACKLE!',0.9);G.brk=(G.brk||0)+1;continue}
    dust(cc.x,cc.y,20);ring(cc.x,cc.y,'#fff',1);G.shake=0.22;d.fallen=2;cc.fallen=2;d.tackler=true;{const u=1/(dd||1),ox=(d.x-cc.x)*u||0,oy=(d.y-cc.y)*u||1,r=Math.max(dd,0.95);d.x=cc.x+ox*r;d.y=cc.y+oy*r;const mx=cc.vx*0.45+d.vx*0.15,my=cc.vy*0.45+d.vy*0.15;cc.vx=mx;cc.vy=my;d.vx=mx;d.vy=my}
    if(G.gang){G.gang=0;G.gangN=(G.gangN||0)+1;for(const q of P)if(q.team!==cc.team&&q!==d&&!q.fallen&&dist(q,cc)<PUR.gang){q.fallen=1.6;q.vx=(cc.x-q.x)*2;q.vy=(cc.y-q.y)*2;dust(q.x,q.y,10)}say('GANG TACKLE!',0.9);G.shake=0.3;ring(cc.x,cc.y,'#ff9a2f',1.8)}
    const behind=cc.role==='QB'&&cc.y<G.los&&G.play.t==='pass';endPlay(behind&&(!G.thrown||G.pend)?'sack':'tackle',cc.y);return}}}
@@ -637,15 +640,15 @@ function rbtn(k,on,x,y,r,fill,stroke,label,icon){const a=ease(k,on);if(a<=0)retu
  // Identical plate + chunky pixel font as SNAP
  if(window.arcRound){arcRound(x,y+2*ps,Math.max(26,r),fill,pr,label,18,icon?()=>{X.translate(0,4);icon()}:null)}
  else{txt(label,x,y,12,'#fff')}X.restore()}
-function drawActionButtons(){const live=G.st==='live'&&!G.paused;const qbB=live&&passerPhase()&&G.carrier===G.qb&&!G.pend&&!G.ball;
- rbtn('tuck',qbB,TB.x,TB.y,G.tuck?32:30,G.tuck?'#ff8a1f':'#2a56d6',G.tuck?'#fff':'#ffb36b',G.tuck?'TUCKED':'TUCK');if(G.tuck&&qbB){X.save();X.globalAlpha=0.5+0.3*Math.sin(G.t*8);X.beginPath();X.arc(TB.x,TB.y,36,0,7);X.lineWidth=3;X.strokeStyle='#ff8a1f';X.stroke();X.restore()}
- if(false)rbtn('bul',qbB,BB.x,BB.y,26,G.bullet?'#d9a400':'#1f6fd6','#fff',G.bullet?'BULLET':'LOB',()=>{X.strokeStyle='#fff';X.lineWidth=2;X.beginPath();if(G.bullet){X.moveTo(-12,10);X.lineTo(12,8)}else{X.moveTo(-12,13);X.quadraticCurveTo(0,-2,12,13)}X.stroke()});
- const carB=live&&(G.tuck||!passerPhase())&&!G.pend&&(!G.ball||G.ball.caught)&&G.carrier&&G.carrier.team===0&&!(G.carrier.fallen>0);
+function drawActionButtons(){const live=G.st==='live'&&!G.paused;const cm=cornerBtn();
+ if(G.ua){if(cm!=='tuck')G.ua.tuck=0;if(cm!=='slide')G.ua.slide=0;if(cm!=='truck')G.ua.truck=0}
+ rbtn('tuck',cm==='tuck',TB.x,TB.y,G.tuck?32:30,G.tuck?'#ff8a1f':'#2a56d6',G.tuck?'#fff':'#ffb36b',G.tuck?'TUCKED':'TUCK');if(G.tuck&&cm==='tuck'){X.save();X.globalAlpha=0.5+0.3*Math.sin(G.t*8);X.beginPath();X.arc(TB.x,TB.y,36,0,7);X.lineWidth=3;X.strokeStyle='#ff8a1f';X.stroke();X.restore()}
+ rbtn('slide',cm==='slide',TB.x,TB.y,32,'#128a5a','#d8ffe8','SLIDE');
+ rbtn('truck',cm==='truck',TB.x,TB.y,32,'#e85d04','#ffe0c2','TRUCK');
+ const carB=live&&(G.tuck||!passerPhase()||cm==='slide'||cm==='truck')&&!G.pend&&(!G.ball||G.ball.caught)&&G.carrier&&G.carrier.team===0&&!(G.carrier.fallen>0)&&!(G.carrier.slide>0);
  const jr=Math.max(0,G.jcd||0)/0.75; rbtn('juke',carB,JB.x,JB.y,36,jr>0?'#4a3a7a':'#7a3cff','#e2d4ff','JUKE');
  if(carB&&jr>0){X.save();X.globalAlpha=ease('juke',true);X.lineWidth=4;X.strokeStyle='#e2d4ff';X.beginPath();X.arc(JB.x,JB.y,40,-Math.PI/2,-Math.PI/2+(1-jr)*Math.PI*2);X.stroke();X.restore()}
- rbtn('dive',carB&&!G.cdive,DB.x,DB.y,36,'#e8344e','#ffd0d6','DIVE');
- const act=runAct(G.carrier),truck=act==='truck';
- rbtn(act,carB&&!(G.carrier&&G.carrier.slide>0),SB.x,SB.y,36,truck?'#c81e3a':'#d9a400','#fff',truck?'TRUCK':'SLIDE')}
+ rbtn('dive',carB&&!G.cdive&&!(G.carrier&&G.carrier.dive>0),DB.x,DB.y,36,'#e8344e','#ffd0d6','DIVE')}
 function drawControls(){drawActionButtons();if(!window.PROJ)return;const live=G.st==='live';
  {const sa=ease('snap',G.st==='presnap'&&!G.audOpen);if(sa>0){X.save();X.globalAlpha=1-Math.pow(1-sa,3);const x=W-64,y=H-84;X.translate(x,y);X.scale(0.75+0.25*X.globalAlpha,0.75+0.25*X.globalAlpha);X.translate(-x,-y);const pr=pressed(x-44,y-44,88,88);arcRound(x,y,44,'#22c25a',pr,'SNAP',18);if(G.ovT>0&&G.st==='presnap')txt('ROUTE VIEW',W/2,H-150,12,'#fff');X.restore()}}
  if(live&&G.ball&&!G.ball.caught){const b=G.ball,k=Math.min(1,b.t/b.T);const sh=scr(b.x,b.y,0.02);X.fillStyle='rgba(0,0,0,.35)';X.beginPath();X.ellipse(sh[0],sh[1],7+b.z*0.6,3.5+b.z*0.3,0,0,7);X.fill();
