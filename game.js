@@ -27,16 +27,17 @@ window.G=G;G.bulletPref=localStorage.getItem('pb_bullet')!=='0';G.adv=false;
 // ---------- input ----------
 const IN={jx:0,jy:0,taps:[],keyp:[],flick:0,truck:false,sprint:false,aimP:null,slide:0,truckTap:0};
 function pos(e){const r=C.getBoundingClientRect();const p=e.touches?e.touches[0]||e.changedTouches[0]:e;return[(p.clientX-r.left)*W/r.width,(p.clientY-r.top)*H/r.height]}
-// DIVE, JUKE, and the corner action (TUCK / SLIDE / TRUCK) share one plate.
-// Centers are 104px apart on both axes so the gaps match. Nothing sits in the old lower corner.
-const ACT_R=44;
-const JB={x:W-172,y:H-176},DB={x:W-68,y:H-280},TB={x:W-68,y:H-176},BB={x:116,y:H-262};const PT=new Map(),STK={x:W-84,y:H-170,r:56},LJ={x:84,y:H-170,r:56};
+// DIVE and JUKE stay on the plates from the reference HUD (r=36). v51's shared
+// 44px grid moved and enlarged all three, then the corner button drew smaller
+// once you tucked. One radius for every action so tuck/slide/truck cannot resize.
+const ACT_R=36;
+const JB={x:W-150,y:H-130},DB={x:W-62,y:H-200},TB={x:W-46,y:H-86},BB={x:116,y:H-262};const PT=new Map(),STK={x:W-84,y:H-170,r:56},LJ={x:84,y:H-170,r:56};
 function hudZones(){const z=[];const live=G.st==='live'&&!G.paused;
  if(G.st==='presnap'&&!G.audOpen){z.push({x:W-64,y:H-84,r:52});z.push({x:60,y:H-84,r:42})}
  const cm=cornerBtn(),carOn=live&&(G.tuck||!passerPhase()||cm==='slide'||cm==='truck')&&!G.pend&&(!G.ball||G.ball.caught)&&G.carrier&&G.carrier.team===0&&!(G.carrier.fallen>0);
  if(cm||carOn)z.push({x:LJ.x,y:LJ.y,r:LJ.r+36});
- if(cm)z.push({x:TB.x,y:TB.y,r:78});
- if(carOn){z.push({x:JB.x,y:JB.y,r:78});z.push({x:DB.x,y:DB.y,r:78})}
+ if(cm)z.push({x:TB.x,y:TB.y,r:ACT_R+28});
+ if(carOn){z.push({x:JB.x,y:JB.y,r:ACT_R+28});z.push({x:DB.x,y:DB.y,r:ACT_R+28})}
  return z}
 function hudPush(sx,sy){let x=sx,y=sy;const zones=hudZones();
  for(let n=0;n<5;n++)for(const z of zones){let dx=x-z.x,dy=y-z.y,d=Math.hypot(dx,dy);if(d>=z.r)continue;if(d<0.01){dx=0;dy=-1;d=1}const push=z.r-d+1.5;x+=dx/d*push;y+=dy/d*push;if(y>z.y-4){const span=Math.sqrt(Math.max(0,z.r*z.r-(x-z.x)*(x-z.x)));y=Math.min(y,z.y-span-1)}}
@@ -47,7 +48,9 @@ function holdOffHud(p){if(!p||p.team||G.st!=='live'||!window.PROJ||!hudZones().l
  const qx=scr(p.x+0.5,p.y,0.2),qy=scr(p.x,p.y+0.5,0.2);
  const jxx=(qx[0]-q[0])/0.5,jxy=(qy[0]-q[0])/0.5,jyx=(qx[1]-q[1])/0.5,jyy=(qy[1]-q[1])/0.5,det=jxx*jyy-jxy*jyx;
  if(Math.abs(det)<0.8)return;let wx=(o.dx*jyy-o.dy*jxy)/det,wy=(jxx*o.dy-jyx*o.dx)/det;const um=Math.hypot(wx,wy)||1,ux=wx/um,uy=wy/um;
- const step=Math.min(um,0.7);p.x=cl(p.x+ux*step,0.6,FIELDW-0.6);p.y+=uy*step;
+ const ix=G._ix||0,iy=-(G._iy||0),sm=Math.hypot(ix,iy);
+ if(sm>0.25&&-(ix*ux+iy*uy)/sm>0.35)return;
+ const step=Math.min(um,0.35);p.x=cl(p.x+ux*step,0.6,FIELDW-0.6);p.y+=uy*step;
  const vn=p.vx*ux+p.vy*uy;if(vn<0){p.vx-=vn*ux;p.vy-=vn*uy}}
 function pocketSpot(){const y=G.dropY!=null?G.dropY:(G.los-5),x0=G.qb?G.qb.x:FIELDW/2;
  if(!window.PROJ||!window.hudPush)return{x:x0,y};
@@ -71,12 +74,12 @@ function cornerBtn(){const c=G.carrier;if(!c||c.team||G.st!=='live'||G.paused||G
  if(c.role==='QB'&&G.play&&G.play.t==='pass'&&!G.thrown)return c.y>G.los+0.15?'slide':'tuck';
  if(runAct(c)==='truck')return'truck';if(c.role==='WR')return'slide';return null}
 function actAt(x,y){
- if(Math.hypot(x-DB.x,y-DB.y)<ACT_R+12)return'diveb';
- if(Math.hypot(x-JB.x,y-JB.y)<ACT_R+12)return'jukeb';
+ if(Math.hypot(x-DB.x,y-DB.y)<ACT_R+14)return'diveb';
+ if(Math.hypot(x-JB.x,y-JB.y)<ACT_R+14)return'jukeb';
  return null}
 function kindFor(x,y){if(G.st!=='live'||G.paused)return'tap';if(x<52&&y<50)return'tap';
  if(G.play&&G.play.t==='ko'&&G.ko&&x<120&&y>H-140)return'tap';
- {const cm=cornerBtn();if(cm&&Math.hypot(x-TB.x,y-TB.y)<ACT_R+12)return cm==='tuck'?'tuckb':cm==='slide'?'slideb':'truckb'}
+ {const cm=cornerBtn();if(cm&&Math.hypot(x-TB.x,y-TB.y)<ACT_R+14)return cm==='tuck'?'tuckb':cm==='slide'?'slideb':'truckb'}
  if(passerPhase()){
   if(canHand()){const g=handoffGeom();if(handoffHit(x,y,g))return'handb'}
   // Tucked = runner: no throw/aim; juke/dive/slide/move OK. Buttons beat the stick.
@@ -184,60 +187,66 @@ function steer(p,tx,ty,sp,dt,sh){let dx=tx-p.x,dy=ty-p.y,d=Math.hypot(dx,dy);con
  if(d>0.05){const v=Math.hypot(p.vx,p.vy);let s=sp;if(v>2){const c=(p.vx*dx+p.vy*dy)/(v*d);s*=1-0.22*(1-c)/2}wx=dx/d*s;wy=dy/d*s}
  let ex=wx-p.vx,ey=wy-p.vy;const e=Math.hypot(ex,ey),m=A*dt;if(e>m){ex*=m/e;ey*=m/e}p.vx+=ex;p.vy+=ey}
 // Play-scale billboard is 2.1yd / 24px (2.8*0.75); linemen draw 1.18x.
-// Front body+arms ~10px skill and ~13px line → halves ~0.44+0.67. Floor the
-// carrier-vs-own-OL gap at 1.16yd so sprites cannot tunnel center-to-center.
-const OL_GAP=1.16;
+// Body halves ~0.44 skill + ~0.67 line. 1.48 leaves daylight between sprites
+// instead of the 1.16 tunnel that read as a stuck shoulder.
+const OL_GAP=1.48;
 function scrambling(){const c=G.carrier;if(!c||c.team||G.thrown||G.pend)return false;
- if(c===G.qb)return !!(G.tuck||G.qbRun||Math.abs(c.vx)>0.85||c.vy>0.85||Math.abs(G._ix||0)>0.28);
+ if(c===G.qb)return !!(G.tuck||G.qbRun||Math.abs(c.vx)>0.85||c.vy>0.85||Math.abs(G._ix||0)>0.22||Math.abs(G._iy||0)>0.22);
  return c.vy>0.45||(G._iy||0)<-0.25}
 function inLane(ol,car){const dx=ol.x-car.x,dy=ol.y-car.y;return dy>-0.45&&dy<3.2&&Math.abs(dx)<2.4&&Math.hypot(dx,dy)<3.8}
 function flankSign(w,ref){if(!ref)return Math.sign(w._slot||1)||1;const s=Math.sign(w.x-ref.x);if(s)return s;if(w._slot)return Math.sign(w._slot);return 1}
-// Open the lane opposite the run. A left cut and a right cut use the same rule,
-// so the line steps out of the path instead of staying on the shoulder he is entering.
-function driveDir(car){const v=car.vx||0,ix=G._ix||0;if(Math.abs(v)>0.4)return Math.sign(v);if(Math.abs(ix)>0.2)return Math.sign(ix);return 0}
-function peelSide(car,line){const dir=driveDir(car);
+// Held stick picks the lane. Residual vx must not override it — that flip
+// dragged blockers back across the ball and froze the lateral cut.
+function driveDir(car){const ix=G._ix||0;if(Math.abs(ix)>0.22)return Math.sign(ix);const v=car.vx||0;if(Math.abs(v)>1.1)return Math.sign(v);return 0}
+function peelSide(car,line){const dx=line.x-car.x;
+ if(Math.abs(dx)>0.62){line._peel=Math.sign(dx);return line._peel}
+ const dir=driveDir(car);
  if(dir){line._peel=-dir;return line._peel}
- const dx=line.x-car.x;
- if(Math.abs(dx)>0.16){line._peel=Math.sign(dx);return line._peel}
  if(line._peel)return line._peel;
- line._peel=line._slot?Math.sign(line._slot):1;return line._peel}
+ line._peel=line._slot?Math.sign(line._slot):(dx?Math.sign(dx):1);return line._peel}
 function washRusher(ol,side){const d=ol.blk;if(!d||d.team!==1||d.shed||d.fallen>0)return;
  d.x+=side*0.22;d.vx+=side*3.2;if(d.vy>1.5)d.vy=1.5}
-// Last word on carrier-vs-own-OL. Moves only the blocker. A man already clear
-// of the lane is left where he is so he cannot ride the runner's shoulder.
+// Own OL never write the carrier. A blocker already off to one side stays
+// there. Overlap slides him out over a few frames — no teleport, no reverse.
 function ownGap(){const car=G.carrier;if(!car||car.team)return;
  if(scrambling()){
-  const dir=driveDir(car),lines=[];
+  const placed=[];
   for(const line of G.players){if(line.team||line.role!=='OL'||line.fallen>0)continue;
    const dx=line.x-car.x,dy=line.y-car.y,ad=Math.hypot(dx,dy);
-   const side=dir?-dir:(line._peel||Math.sign(dx)||1);
-   if(dx*side>=OL_GAP+0.2&&ad>=OL_GAP)continue;
-   const inFront=dy>-0.5&&dy<2.6&&Math.abs(dx)<1.35;
-   const onDrive=!!dir&&dx*dir>-0.2&&Math.abs(dx)<2.3&&dy>-0.45&&dy<2.8;
-   if(ad<OL_GAP||inFront||onDrive)lines.push(line)}
-  lines.sort((a,b)=>Math.hypot(a.x-car.x,a.y-car.y)-Math.hypot(b.x-car.x,b.y-car.y));
-  const placed=[];
-  for(const line of lines){
-   const dx=line.x-car.x,dy=line.y-car.y,ad=Math.hypot(dx,dy);
+   const near=ad<OL_GAP+0.2||(dy>-0.4&&dy<2.5&&Math.abs(dx)<1.85);
+   if(!near){if(ad>OL_GAP+1.6)line._peel=0;continue}
    let side=peelSide(car,line);
-   let goal=car.x+side*(OL_GAP+0.1);
-   if(dx*side>=OL_GAP-0.02&&ad>=OL_GAP)goal=line.x;
-   for(const q of placed)if(Math.abs(q.x-goal)<0.86&&Math.abs(q.y-line.y)<1.3)goal+=side*0.9;
-   if(goal<0.7||goal>FIELDW-0.7){side=-side;line._peel=side;goal=car.x+side*(OL_GAP+0.1)}
-   line.x=cl(goal,0.55,FIELDW-0.55);
-   if(dy<0.08)line.y=car.y+0.22;
-   const nx=line.x-car.x,ny=line.y-car.y,nd=Math.hypot(nx,ny)||1;
-   const rel=((line.vx-car.vx)*nx+(line.vy-car.vy)*ny)/nd;
-   if(rel<0){line.vx-=rel*nx/nd;line.vy-=rel*ny/nd}
-   line.vx+=(side*3.6-line.vx)*0.55;if(line.vy<0)line.vy*=0.25;
-   washRusher(line,side);placed.push(line)}
+   let goal=car.x+side*(OL_GAP+0.28);
+   for(const q of placed)if(Math.abs(q-goal)<0.95)goal+=side*0.95;
+   if(goal<0.8||goal>FIELDW-0.8){side=-side;line._peel=side;goal=car.x+side*(OL_GAP+0.28)}
+   const maxStep=ad<OL_GAP?0.4:0.18;
+   let step=goal-line.x;if(Math.abs(step)>maxStep)step=Math.sign(step)*maxStep;
+   const nx0=line.x-car.x;
+   if(nx0*side<0&&Math.abs(nx0)<OL_GAP&&Math.abs(step)>Math.abs(nx0)+0.05)step=side*Math.min(maxStep,Math.abs(nx0)+0.06);
+   line.x=cl(line.x+step,0.55,FIELDW-0.55);
+   if(dy<0.02)line.y=Math.min(car.y+0.22,line.y+0.14);
+   const rx=line.x-car.x,ry=line.y-car.y,rd=Math.hypot(rx,ry)||1;
+   const rel=((line.vx-car.vx)*rx+(line.vy-car.vy)*ry)/rd;
+   if(rel<0){line.vx-=rel*rx/rd;line.vy-=rel*ry/rd}
+   line.vx+=(side*2.2-line.vx)*0.28;
+   washRusher(line,side);placed.push(line.x)}
   return}
  for(const line of G.players){if(line.team||line.role!=='OL'||line.fallen>0)continue;
   const dx=line.x-car.x,dy=line.y-car.y,ad=Math.hypot(dx,dy);if(ad>=OL_GAP)continue;
   let ax=dx,ay=dy;if(ad<0.02){ax=0;ay=1}const nd=Math.hypot(ax,ay)||1,nx=ax/nd,ny=ay/nd,pen=OL_GAP-ad;
   line.x+=nx*pen;line.y+=ny*pen;
-  const rel=(car.vx-line.vx)*nx+(car.vy-line.vy)*ny;
-  if(rel>0){line.vx+=nx*rel;line.vy+=ny*rel}}}
+  const rel=(line.vx-car.vx)*nx+(line.vy-car.vy)*ny;
+  if(rel<0){line.vx-=rel*nx;line.vy-=rel*ny}}}
+// Contact may clip a frame of speed. A stick that is still held gets that
+// speed back, and only while an own lineman is actually in the way.
+function preserveStick(car){if(!car||car.team||car.fallen>0||car.slide>0||car.dive>0||G.pend)return;
+ const ix=G._ix||0,iy=-(G._iy||0),m=Math.hypot(ix,iy);if(m<0.2)return;
+ let hit=false;for(const line of G.players){if(line.team||line.role!=='OL'||line.fallen>0)continue;if(Math.hypot(line.x-car.x,line.y-car.y)<OL_GAP+0.35){hit=true;break}}
+ if(!hit)return;
+ const ux=ix/m,uy=iy/m,along=car.vx*ux+car.vy*uy;
+ const burst=car.role==='QB'&&!G.thrown&&!!G.tuck,pocket=car.role==='QB'&&passerPhase()&&!G.tuck&&!G.thrown;
+ const floor=(pocket?4.4:burst?10.8:8.2)*Math.min(1,m)*0.72;
+ if(along<floor){const add=floor-along;car.vx+=ux*add;car.vy+=uy*add}}
 function passLive(){return !!(G.play&&G.play.t==='pass'&&G.thrown&&(G.pend||(G.ball&&!G.ball.caught)))}
 function qbIgnored(){return passLive()&&G.carrier===G.qb}
 // ---------- live update ----------
@@ -375,7 +384,7 @@ function update(dt){
    if(w.role==='WR'){w.rt+=dt;if(G.passer===false)steer(w,w.x,w.y+1,4,dt);else{const r=routeTarget(w,w.rt);w.spd=7.2+DIFFS[G.diff].sep;steer(w,r.x,r.y,w.route==='block'?3:w.spd*(r.k||1),dt,r.sh||11)}}
    else if(w.role==='OL'&&p.t==='ko')koBlock(w,dt);
    else if(w.role==='OL'){const ref=G.carrier;
-    if(ref&&ref.team===0&&scrambling()&&inLane(w,ref)){const side=peelSide(ref,w);const ax=ref.x+(ref.vx||0)*0.22,ay=ref.y+Math.max(0,ref.vy||0)*0.12;steer(w,cl(ax+side*(OL_GAP+0.72),1,FIELDW-1),Math.max(w.y,ay+0.35),11,dt,28);w.eng=false;washRusher(w,side)}
+    if(ref&&ref.team===0&&scrambling()&&inLane(w,ref)){const side=peelSide(ref,w);const ax=ref.x,ay=ref.y+Math.max(0,(ref.vy||0))*0.06;steer(w,cl(ax+side*(OL_GAP+0.42),1,FIELDW-1),Math.max(w.y,ay+0.55),5.2,dt,12);w.eng=false;washRusher(w,side)}
     else{w._peel=0;let d=w.blk;if(!d||d.shed||d.fallen>0){d=null;let bd=6;for(const q of P)if(q.team===1&&(q.role==='DL'||q.role==='LB')&&!(q.fallen>0)){const dd=dist(w,q);if(dd<bd){bd=dd;d=q}}}
      if(d){const dx=ref.x-d.x,dy=ref.y-d.y,l=Math.hypot(dx,dy)||1;let tx=d.x+dx/l*2.3,ty=d.y+dy/l*2.3;
       if(ref.team===0&&Math.hypot(w.x-ref.x,w.y-ref.y)<2.4){const s=flankSign(w,ref);tx=ref.x+s*1.85;ty=Math.max(ref.y+0.8,Math.min(ty,ref.y+1.6))}
@@ -399,7 +408,7 @@ function update(dt){
   if(own)continue;
   const ux=dx/d,uy=dy/d,wa=a===G.carrier?0.35:1,wb=b===G.carrier?0.35:1,s=wa+wb;a.x+=ux*(m-d)*(wa/s);a.y+=uy*(m-d)*(wa/s);b.x-=ux*(m-d)*(wb/s);b.y-=uy*(m-d)*(wb/s);
   const rel=(a.vx-b.vx)*ux+(a.vy-b.vy)*uy;if(rel<0){const c=-rel*0.5;a.vx+=ux*c*(wa/s);a.vy+=uy*c*(wa/s);b.vx-=ux*c*(wb/s);b.vy-=uy*c*(wb/s)}}
- ownGap();krHold();
+ ownGap();krHold();if(!G.play||G.play.t!=='ko')preserveStick(G.carrier);
  // ball flight
  if(G.ball&&!G.ball.caught){const b=G.ball;b.t+=dt;(G.trail=G.trail||[]).push([b.x,b.y,b.z,b.t,b.T,b.h0||1.6]);if(G.trail.length>16)G.trail.shift();if(G.assist&&b.tgt===G.assist&&b.t>b.T*0.35&&Math.hypot(b.tgt.x-b.tx,b.tgt.y-b.ty)<4){const w=b.tgt,a=Math.min(1,dt*(b.tt==='bullet'?2.5:1.6));b.tx+=(cl(w.x,1.5,FIELDW-1.5)-b.tx)*a;b.ty+=(Math.min(w.y,108.5)-b.ty)*a}{const k0=b.t/b.T;if(k0>0.8&&!b.dv&&G.play.t!=='ko'){for(const q of P)if(q.team===0&&(q.role==='WR'||q.role==='RB')&&!(q.fallen>0)&&(!b.tgt||q===b.tgt)){const d=Math.hypot(q.x-b.tx,q.y-b.ty);if(d>2.4&&d<4.8){b.dv=q;q.dive=0.45;const u=1/d;q.vx=(b.tx-q.x)*u*12;q.vy=(b.ty-q.y)*u*12;dust(q.x,q.y,8);break}}}}const k=Math.min(1,b.t/b.T);b.x=b.x0+(b.tx-b.x0)*k;b.y=b.y0+(b.ty-b.y0)*k;b.z=Math.sin(k*Math.PI)*b.h;
   if(G.play.t==='ko'&&k>0.7&&G.carrier&&Math.hypot(G.carrier.x-b.tx,G.carrier.y-b.ty)<3.5)G.carrier.reach=Math.max(G.carrier.reach||0,0.55);
@@ -673,14 +682,17 @@ function rbtn(k,on,x,y,r,fill,stroke,label,icon){const a=ease(k,on);if(a<=0)retu
  if(window.arcRound){arcRound(x,y+2*ps,Math.max(28,r),fill,pr,label,14,icon?()=>{X.translate(0,4);icon()}:null)}
  else{txt(label,x,y,12,'#fff')}X.restore()}
 function drawActionButtons(){const live=G.st==='live'&&!G.paused;const cm=cornerBtn();
- if(G.ua){if(cm!=='tuck')G.ua.tuck=0;if(cm!=='slide')G.ua.slide=0;if(cm!=='truck')G.ua.truck=0}
- rbtn('tuck',cm==='tuck',TB.x,TB.y,ACT_R,G.tuck?'#ff8a1f':'#2a56d6','#fff',G.tuck?'TUCKED':'TUCK');
- rbtn('slide',cm==='slide',TB.x,TB.y,ACT_R,'#148a45','#d8ffe8','SLIDE');
- rbtn('truck',cm==='truck',TB.x,TB.y,ACT_R,G.truck?'#ffb03a':'#e07a12','#ffe0c2','TRUCK');
+ // Full plate every frame. arcade rbtn scales 0.7→1 and that pop is what
+ // made DIVE/JUKE/TRUCK look half-size the moment TUCK toggled.
+ const plate=(on,x,y,fill,label)=>{if(!on)return;const pr=pressed(x-ACT_R,y-ACT_R,ACT_R*2,ACT_R*2);
+  if(window.arcRound)arcRound(x,y,ACT_R,fill,!!pr,label,13);else txt(label,x,y,12,'#fff')};
+ plate(cm==='tuck',TB.x,TB.y,G.tuck?'#ff8a1f':'#2a56d6',G.tuck?'TUCKED':'TUCK');
+ plate(cm==='slide',TB.x,TB.y,'#148a45','SLIDE');
+ plate(cm==='truck',TB.x,TB.y,G.truck?'#ffb03a':'#e07a12','TRUCK');
  const carB=live&&(G.tuck||!passerPhase()||cm==='slide'||cm==='truck')&&!G.pend&&(!G.ball||G.ball.caught)&&G.carrier&&G.carrier.team===0&&!(G.carrier.fallen>0)&&!(G.carrier.slide>0);
- const jr=Math.max(0,G.jcd||0)/0.75; rbtn('juke',carB,JB.x,JB.y,ACT_R,jr>0?'#4a3a7a':'#7a3cff','#e2d4ff','JUKE');
- if(carB&&jr>0){X.save();X.globalAlpha=ease('juke',true);X.lineWidth=4;X.strokeStyle='#e2d4ff';X.beginPath();X.arc(JB.x,JB.y,ACT_R+6,-Math.PI/2,-Math.PI/2+(1-jr)*Math.PI*2);X.stroke();X.restore()}
- rbtn('dive',carB&&!G.cdive&&!(G.carrier&&G.carrier.dive>0),DB.x,DB.y,ACT_R,'#e8344e','#ffd0d6','DIVE')}
+ const jr=Math.max(0,G.jcd||0)/0.75; plate(carB,JB.x,JB.y,jr>0?'#4a3a7a':'#7a3cff','JUKE');
+ if(carB&&jr>0){X.save();X.lineWidth=4;X.strokeStyle='#e2d4ff';X.beginPath();X.arc(JB.x,JB.y,ACT_R+6,-Math.PI/2,-Math.PI/2+(1-jr)*Math.PI*2);X.stroke();X.restore()}
+ plate(carB&&!G.cdive&&!(G.carrier&&G.carrier.dive>0),DB.x,DB.y,'#e8344e','DIVE')}
 function drawControls(){drawActionButtons();if(!window.PROJ)return;const live=G.st==='live';
  {const sa=ease('snap',G.st==='presnap'&&!G.audOpen);if(sa>0){X.save();X.globalAlpha=1-Math.pow(1-sa,3);const x=W-64,y=H-84;X.translate(x,y);X.scale(0.75+0.25*X.globalAlpha,0.75+0.25*X.globalAlpha);X.translate(-x,-y);const pr=pressed(x-44,y-44,88,88);arcRound(x,y,44,'#22c25a',pr,'SNAP',18);if(G.ovT>0&&G.st==='presnap')txt('ROUTE VIEW',W/2,H-150,12,'#fff');X.restore()}}
  if(live&&G.ball&&!G.ball.caught){const b=G.ball,k=Math.min(1,b.t/b.T);const sh=scr(b.x,b.y,0.02);X.fillStyle='rgba(0,0,0,.35)';X.beginPath();X.ellipse(sh[0],sh[1],7+b.z*0.6,3.5+b.z*0.3,0,0,7);X.fill();
