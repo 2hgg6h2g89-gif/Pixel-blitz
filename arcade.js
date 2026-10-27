@@ -167,50 +167,45 @@ window.drawCallout=function(){const b=G.banner;let t=b.t,sub=b.sub||'';const up=
  X.fillStyle=cols[2];X.fillRect(-bw/2,-sz*0.75,bw,3);X.fillRect(-bw/2,sz*0.75+(sub?26:0)-3,bw,3);X.restore();
  X.translate(W/2+out*W*0.6,y);X.scale(sc,sc);X.rotate(-0.05);arcTxt(t,0,0,sz,cols,{sk:0.16});X.restore();
  if(sub&&a>0.18){X.save();X.globalAlpha=(1-out)*Math.min(1,(a-0.18)/0.12);arcTxt(sub,W/2-out*W*0.6,y+sz*0.62+8,15,['#ffffff','#dfe8ff'],{rim:false,shine:false,sk:0.14});X.restore()}};
-// ---------- title ----------
-let titleTeams=null;
+// ---------- title / shared night bowl ----------
+const ICE=['#f7fdff','#c5ecff','#3ec4ff','#eaf8ff','#157ec4'];
+const SHELL_RED={n:'RED',a:'RED',city:'RED',nick:'RED',c1:'#c8102e',c2:'#ffffff',h:'#d0122a',p:'#f4f6f8'};
+const SHELL_TAN={n:'TAN',a:'TAN',city:'TAN',nick:'TAN',c1:'#c6a15b',c2:'#ffffff',h:'#e0c48a',p:'#f4f6f8'};
+function drawNightBowl(fieldFrac){
+ const fy0=Math.round(H*(fieldFrac==null?0.47:fieldFrac));
+ const sky=X.createLinearGradient(0,0,0,fy0);sky.addColorStop(0,'#070b22');sky.addColorStop(.45,'#14124a');sky.addColorStop(1,'#24164a');
+ X.fillStyle=sky;X.fillRect(0,0,W,fy0);
+ const rows=Math.max(6,Math.round((fy0-24)/22));
+ for(let i=0;i<rows;i++){const y=18+i*22;if(y>=fy0)break;X.fillStyle=i%2?'#241444':'#160e32';X.fillRect(0,y,W,Math.min(22,fy0-y));
+  for(let x=(i%2)*7;x<W;x+=9){X.fillStyle=['#3a2068','#6a2848','#243878','#4a2860','#1a3060','#503060'][(x+i*3)%6];X.fillRect(x,y+7,3,3)}}
+ const bank=(x,dir)=>{for(let r=0;r<2;r++)for(let c=0;c<3;c++){X.fillStyle=r?'#d7e6ff':'#ffffff';X.fillRect(x+c*11,10+r*9,9,7)}
+  X.save();X.translate(x+16,16);const lg=X.createLinearGradient(0,0,0,fy0+80);lg.addColorStop(0,'rgba(214,232,255,.5)');lg.addColorStop(.35,'rgba(214,232,255,.12)');lg.addColorStop(1,'rgba(214,232,255,0)');X.fillStyle=lg;X.beginPath();X.moveTo(-10,0);X.lineTo(22,0);X.lineTo(dir*70+36,fy0+40);X.lineTo(dir*8-28,fy0+40);X.fill();X.restore()};
+ bank(16,1);bank(W-50,-1);
+ const band=Math.max(18,Math.round((H-fy0)/14));
+ for(let i=0;i<20;i++){const y=fy0+i*band;if(y>=H)break;X.fillStyle=i%2?'#1c682c':'#248034';X.fillRect(0,y,W,Math.min(band+1,H-y))}
+ X.strokeStyle='rgba(247,250,246,.92)';X.lineWidth=2;X.beginPath();
+ for(let i=1;i<16;i++){const y=fy0+i*band+0.5;if(y>H-8)break;X.moveTo(16,y);X.lineTo(W-16,y)}X.stroke();
+ X.fillStyle='rgba(247,250,246,.8)';
+ for(let i=1;i<16;i++){const y=fy0+i*band;if(y>H-8)break;X.fillRect(Math.round(W*0.33)-6,y-1,12,2);X.fillRect(Math.round(W*0.67)-6,y-1,12,2)}
+ X.fillStyle='#f7faf6';X.fillRect(12,fy0,3,H-fy0);X.fillRect(W-15,fy0,3,H-fy0);
+ return fy0}
+window.drawNightBowl=drawNightBowl;
+function drawPBLogo(y,sc){sc=sc||1;X.save();X.translate(W/2,y);X.scale(sc,sc);
+ arcTxt('PIXEL',0,-34,62,ICE,{sk:0.16,out:'#071018',rim:'#d8f6ff'});
+ arcTxt('BLITZ',1,30,72,FIRE,{sk:0.16,out:'#1a0810',rim:'#fff3b0'});X.restore()}
+window.drawPBLogo=drawPBLogo;
 function recOf(ti){try{const S=window.__season&&window.__season.get();if(S&&S.rec&&S.rec[ti]){const r=S.rec[ti];return r.w+'-'+r.l+(r.t?'-'+r.t:'')}}catch(e){}return '0-0'}
 function drawTitle(){const t=G.t;
- // Stadium field look — green turf + stands (no neon grid / sunburst)
- const sky=X.createLinearGradient(0,0,0,H*0.55);sky.addColorStop(0,'#0a1430');sky.addColorStop(.6,'#1a2850');sky.addColorStop(1,'#2a6a38');
- X.fillStyle=sky;X.fillRect(0,0,W,H*0.55);
- // stands bands
- for(let i=0;i<8;i++){const y=40+i*28;X.fillStyle=i%2?'#3a2048':'#2a1538';X.fillRect(0,y,W,28);
-  X.fillStyle='rgba(255,80,100,.12)';for(let x=i%2*6;x<W;x+=12)X.fillRect(x,y+4,3,3);X.fillStyle='rgba(80,160,255,.1)';for(let x=4;x<W;x+=14)X.fillRect(x,y+14,2,2)}
- // Seamless stadium field — one continuous canvas, integer Y only
- const fy0=Math.round(H*0.50);
- // full-width mowing stripes (never split L/R)
- const band=Math.round((H-fy0)/12);
- for(let i=0;i<12;i++){X.fillStyle=i%2?'#2a8237':'#1f672b';X.fillRect(0,fy0+i*band,W,band+1)}
- // end-zone band
- X.fillStyle='rgba(20,50,110,.4)';X.fillRect(0,fy0,W,band);
- // yard lines — single stroke each, shared Y
- X.strokeStyle='rgba(247,250,246,.9)';X.lineWidth=2;
- X.beginPath();
- for(let i=1;i<=10;i++){const y=fy0+i*band+0.5;X.moveTo(0,y);X.lineTo(W,y)}
- X.stroke();
- // hash ticks on the SAME y (short, not a center seam)
- X.fillStyle='rgba(247,250,246,.75)';
- for(let i=1;i<=10;i++){const y=fy0+i*band;X.fillRect(Math.round(W*0.32)-8,y-1,16,2);X.fillRect(Math.round(W*0.68)-8,y-1,16,2)}
- // sidelines
- X.fillStyle='#f7faf6';X.fillRect(8,fy0,3,H-fy0);X.fillRect(W-11,fy0,3,H-fy0);
- // light beams
- for(let i=0;i<3;i++){X.save();X.translate(i===1?W/2:(i?W+20:-20),20);X.rotate((i-1)*0.2);const lg=X.createLinearGradient(0,0,0,500);lg.addColorStop(0,'rgba(255,245,210,.16)');lg.addColorStop(1,'rgba(255,245,210,0)');X.fillStyle=lg;X.beginPath();X.moveTo(-10,0);X.lineTo(10,0);X.lineTo(70,520);X.lineTo(-70,520);X.fill();X.restore()}
- if(!titleTeams){const a=Math.floor(Math.random()*32);let b=(a+1+Math.floor(Math.random()*31))%32;titleTeams=[a,b]}
- const bob=Math.round(Math.sin(t*2.2)*2);
- const saved=window.__season&&__season.get&&__season.get();
- const homeI=saved&&saved.team!=null?saved.team:titleTeams[0];
- const awayI=titleTeams[1]===homeI?titleTeams[0]:titleTeams[1];
- HELM.drawHelmet(X,W/2-4,518+bob,168,TEAMS[homeI],false,homeI);
- HELM.drawHelmet(X,W-72,590+bob,78,TEAMS[awayI],true,awayI);
- // logo
- const s=Math.min(1,t/0.35);const sc=t<0.35?2.0-1.0*s*s:1;X.save();X.translate(W/2,210);X.scale(sc,sc);
- arcTxt('PIXEL',0,-40,72,CHROME,{sk:0.12,out:'#0b0614',rim:'#3fd0ff'});arcTxt('BLITZ',2,32,84,FIRE,{sk:0.12,out:'#0b0614',rim:'#fff6a0'});X.restore();
- // pill tag
- bevPanel(W/2-110,300,220,34,'#141a3a',{c:10,edge:'#ffd23f',drop:3});
- arcTxt('GRIDIRON ARCADE',W/2,317,16,GOLD,{sk:0.08,rim:false,shine:false});
- if(Math.floor(t*2.4)%2===0||t<1){arcTxt('TAP TO START',W/2,700,28,GOLD,{sk:0.1})}
- (window.uiTxt||txt)('(C) 2026 LOCK IN LABS  -  ORIGINAL GAME',W/2,812,10,'#9fb3ff','center',false);
+ const fy0=drawNightBowl(0.42);
+ const s=Math.min(1,t/0.35);const sc=t<0.35?1.35-0.35*s*s:1;
+ drawPBLogo(168,sc);
+ bevPanel(W/2-118,248,236,36,'#141a3a',{c:12,edge:'#ffd23f',drop:3});
+ arcTxt('GRIDIRON ARCADE',W/2,266,15,GOLD,{sk:0.08,rim:false,shine:false});
+ const bob=Math.round(Math.sin(t*2.1)*2);
+ HELM.drawHelmet(X,W*0.30,fy0+128+bob,156,SHELL_RED,false,0);
+ HELM.drawHelmet(X,W*0.70,fy0+128-bob,156,SHELL_TAN,true,1);
+ if(Math.floor(t*2.2)%2===0||t<1.1)arcTxt('TAP TO START',W/2,fy0+250,26,GOLD,{sk:0.12});
+ (window.uiTxt||txt)('(C) 2026 LOCK IN LABS - ORIGINAL GAME',W/2,H-28,11,'#c9d6ff','center',false);
 }
 
 function drawVS(){const t=TEAMS[G.home],o=TEAMS[G.away];const a=G.vsT||0;const k=Math.min(1,a/0.3),e=1-Math.pow(1-k,3);
