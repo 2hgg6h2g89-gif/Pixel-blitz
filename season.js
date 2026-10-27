@@ -96,21 +96,24 @@ function menuTap(t){const[x,y]=t;
 function finishOutPlayoffs(){while(S.phase==='po')playRound(null);G.st='bracket'}
 // ---------- drawing ----------
 function bg(){if(window.drawNightBowl){drawNightBowl(0.84);X.fillStyle='rgba(7,6,20,.78)';X.fillRect(0,0,W,H);return}const g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b0a26');g.addColorStop(1,'#1a0f33');X.fillStyle=g;X.fillRect(0,0,W,H);stars();for(let y=0;y<H;y+=4){X.fillStyle='rgba(0,0,0,.12)';X.fillRect(0,y,W,1)}}
-function pathBoxes(){return{x:28,w:W-56,h:86,ay:300,cy:452}}
+function pathBoxes(){return{x:22,w:W-44,h:78,ay:286,cy:452}}
 function hdr(s){txt(s,W/2,62,24,PAL.yel)}
 function back(){btn(12,40,90,40,'< BACK','#2b3a7a','#8fc4ff',13)}
 function recStr(t){const r=S.rec[t];return r.w+'-'+r.l+(r.t?'-'+r.t:'')}
-function drawModeSel(){if(window.drawNightBowl)drawNightBowl(0.68);else bg();
- if(window.drawPBLogo)drawPBLogo(132,0.9);else uiTxt('PIXEL BLITZ',W/2,120,28,PAL.yel);
- uiTxt('--- CHOOSE YOUR PATH ---',W/2,228,14,'#7fd8ff','center',false);
+function drawModeSel(){
  const b=pathBoxes();
- if(window.bevPanel){bevPanel(b.x,b.ay,b.w,b.h,'#1d6fe6',{c:28,edge:'#ffe7a0',drop:5});bevPanel(b.x,b.cy,b.w,b.h,'#d0122c',{c:28,edge:'#ffe7a0',drop:5})}
+ const deals=b.cy+b.h+50;
+ const fy=Math.max(deals+34,Math.round(H*0.78));
+ if(window.drawNightBowl)drawNightBowl(fy/H);else bg();
+ if(window.drawPBLogo)drawPBLogo(108,0.78);else uiTxt('PIXEL BLITZ',W/2,110,28,PAL.yel);
+ uiTxt('--- CHOOSE YOUR PATH ---',W/2,228,14,'#7fd8ff','center',false);
+ if(window.bevPanel){bevPanel(b.x,b.ay,b.w,b.h,'#1d6fe6',{c:34,edge:'#ffe7a0',drop:5});bevPanel(b.x,b.cy,b.w,b.h,'#d0122c',{c:34,edge:'#ffe7a0',drop:5})}
  else{btn(b.x,b.ay,b.w,b.h,'ARCADE','#1d6fe6','#ffe7a0',28);btn(b.x,b.cy,b.w,b.h,'CAREER','#d0122c','#ffe7a0',28)}
- if(window.arcTxt){arcTxt('ARCADE',W/2,b.ay+b.h/2+1,28,['#ffffff','#e7f3ff'],{px:true,rim:false,sk:0.12});arcTxt('CAREER',W/2,b.cy+b.h/2+1,28,['#ffffff','#ffe0e6'],{px:true,rim:false,sk:0.12})}
- uiTxt('Pick a team and play now',W/2,b.ay+b.h+22,14,'#e7eefc','center',false);
- uiTxt('Coach, draft, build a dynasty',W/2,b.cy+b.h+22,14,'#ffd0d8','center',false);
- uiTxt('Contracts  ·  Free Agents  ·  Trades',W/2,b.cy+b.h+54,13,'#c5d0ea','center',false);
- uiTxt('5  0',W/2,Math.min(H-48,Math.round(H*0.68)+(H-Math.round(H*0.68))*0.62),22,'rgba(247,250,246,.8)','center',false)}
+ if(window.arcTxt){arcTxt('ARCADE',W/2,b.ay+b.h/2+1,26,['#ffffff','#e7f3ff'],{px:true,rim:false,sk:0.12});arcTxt('CAREER',W/2,b.cy+b.h/2+1,26,['#ffffff','#ffe0e6'],{px:true,rim:false,sk:0.12})}
+ uiTxt('Pick a team and play now',W/2,b.ay+b.h+16,13,'#e7eefc','center',false);
+ uiTxt('Coach, draft, build a dynasty',W/2,b.cy+b.h+16,13,'#ffd0d8','center',false);
+ uiTxt('Contracts · Free Agents · Trades',W/2,deals,12,'#c5d0ea','center',false);
+ if(window.pxText){const y50=fy+Math.round((H-fy)*0.58);pxText(X,'50',W/2,y50,8,'rgba(247,250,246,.92)',{al:'center',out:'rgba(8,32,16,.45)',sk:0,it:false})}}
 function drawCareer(){bg();hdr('CAREER MODE');txt('YOU ARE THE COACH',W/2,120,16,PAL.cy,'center',false);
  txt('DRAFT  ·  CONTRACTS  ·  FREE AGENTS  ·  TRADES',W/2,160,11,'#9fb3ff','center',false);
  box(30,220,W-60,280,'#120a24',PAL.yel);
@@ -142,7 +145,7 @@ function drawStandings(){bg();hdr('STANDINGS');back();btn(W/2-150,92,148,34,'BLI
   sortTeams(d).forEach((ti,i)=>{const y=y0+40+i*31,me=ti===S.team;if(me)rect(16,y-13,W-32,27,'rgba(255,79,163,.25)');HELM.drawHelmet(X,28,y,24,TEAMS[ti],false,ti);
    const s=sd.indexOf(ti);let nm=(s>=0?(s+1)+'. ':'')+TEAMS[ti].a+' '+TEAMS[ti].nick;
    // truncate so never overlaps record column
-   X.font='800 12px "Trebuchet MS",Arial';while(X.measureText(nm).width>nameW-50&&nm.length>6)nm=nm.slice(0,-1);
+   while((window.pxMeasure?pxMeasure(nm,2):nm.length*12)>nameW-50&&nm.length>6)nm=nm.slice(0,-1);
    if(nm.length<((s>=0?(s+1)+'. ':'')+TEAMS[ti].a+' '+TEAMS[ti].nick).length)nm=nm.replace(/\.?$/,'');
    uiTxt(nm,46,y,12,me?PAL.yel:'#fff','left',false);
    const r=S.rec[ti];uiTxt(r.w+'-'+r.l+'-'+r.t,W-118,y,12,'#fff','center',false);uiTxt(String(r.pf),W-70,y,11,'#c9d4ff','center',false);uiTxt(String(r.pa),W-34,y,11,'#c9d4ff','center',false)})});
