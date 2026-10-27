@@ -15,7 +15,7 @@ const confOf=t=>DIVS[0].flat().includes(t)?0:1,divOf=t=>DIVS[confOf(t)].findInde
 window.SEASON_TEAMS=()=>TEAMS.map((t,i)=>({i,name:t.city+' '+t.nick,a:t.a,conf:CABR[confOf(i)],div:DIVN[divOf(i)]}));
 // ---------- season data ----------
 const KEY='pb_season';const AKEY='pb_season_arcade';const CKEY='pb_season_career';let S=null;
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S));if(S&&S.career)localStorage.setItem(CKEY,JSON.stringify(S));else if(S)localStorage.setItem(AKEY,JSON.stringify(S))}catch(e){}}
+function save(){if(!S)return;try{localStorage.setItem(KEY,JSON.stringify(S));if(S.career)localStorage.setItem(CKEY,JSON.stringify(S));else localStorage.setItem(AKEY,JSON.stringify(S))}catch(e){}}
 function load(){try{S=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){S=null}return S}
 function loadSlot(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
@@ -72,7 +72,7 @@ function startMyGame(){const g=myGame();if(!g)return;G.season=true;G.career=!!(S
  Object.assign(G,{sh:0,sa:0,drive:0,q:1,clock:QLEN,aud:4,los:25,down:1,togo:10,log:[],stats:{py:0,ry:0,td:0,int:0,sack:0},two:false,fgDone:false,paused:false});G.st='vs';G.vsT=0}
 window.startMyGame=startMyGame;
 const _u=update;update=function(dt){
- if(G.st==='title'&&!G.paused){const taps=IN.taps.splice(0);IN.keyp.splice(0);G.t+=dt;if(taps.length){G.st='modesel'}return}
+ if(G.st==='title'){IN.taps.splice(0);IN.keyp.splice(0);G.st='modesel';return}
  if(G.st==='vs'){G.t+=dt;G.vsT+=dt;const taps=IN.taps.splice(0);IN.keyp.splice(0);if(G.vsT>2.2||(taps.length&&G.vsT>0.5)){startKickoff()}return}
  if(G.st==='final'&&G.season){G.t+=dt;const taps=IN.taps.splice(0);IN.keyp.splice(0);if(taps.length){G.season=false;G.st=(G.career?'chub':'hub')}return}
  if(MENU.includes(G.st)&&!G.paused){G.t+=dt;const taps=IN.taps.splice(0);IN.keyp.splice(0);if(window.__career&&window.__career.CMENU.includes(G.st)){if(window.__career.tick)window.__career.tick(dt);for(const tp of taps){if(!tp)continue;window.__career.tap(tp)}return}for(const tp of taps){if(!tp)continue;menuTap(tp)}return}
@@ -80,7 +80,7 @@ const _u=update;update=function(dt){
  _u(dt)};
 function menuTap(t){const[x,y]=t;
  if(G.st==='modesel'){const b=pathBoxes();if(hitR(t,b.x,b.ay,b.w,b.h)){G.career=false;const arc=loadSlot(AKEY);S=(arc&&arc.v===1&&!arc.career)?arc:null;if(S){save();G.st='hub'}else{sel=0;G.st='team'}return}
-  if(hitR(t,b.x,b.cy,b.w,b.h)){G.career=true;const C=window.__career&&window.__career.load();if(C&&C.v>=2){const cs=loadSlot(CKEY);S=(cs&&cs.v&&cs.career)?cs:(S&&S.career?S:null);if(!S||S.team!==C.team){newSeason(C.team,C.diff||1,true);S.year=C.year||1;save()}else save();G.st='chub';window.__career.applyRatings()}else G.st='ccoach';return}return}
+  if(hitR(t,b.x,b.cy,b.w,b.h)){G.career=true;const C=window.__career&&window.__career.load();if(C&&C.v>=2){const cs=loadSlot(CKEY);const shared=loadSlot(KEY);let slot=(cs&&cs.v&&cs.career)?cs:null;if(!slot&&shared&&shared.career&&Number(shared.team)===Number(C.team))slot=shared;S=slot;if(!S||Number(S.team)!==Number(C.team)){newSeason(C.team,C.diff||1,true);S.year=C.year||1;save()}else{if(S.year==null)S.year=C.year||1;save()}G.st='chub';window.__career.applyRatings()}else G.st='ccoach';return}return}
  if(G.st==='career'){if(hitR(t,40,700,W-80,56)){G.career=false;G.st='modesel'}return}
  if(G.st==='team'){for(let i=0;i<32;i++){const[a,b,w,h]=gridPos(i);if(hitR(t,a,b,w,h)){sel=i;return}}
   const bw=(W-32)/4;for(let i=0;i<4;i++)if(hitR(t,16+i*bw,690,bw,40)){teamDiff=i;return}
@@ -113,7 +113,7 @@ function drawModeSel(){
  uiTxt('Pick a team and play now',W/2,b.ay+b.h+16,13,'#e7eefc','center',false);
  uiTxt('Coach, draft, build a dynasty',W/2,b.cy+b.h+16,13,'#ffd0d8','center',false);
  uiTxt('Contracts · Free Agents · Trades',W/2,deals,12,'#c5d0ea','center',false);
- if(window.pxText){const y50=fy+Math.round((H-fy)*0.58);pxText(X,'50',W/2,y50,8,'rgba(247,250,246,.92)',{al:'center',out:'rgba(8,32,16,.45)',sk:0,it:false})}}
+ if(window.HELM){const RED={n:'RED',a:'RED',city:'RED',nick:'RED',c1:'#c8102e',c2:'#ffffff',h:'#d0122a',p:'#f4f6f8'};const TAN={n:'TAN',a:'TAN',city:'TAN',nick:'TAN',c1:'#c6a15b',c2:'#ffffff',h:'#e0c48a',p:'#f4f6f8'};const HS=118,hy=Math.round(fy+(H-fy)*0.50);HELM.drawHelmet(X,Math.round(W*0.30),hy,HS,RED,false);HELM.drawHelmet(X,Math.round(W*0.70),hy,HS,TAN,true)}}
 function drawCareer(){bg();hdr('CAREER MODE');txt('YOU ARE THE COACH',W/2,120,16,PAL.cy,'center',false);
  txt('DRAFT  ·  CONTRACTS  ·  FREE AGENTS  ·  TRADES',W/2,160,11,'#9fb3ff','center',false);
  box(30,220,W-60,280,'#120a24',PAL.yel);
