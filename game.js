@@ -289,7 +289,9 @@ function maybeReplay(kind,gain){
  const frames=G._rec||[];
  if(!big||frames.length<12){frames.length=0;return}
  const secs=frames.length/60;
- G.replay={frames:frames.slice(),t:0,dur:Math.max(2.8,Math.min(9,secs*1.8))};
+ G.shake=0;
+ // ~0.40x. Long enough to watch, capped so a long return still ends.
+ G.replay={frames:frames.slice(),t:0,dur:Math.max(5.2,Math.min(26,secs/0.4))};
  frames.length=0;G.st='replay';
 }
 function lerp(a,b,k){return a+(b-a)*k}
@@ -331,7 +333,7 @@ function replayStep(dt){
  const R=G.replay;if(!R){G.st='result';return}
  const taps=IN.taps.splice(0),keys=IN.keyp.splice(0);
  if(taps.some(pointingSkip)||keys.includes('Escape')||keys.includes(' ')){finishReplay();return}
- R.t+=dt;G.t+=dt;if(G.banner)G.banner.a+=dt*0.7;
+ R.t+=dt;G.t+=dt;if(G.shake>0)G.shake=0;
  const fr=R.frames;if(!fr.length){finishReplay();return}
  const u=Math.min(1,R.t/Math.max(0.2,R.dur));
  const fpos=u*(fr.length-1);
@@ -662,7 +664,7 @@ function render(){
   txt('LEVEL '+G.lvl,W/2,612,18,PAL.yel);txt('VS '+TEAMS[lvlOpp(G.lvl)].n,W/2,636,12,PAL.txt);
   const o=TEAMS[lvlOpp(G.lvl)];rect(W/2-120,680,16,16,o.c1);txt('OPP STRENGTH '+'#'.repeat(G.diff*2+1+Math.floor((G.lvl-1)/3)),W/2+8,688,12,PAL.pink);
   btn(60,744,W-120,52,'KICK OFF','#ff4f7a','#ffd0dc',22);X.restore();return}
- if(window.PROJ){X.clearRect(0,0,W,H);if(G.st==='live'||G.st==='result'||G.st==='presnap')drawBadges();drawTrail();drawFlash();drawRings();G.parts.forEach(p=>{const q=scr(p.x,p.y,1+p.l*3);X.globalAlpha=Math.min(1,p.l*2);rect(q[0]-2,q[1]-2,p.dust?6:4,p.dust?6:4,p.c);X.globalAlpha=1});drawHUD2()}
+ if(window.PROJ){X.clearRect(0,0,W,H);if(G.st==='live'||G.st==='result'||G.st==='presnap'||G.st==='replay'){if(G.st!=='replay'){drawBadges();drawTrail();drawFlash();drawRings();G.parts.forEach(p=>{const q=scr(p.x,p.y,1+p.l*3);X.globalAlpha=Math.min(1,p.l*2);rect(q[0]-2,q[1]-2,p.dust?6:4,p.dust?6:4,p.c);X.globalAlpha=1})}drawHUD2()}}
  else{drawField();
  if(G.st==='live'||G.st==='result'){const ps=[...G.players].sort((a,b)=>b.y-a.y);ps.forEach(drawPlayer);drawBall()}
  G.parts.forEach(p=>rect(sx(p.x),sy(p.y),4,4,p.c));
@@ -805,8 +807,8 @@ function drawControls(){drawActionButtons();if(!window.PROJ)return;const live=G.
    const bx=20,by=H-46,bw=170;pill(bx,by,bw,18,'rgba(16,20,44,.9)','#ffd23f');rect(bx+3,by+3,(bw-6)*G.stam,12,G.truck?'#ff4d5e':G.stam<.25?'#ff8a1f':'#3fd07a');
    txt('STAMINA',bx+bw/2,by+28,10,'#cfd3da')}else ease('rstk',false)}
  if(G.ko&&G.st==='live')btn(16,H-112,104,52,'TOUCHBACK','#e8344e','#ffd0d6',13);
- if(G.st==='presnap'&&!G.audOpen&&G.play){pill(W/2-90,156,180,26,'rgba(10,14,36,.8)','#ffd23f');txt(G.play.n,W/2,169,13,'#ffd23f','center',false)}if(G.st==='replay'){const g=skipReplayGeom();if(window.bevPanel)bevPanel(g.x,g.y,g.w,g.h,'#141a3a',{c:14,edge:'#ffd23f',drop:4});else pill(g.x,g.y,g.w,g.h,'#141a3a','#ffd23f');if(window.arcTxt)arcTxt('SKIP REPLAY',g.x+g.w/2,g.y+g.h/2+1,15,['#fff6c8','#ffd23f'],{px:true,rim:false,shine:false,sk:0.1});else txt('SKIP REPLAY',g.x+g.w/2,g.y+g.h/2,14,'#ffd23f')}if(G.banner&&(G.st==='result'||G.st==='live'||G.st==='presnap'||G.st==='fg'||G.st==='patpick'||G.st==='replay')&&G.banner.a<2.2)drawCallout();
- if(G.hint&&!G.paused){const L=G.hint.txt.split('|');const y=118;pill(16,y,W-32,22+L.length*16,'rgba(10,14,36,.94)','#3fd0ff');uiTxt('TIP',28,y+12,11,'#3fd0ff','left',false);L.forEach((l,i)=>uiTxt(l,W/2,y+14+i*16,12,'#fff','center',false))}}
+ if(G.st==='presnap'&&!G.audOpen&&G.play){pill(W/2-90,156,180,26,'rgba(10,14,36,.8)','#ffd23f');txt(G.play.n,W/2,169,13,'#ffd23f','center',false)}if(G.st==='replay'){const g=skipReplayGeom();if(window.bevPanel)bevPanel(g.x,g.y,g.w,g.h,'#141a3a',{c:14,edge:'#ffd23f',drop:4});else pill(g.x,g.y,g.w,g.h,'#141a3a','#ffd23f');if(window.arcTxt)arcTxt('SKIP REPLAY',g.x+g.w/2,g.y+g.h/2+1,15,['#fff6c8','#ffd23f'],{px:true,rim:false,shine:false,sk:0.1});else txt('SKIP REPLAY',g.x+g.w/2,g.y+g.h/2,14,'#ffd23f')}if(G.banner&&(G.st==='result'||G.st==='live'||G.st==='presnap'||G.st==='fg'||G.st==='patpick')&&G.banner.a<2.2)drawCallout();
+ if(G.hint&&!G.paused&&G.st!=='replay'){const L=G.hint.txt.split('|');const y=118;pill(16,y,W-32,22+L.length*16,'rgba(10,14,36,.94)','#3fd0ff');uiTxt('TIP',28,y+12,11,'#3fd0ff','left',false);L.forEach((l,i)=>uiTxt(l,W/2,y+14+i*16,12,'#fff','center',false))}}
 
 let last=performance.now();let acc=0;
 function snapPrev(){const P=G.players;if(P)for(let i=0;i<P.length;i++){const p=P[i];p._px=p.x;p._py=p.y}const b=G.ball;if(b){b._px=b.x;b._py=b.y;b._pz=b.z;b._pt=b.t}}
