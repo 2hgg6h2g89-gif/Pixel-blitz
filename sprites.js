@@ -30,9 +30,10 @@ add('cdive0',{c:7,ln:5,L:[5,0,-3,1],A:[[6,2],[5,3]],ball:'tuck',F:{L:[1,0],sp:1,
 add('cdive1',{c:8,ln:6,L:[6,1,-2,0],A:[[7,1],[6,2]],ball:'tuck',F:{L:[2,0],sp:1,A:[[3,2],[2,2]],ball:'chest'}});
 // Superman: arms forward on the side view, arms out on the front and back. Held, not a ground slide.
 add('fly',{ln:3,L:[6,1,-5,2],A:[[8,-3],[7,-2]],ball:'tuck',F:{L:[1,2],sp:3,A:[[6,-5],[6,-5]],ball:'chest'}});
-// Feet-first give-up: low, leaned back, ball pinned to the chest. Distance is unchanged in game.js.
-add('slide0',{c:8,ln:-6,L:[8,1,-1,0],A:[[2,3],[1,3]],ball:'tuck',F:{L:[1,0],sp:2,A:[[2,3],[2,3]],ball:'chest'}});
-add('slide1',{c:8,ln:-7,L:[9,2,0,0],A:[[2,4],[1,3]],ball:'tuck',F:{L:[2,0],sp:2,A:[[2,4],[2,3]],ball:'chest'}});
+// Feet-first give-up. Hips stay above the feet so the lead leg can stretch
+// forward; the torso leans back and the ball stays pinned. Distance is unchanged in game.js.
+add('slide0',{c:2,ln:-3,L:[6,0,-2,0],A:[[1,2],[2,1]],ball:'tuck',F:{L:[1,0],sp:2,A:[[1,2],[2,1]],ball:'chest'}});
+add('slide1',{c:3,ln:-6,L:[10,0,-1,0],A:[[0,2],[-5,1]],ball:'tuck',F:{L:[0,1],sp:3,A:[[1,2],[4,0]],ball:'chest'}});
 add('wrap',{c:2,ln:4,L:[4,0,-4,1],A:[[6,1],[6,3]],F:{L:[0,1],sp:1,A:[[-2,2],[-2,2]]}});
 add('fall0',{c:1,ln:-1,L:[2,2,-2,0],A:[[-2,-5],[3,-4]],F:{L:[2,0],sp:1,A:[[3,-5],[3,-4]]}});
 add('down',{L:[1,0,-1,0],A:[[2,4],[-1,4]],F:{L:[0,0],sp:1,A:[[2,4],[2,4]]}});
@@ -69,7 +70,7 @@ function fig(g,t,skin,line,dir,name,ti){const s=D[name];
  const c=fs.c||0,j=fs.j||0,br=fs.br||0;const y0=1+c-j+br,ty=y0+8,py=ty+6,ly=py+2,fy=22-j;const ln=side?(s.ln||0):0;
  const J=t.c1,J2=shade(t.c1,.7),JL=shade(t.c1,1.2),H=t.h,HL=shade(t.h,1.45),H2=shade(t.h,.68),ST=lum(t.c1)-lum(t.h)>-40&&Math.abs(lum(t.c1)-lum(t.h))>40?t.c1:t.c2,
   PN=t.p,PN2=shade(t.p,.75),SK=skin,SK2=shade(skin,.8),MK='#d4d8e0',MK2='#8a909c',SH='#1a1a1a',SO=t.c2;
- const ballAt=(x,y,v)=>{if(v){r(x,y,2,3,BALL);r(x,y+1,1,1,LACE)}else{r(x,y,3,2,BALL);r(x+1,y,1,1,LACE)}};
+ const ballAt=(x,y,v)=>{if(v){r(x,y,2,3,BALL);r(x,y+1,1,1,LACE)}else{r(x,y,4,3,BALL);r(x+1,y+1,2,1,LACE)}};
  const after=[];
  // ---- legs
  if(side){const L=s.L||[1,0,-1,0];const hipX=cx,hipY=ly;
@@ -92,7 +93,7 @@ function fig(g,t,skin,line,dir,name,ti){const s=D[name];
   if((s.ball==='tuck'||s.ball==='tuck2')&&A[0][1]>1)draw();else after.push(draw);
  }else{const sy=ty+1;const L=tx-2,R=tx+tw;const arm=(h,x,dirx,col)=>{const hx=x+dirx*h[0],hy=sy+h[1];seg(x,sy,x+dirx*h[0]*0.35,sy+h[1]*0.35,2,J);seg(x+dirx*h[0]*0.35,sy+h[1]*0.35,hx,hy,2,col);return[hx,hy]};
   const up=A[0][1]<0||A[1][1]<0;const go=()=>{const a=arm(A[0],L,-1,SK),b=arm(A[1],R,1,SK);const bl=fs.ball;
-   if(bl==='chest'&&!back){r(cx-3,ty+2,6,2,SK);ballAt(cx-1,ty+1,false)}else if(bl==='up')ballAt(cx-1,Math.min(a[1],b[1])-2,false);else if(bl==='r')ballAt(b[0]-1,b[1]-1,false);else if(bl==='l')ballAt(a[0]-1,a[1]-1,false)};
+   if(bl==='chest'){if(back)ballAt(cx-1,ty+3,false);else{r(cx-3,ty+2,6,2,SK);ballAt(cx-2,ty+1,false)}}else if(bl==='up')ballAt(cx-1,Math.min(a[1],b[1])-2,false);else if(bl==='r')ballAt(b[0]-1,b[1]-1,false);else if(bl==='l')ballAt(a[0]-1,a[1]-1,false)};
   if(up)after.push(go);else go()}
  // Same line-drawing shell as the title helmet. outline() rims the figure; the ear stays ink.
  const hx0=side?cx+Math.round(ln):cx;
