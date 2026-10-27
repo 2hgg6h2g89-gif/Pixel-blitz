@@ -45,7 +45,7 @@ function teamOvr(R){if(!R||!R.length)return 70;const q=R.filter(p=>p.pos==='QB')
   const sk=R.slice().sort((a,b)=>b.ovr-a.ovr).slice(0,11);const avg=sk.reduce((s,p)=>s+p.ovr,0)/sk.length;
   return Math.round(avg*0.7+(q?q.ovr:75)*0.3)}
 
-function saveC(){try{localStorage.setItem(CKEY,JSON.stringify(C))}catch(e){}}
+function saveC(){if(!C)return;try{localStorage.setItem(CKEY,JSON.stringify(C))}catch(e){}}
 function loadC(){try{C=JSON.parse(localStorage.getItem(CKEY)||'null')}catch(e){C=null}
   if(C){if(C.credits==null)C.credits=10;if(C.fans==null)C.fans=20;if(C.morale==null)C.morale=70;
     if(C.stadium==null)C.stadium=2;if(C.training==null)C.training=3;if(C.rehab==null)C.rehab=2;
@@ -665,6 +665,9 @@ window.__career={
   applyFieldOvr,applyRatings,tap:careerTap,draw:careerDraw,tick:careerTick,
   finishSeason:finishCareerSeason,openDraft:startDraft,capLeft,salaryUsed
 };
+function flushSaves(){try{if(window.__season&&window.__season.get&&window.__season.get())window.__season.save()}catch(e){}try{if(C)saveC()}catch(e){}}
+addEventListener('pagehide',flushSaves);
+addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushSaves()});
 
 // Patch season menu: Career → cteam or resume chub
 const _ready=()=>{
