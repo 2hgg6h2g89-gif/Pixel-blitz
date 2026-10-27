@@ -392,7 +392,7 @@ window.R3D=()=>{if(!_pixDone)pixelize();const st=G.st;if(window.MENU_ST?window.M
   const live=st==='live';
   const inAir=live&&b3&&!b3.caught;const drop=live&&pass&&!G.thrown&&!G.pend&&c3===G.qb&&!G.qbRun;const LA=CA.look;
   let fy=G.los,fx=HX,yN=CA.w.yN,want=0,stF=0.3;RQn=0;
-  if(!on||fgB||st==='fg'||st==='patpick'||st==='presnap'||!c3||!live&&st!=='result'){fy=G.los;want=0;for(const q of P)rqP(q,0);if(fgB||st==='fg'||st==='patpick')yN=0.02;cam._scram=0;cam._hand=0}
+  if(!on||fgB||st==='fg'||st==='patpick'||st==='presnap'||!c3||!live&&st!=='result'){fy=G.los;want=0;for(const q of P)rqP(q,0);if(fgB||st==='fg'||st==='patpick'){yN=-0.04;rq(FW/2,112,0.4);rq(FW/2,112,13);rq(FW/2-3.1,112,11);rq(FW/2+3.1,112,11)}cam._scram=0;cam._hand=0}
   else if(st==='result'){const fo=G.loose?G.loose:b3&&!b3.caught&&G.play.t!=='ko'?b3:c3;fy=fo.y;fx=fo.x;yN=CA.t.yN;want=0;stF=0.45;if(fo===c3)rqP(c3,0);else rq(fo.x,fo.y,0.3);cam._scram=0;cam._hand=0}
   else{const after=ko||(G.thrown&&!G.pend&&b3);
    const scram=live&&pass&&!G.thrown&&!G.pend&&!ko&&c3===G.qb&&(G.qbRun||G.tuck);
@@ -434,7 +434,7 @@ window.R3D=()=>{if(!_pixDone)pixelize();const st=G.st;if(window.MENU_ST?window.M
   RR=CA.ref?1:cam._R;
   // Pre-pass: widen until every player clears the HUD. Throws: tighten on the ball.
   // If nothing fits, pull back (v30) — the old path left bf at the tight preset and cropped deep routes.
-  cam._fitTop=(live&&!inAir&&!G.thrown&&!ko&&!cam._scram&&!cam._hand)?0.46:0.64;
+  cam._fitTop=(live&&!inAir&&!G.thrown&&!ko&&!cam._scram&&!cam._hand)?0.46:0.64;if(st==='fg'||st==='patpick'||fgB)cam._fitTop=0.50;
   const preWide=live&&!inAir&&!G.thrown&&!ko&&!cam._scram&&!cam._hand;
   let bf=want,zt=1,fitted=false;const zCap=preWide?2.35:(live&&inAir)?1.12:(live?1.55:3.2);const bbMin=preWide?0.18:0.32;
   if(cam._scram){bf=want;zt=1;fitted=true}

@@ -276,12 +276,14 @@ function drawCHub(){
   else if(S&&S.phase==='done'){sub='Season complete';playLab='START DRAFT'}
   else if(S&&S.phase==='po'){sub='Eliminated';playLab='PLAYOFFS'}
   pill(12,192,W-24,108,'rgba(22,14,42,.95)',PAL.pink);
-  uiTxt('NEXT',W/2,208,11,'#9fb3ff','center',false);
-  uiTxt(sub,W/2,230,14,PAL.yel,'center',false);
-  HELM.drawHelmet(X,78,258,52,t,false,C.team);
-  if(g){HELM.drawHelmet(X,W-78,258,52,TEAMS[g.opp],true,g.opp);uiTxt('VS',W/2,258,14,PAL.pink)}
-  else uiTxt(t.a,W-70,258,16,'#fff');
-  uiTxt('OVR '+TEAMS[C.team].rat+'   '+DIFFS[C.diff||1].n,W/2,286,11,'#c9d4ff','center',false);
+  uiTxt('NEXT',W/2,206,11,'#9fb3ff','center',false);
+  uiTxt(sub,W/2,224,13,PAL.yel,'center',false);
+  X.save();X.fillStyle='rgba(255,248,230,.22)';X.beginPath();X.ellipse(78,248,20,15,0,0,7);X.fill();if(g){X.beginPath();X.ellipse(W-78,248,20,15,0,0,7);X.fill()}X.restore();
+  HELM.drawHelmet(X,78,246,48,t,false,C.team);
+  if(g){HELM.drawHelmet(X,W-78,246,48,TEAMS[g.opp],true,g.opp);uiTxt('VS',W/2,242,12,PAL.pink);uiTxt('OVR '+TEAMS[C.team].rat,W/2,258,10,'#c9d4ff','center',false)}
+  else uiTxt(t.a,W-70,248,16,'#fff');
+  if(window.drawDiffRow)drawDiffRow(20,264,W-40,28);
+  else uiTxt(DIFFS[G.diff||C.diff||1].n,W/2,278,11,'#c9d4ff');
   const di=(window.divOf||(x=>x%4))(C.team);
   const conf=(window.confOf||(x=>0))(C.team);
   const divTeams=(window.DIVS&&window.DIVS[conf]?window.DIVS[conf][di]:null)||[C.team,(C.team+1)%32,(C.team+2)%32,(C.team+3)%32];
@@ -296,7 +298,7 @@ function drawCHub(){
   pill(12,452,W-24,70,'rgba(18,10,36,.92)','#3a2a6a');
   uiTxt('LINEUP',24,468,11,PAL.yel,'left',false);
   line.forEach((s,i)=>{const x=20+i*((W-40)/4);uiTxt(s.pos,x+8,490,11,'#9fb3ff','left',false);uiTxt(s.p.nm.split(' ').pop(),x+8,508,12,'#fff','left',false);uiTxt(String(s.p.ovr),x+((W-40)/4)-16,508,12,PAL.yel,'right',false)});
-  btn(16,534,W-32,64,playLab,'#e8344e','#ffe7a0',20);
+  btn(16,534,W-32,64,(window.midForHub&&midForHub(true)&&playLab==='PLAY')?'RESUME':playLab,'#e8344e','#ffe7a0',20);
   hubNav().forEach(n=>btn(n.x,n.y,n.w,n.h,n.lab,'#1f4fb0','#d7e6ff',n.lab.length>10?11:13));
   ui.maxScr=0;
   btn(16,H-48,110,36,'QUIT','#3a2a6a','#8a7ab0',12);
@@ -502,7 +504,7 @@ function drawCTeamPick(){
   bg();back('ccoach');txt('CHOOSE YOUR FRANCHISE',W/2,60,18,PAL.yel);txt((ui.coach||'COACH')+'  ·  PICK A TEAM',W/2,88,12,PAL.cy);
   for(let i=0;i<32;i++){const cols=4,cw=(W-24)/cols,rh=54,a=12+(i%cols)*cw,b=110+Math.floor(i/cols)*rh,w=cw-6,h=rh-6;
     const on=i===ui.sel;pill(a,b,w,h,on?'#2a1450':'rgba(18,10,36,.9)',on?PAL.yel:TEAMS[i].c1);
-    HELM.drawHelmet(X,a+w/2,b+18,28,TEAMS[i],false,i);txt(TEAMS[i].a,a+w/2,b+h-8,10,on?PAL.yel:'#fff','center',false)}
+    X.save();X.fillStyle='rgba(255,248,230,.2)';X.beginPath();X.ellipse(a+w/2,b+18,15,11,0,0,7);X.fill();X.restore();HELM.drawHelmet(X,a+w/2,b+17,28,TEAMS[i],false,i);txt(TEAMS[i].a,a+w/2,b+h-8,10,on?PAL.yel:'#fff','center',false)}
   const t=TEAMS[ui.sel];pill(16,H-150,W-32,50,'#120a24',t.c1);txt(t.city+' '+t.nick,W/2,H-125,16,'#fff');
   btn(40,H-88,W-80,56,'START CAREER','#c8102e','#fff',18);
 }
@@ -515,6 +517,8 @@ function readCoach(){const el=document.getElementById('coachIn');return String((
 function hubPlay(){
   const S=window.__season&&window.__season.get();
   const g=S&&window.__season.myGame&&window.__season.myGame();
+  const mid=window.midForHub&&midForHub(true);
+  if(mid&&g){resumeMid(mid);return}
   if(g){G.career=true;if(window.startMyGame)window.startMyGame();return}
   if(C.draft){G.st='cdraft';advanceDraftAI();return}
   if(C.phase==='draft'||(S&&S.phase==='done')){startDraft();return}
@@ -542,10 +546,11 @@ function careerTap(t){
     if(hit(t,12,40,90,40)){G.st='ccoach';return}
     for(let i=0;i<32;i++){const cols=4,cw=(W-24)/cols,rh=54,a=12+(i%cols)*cw,b=110+Math.floor(i/cols)*rh,w=cw-6,h=rh-6;
       if(hit(t,a,b,w,h)){ui.sel=i;return}}
-    if(hit(t,40,H-88,W-80,56)){initCareer(ui.sel,1,ui.coach);return}
+    if(hit(t,40,H-88,W-80,56)){initCareer(ui.sel,G.diff|0,ui.coach);return}
     return;
   }
   if(G.st==='chub'){
+    if(window.hitDiffRow&&hitDiffRow(t,20,264,W-40,28))return;
     if(hit(t,16,H-48,110,36)){clearC();G.career=false;G.st='modesel';return}
     if(hit(t,16,534,W-32,64)){hubPlay();return}
     for(const n of hubNav()){if(!hit(t,n.x,n.y,n.w,n.h))continue;
