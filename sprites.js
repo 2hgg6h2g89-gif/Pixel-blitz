@@ -25,6 +25,8 @@ add('jplant',{c:3,ln:2,L:[4,0,-4,0],A:[[2,3],[-2,2]],ball:'tuck',F:{L:[0,0],sp:3
 add('jfake',{c:2,ln:-1,L:[2,2,-3,0],A:[[2,3],[-4,1]],ball:'tuck',F:{L:[2,0],sp:2,A:[[4,1],[1,3]],ball:'chest'}});
 add('jcut',{c:1,ln:3,L:[5,0,-4,3],A:[[2,3],[4,0]],ball:'tuck',F:{L:[0,3],sp:1,A:[[1,3],[4,0]],ball:'chest'}});
 add('dive0',{c:4,ln:3,L:[3,0,-3,0],A:[[3,5],[2,5]],ball:'tuck'});add('dive1',{L:[-1,0,-3,1],A:[[1,-8],[2,-8]],ball:'hi',F:{L:[0,0],sp:0,A:[[0,-8],[0,-8]],ball:'up'}});
+// Superman: arms forward on the side view, arms out on the front and back. Held, not a ground slide.
+add('fly',{ln:3,L:[6,1,-5,2],A:[[8,-3],[7,-2]],ball:'tuck',F:{L:[1,2],sp:3,A:[[6,-5],[6,-5]],ball:'chest'}});
 // Feet-first give-up: low, leaned back, ball on the chest. Not a dive layout.
 add('slide0',{c:6,ln:-4,L:[6,1,-2,0],A:[[1,4],[2,4]],ball:'tuck',F:{L:[1,0],sp:4,A:[[3,4],[2,4]],ball:'chest'}});
 add('slide1',{c:7,ln:-5,L:[7,2,-1,0],A:[[2,5],[1,4]],ball:'tuck',F:{L:[2,1],sp:4,A:[[4,5],[2,4]],ball:'chest'}});
