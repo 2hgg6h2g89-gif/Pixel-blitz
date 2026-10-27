@@ -33,7 +33,10 @@ function judge(){const f=G.fg;const cx=FIELDW/2;let s=0,lo=0,hi=1;const p0=pathA
  if(p0.y<110){return{good:false,why:'SHORT'}}
  for(let i=0;i<40;i++){s=(lo+hi)/2;const p=pathAt(f,s,f.pow,f.e,f.wind);if(p.y<110)lo=s;else hi=s}
  const p=pathAt(f,s,f.pow,f.e,f.wind);if(p.z<5)return{good:false,why:'SHORT'};if(Math.abs(p.x-cx)>FGT.post)return{good:false,why:p.x<cx?'WIDE LEFT':'WIDE RIGHT'};return{good:true,why:''}}
-function finishFG(){const f=G.fg;const r=judge();f.res=r;f.ph='done';G.st='result';G.resT=2.0;G.next='drive';G.fgDone=true;
+function finishFG(){const f=G.fg;const r=judge();f.res=r;f.ph='done';G.st='result';G.resT=2.0;G.fgDone=true;
+ // A made FG or any PAT ends with a kickoff. A miss from the field is a turnover.
+ // Do not roll an opponent score on the kick itself (that was the phantom TD).
+ G.next=(f.pat||r.good)?'kickoff':'drive';
  if(r.good){G.sh+=f.pat?1:3;G.celeb=true;burst(FIELDW/2,110);G.shake=0.4}
  G.pop={x:FIELDW/2,y:108,t:0,s:r.good?'GOOD!':'NO GOOD'};banner(r.good?'GOOD!':'NO GOOD',r.good?(f.pat?'EXTRA POINT':'FIELD GOAL  '+fgYds()+' YDS'):r.why);G.log.unshift((f.pat?'PAT ':'FG ')+(r.good?'GOOD':'NO GOOD'));if(!f.pat)G.clock=Math.max(0,G.clock-5)}
 function fgUpdate(dt,taps){const f=G.fg;f.t+=dt;const kk=f.kk;
@@ -46,6 +49,7 @@ function fgUpdate(dt,taps){const f=G.fg;f.t+=dt;const kk=f.kk;
  if(f.ph==='power'||f.ph==='acc'){const k=f.ph==='power'?f.n/120*0.7:0.7+0.3*(1-Math.max(0,f.n)/Math.max(1,f.pow));steer(kk,f.kx0+(f.x0-0.5-f.kx0)*k,f.ky0+(f.y0-0.8-f.ky0)*k,6,dt)}
  else{kk.vx*=0.8;kk.vy*=0.8}
  kk.x+=kk.vx*dt;kk.y+=kk.vy*dt;kk.anim+=Math.hypot(kk.vx,kk.vy)*dt;if(kk.throwT>0)kk.throwT-=dt;
+ if(f.ph!=='fly'){G.fgBall={x:f.x0,y:f.y0,z:0.2}}
  if(f.ph==='fly'){const s=Math.min(1.15,f.t/f.T);const p=pathAt(f,s,f.pow,f.e,f.wind);G.fgBall={x:p.x,y:p.y,z:Math.max(0.2,p.z)};
   G.players.forEach(q=>{if(q.team===1){steer(q,q.x,q.y-1,2,dt);q.x+=q.vx*dt;q.y+=q.vy*dt;q.anim+=dt}});if(p.y>=112||s>=1.15)finishFG()}}
 // update wrapper
