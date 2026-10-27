@@ -59,7 +59,7 @@ function paintField(){const W2=fc.width;
    f.lineWidth=Math.max(2,PX*0.35);f.strokeStyle='rgba(10,40,18,.55)';f.strokeText(String(n),0,0);
    f.fillStyle='#f7faf6';f.fillText(String(n),0,0);f.restore()}}
  f.fillStyle='#f4f8f2';f.fillRect(0,0,6,fc.height);f.fillRect(W2-6,0,6,fc.height);quantField();
- f.save();f.translate(W2/2,60*PX);f.rotate(Math.PI/4);f.fillStyle='rgba(247,250,246,.92)';const dm=PX*1.35;f.fillRect(-dm,-dm,dm*2,dm*2);f.restore();
+ if(window.HELM&&HELM.drawMark)HELM.drawMark(f,W2/2,60*PX,8*PX,home().c1);
  buildMips()}
 let _ftexReady=false;function buildMips(){if(!_ftexReady)return;const L=[fc];let c=fc;while(c.width>1||c.height>1){const n=document.createElement('canvas');n.width=Math.max(1,c.width>>1);n.height=Math.max(1,c.height>>1);const g=n.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(c,0,0,n.width,n.height);L.push(n);c=n}ftex.mipmaps=L;ftex.generateMipmaps=false;ftex.minFilter=THREE.NearestMipmapNearestFilter;ftex.magFilter=THREE.NearestFilter;ftex.needsUpdate=true}
 function quantField(){const id=f.getImageData(0,0,fc.width,fc.height),d=id.data;const pal=[[0x1a,0x5a,0x26],[0x1f,0x67,0x2b],[0x2a,0x82,0x37],[0x3a,0x9a,0x44],[0x4f,0xae,0x52],[0xf4,0xf8,0xf2],[0x12,0x16,0x30]];
@@ -217,7 +217,10 @@ function inView(x,y){for(const h of[0.05,2.9]){_cv.set(Xw(x),h,Z(y)).project(cam
 function clampView(){cam.updateMatrixWorld();const lx=clook.x+HX,ly=-clook.z;for(const q of G.players){if(inView(q.x,q.y))continue;let lo=0,hi=1;for(let i=0;i<14;i++){const m=(lo+hi)/2;if(inView(lx+(q.x-lx)*m,ly+(q.y-ly)*m))lo=m;else hi=m}const nx=lx+(q.x-lx)*lo,ny=ly+(q.y-ly)*lo;const dx=nx-q.x,dy=ny-q.y,l=Math.hypot(dx,dy)||1;const vn=(q.vx*dx+q.vy*dy)/l;if(vn<0){q.vx-=vn*dx/l;q.vy-=vn*dy/l}q.x=nx;q.y=ny;q._clamped=(q._clamped||0)+1}}
 window.__inView=inView;
 function hudErr(){if(!window.hudPush||!window.PROJ)return null;const watch=[];if(G.qb&&!G.qb.team)watch.push(G.qb);if(G.rb&&!G.rb.team)watch.push(G.rb);if(G.carrier&&!G.carrier.team)watch.push(G.carrier);
- let px=0,py=0,n=0;const seen=new Set();for(const q of watch){if(!q||seen.has(q))continue;seen.add(q);const s=PROJ(q.x,q.y,0.2),o=window.hudPush(s[0],s[1]),m=Math.hypot(o.dx,o.dy);if(m>2){px+=o.dx;py+=o.dy;n++}}return n?{x:px,y:py}:null}
+ let px=0,py=0,n=0;const seen=new Set();for(const q of watch){if(!q||seen.has(q))continue;seen.add(q);
+  const hs=q===G.qb?[0.25,1.2,2.3]:[0.2];let bx=0,by=0,bm=0;
+  for(const h of hs){const s=PROJ(q.x,q.y,h),o=window.hudPush(s[0],s[1]),m=Math.hypot(o.dx,o.dy);if(m>bm){bm=m;bx=o.dx;by=o.dy}}
+  if(bm>2){px+=bx;py+=by;n++}}return n?{x:px,y:py}:null}
 const camR=new THREE.Vector3(),v3b=new THREE.Vector3(),v3c=new THREE.Vector3();const ballSh=new THREE.Mesh(new THREE.CircleGeometry(.5,14),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.45,depthWrite:false}));ballSh.rotation.x=-Math.PI/2;ballSh.renderOrder=2;scene.add(ballSh);
 {const pg=new THREE.BoxGeometry(.55,1.05,.55),og=new THREE.BoxGeometry(.7,1.2,.7),py=new THREE.InstancedMesh(pg,new THREE.MeshBasicMaterial({color:0xff5a1a}),8),po=new THREE.InstancedMesh(og,new THREE.MeshBasicMaterial({color:0x2a0c06,side:THREE.BackSide}),8);let i=0;const M=new THREE.Matrix4();for(const y of[-10,0,100,110])for(const x of[0,FW]){M.makeTranslation(Xw(x)+(x?0.3:-0.3),.53,Z(y));py.setMatrixAt(i,M);po.setMatrixAt(i++,M)}scene.add(po);scene.add(py)}
 const tgtMk=new THREE.Mesh(new THREE.RingGeometry(.6,.85,16),new THREE.MeshBasicMaterial({color:0xffe23f}));tgtMk.rotation.x=-Math.PI/2;tgtMk.position.y=.05;scene.add(tgtMk);
@@ -234,7 +237,7 @@ function mkNumMesh(){const mat=new THREE.MeshBasicMaterial({map:new THREE.Canvas
  mat.onBeforeCompile=sh=>{sh.vertexShader='attribute vec2 uvOff;\n'+sh.vertexShader.replace('#include <uv_vertex>','#include <uv_vertex>\n vMapUv = vMapUv*vec2('+SU.toFixed(8)+',1.0) + uvOff;')};
  const m=new THREE.InstancedMesh(ngeo,mat,N);m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);const uo=new THREE.InstancedBufferAttribute(new Float32Array(N*2),2);uo.setUsage(THREE.DynamicDrawUsage);m.geometry=ngeo.clone();m.geometry.setAttribute('uvOff',uo);m.frustumCulled=false;scene.add(m);return{m,mat,uo,cv:null,tex:null}}
 const NM=[mkNumMesh(),mkNumMesh()];NM.forEach(n=>n.m.renderOrder=3);const camUp=new THREE.Vector3(),camBk=new THREE.Vector3();window.__atlases=[];
-let atlasKey='';function ensureAtlas(){const k=G.home+'-'+G.away+'-v36';if(k===atlasKey)return;atlasKey=k;[home(),away()].forEach((t,i)=>{const c=S.buildAtlas(t,i?G.away:G.home);window.__atlases[i]=c;const tx=new THREE.CanvasTexture(c);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;tx.generateMipmaps=false;tx.colorSpace=THREE.SRGBColorSpace;TM[i].mat.map=tx;TM[i].mat.needsUpdate=true;const nc=S.buildNumbers(t);const nt=new THREE.CanvasTexture(nc);nt.magFilter=nt.minFilter=THREE.NearestFilter;nt.generateMipmaps=false;nt.flipY=true;nt.colorSpace=THREE.SRGBColorSpace;NM[i].mat.map=nt;NM[i].cv=nc;NM[i].tex=nt;NM[i].mat.needsUpdate=true})}
+let atlasKey='';function ensureAtlas(){const k=G.home+'-'+G.away+'-v37';if(k===atlasKey)return;atlasKey=k;[home(),away()].forEach((t,i)=>{const c=S.buildAtlas(t,i?G.away:G.home);window.__atlases[i]=c;const tx=new THREE.CanvasTexture(c);tx.magFilter=THREE.NearestFilter;tx.minFilter=THREE.NearestFilter;tx.generateMipmaps=false;tx.colorSpace=THREE.SRGBColorSpace;TM[i].mat.map=tx;TM[i].mat.needsUpdate=true;const nc=S.buildNumbers(t);const nt=new THREE.CanvasTexture(nc);nt.magFilter=nt.minFilter=THREE.NearestFilter;nt.generateMipmaps=false;nt.flipY=true;nt.colorSpace=THREE.SRGBColorSpace;NM[i].mat.map=nt;NM[i].cv=nc;NM[i].tex=nt;NM[i].mat.needsUpdate=true})}
 const pm=new THREE.Matrix4(),v3=new THREE.Vector3(),sc=new THREE.Vector3(),bUp=new THREE.Vector3(),bOut=new THREE.Vector3();
 // ===== v17 animation state machine: pose + roll + squash + lift, eased per player =====
 const N_=S.P;let animT=performance.now();const qR=new THREE.Quaternion(),qC=new THREE.Quaternion(),zAx=new THREE.Vector3(0,0,1);
@@ -334,7 +337,8 @@ function camPose(CA,bb,want,zf){zf=zf||1;const w=CA.w,asp=W/H;const Tp=CA.t.p+(C
   const m=w.m+(CA.t.m-w.m)*bb;let h=60,cx=0;const af=p-Math.atan(yn*t);
   for(let it=0;it<4;it++){const yc=camFy-h/Math.tan(af);const dz=yl-yc;const al=Math.atan2(h,Math.max(0.5,dz));const yr=Math.tan(p-al)/t;const ang=Math.atan(yr*t);
     const hs=(HX+0.4)/m,h0w=CA.ref?CA.w.wv/2:(HX+0.4)/w.m,hr=h0w+(CA.r.wv/2-h0w)*bb;const hw=hs+(hr-hs)*RR;h=hw*Math.sin(al)/(Math.cos(ang)*t*asp)}
-  if(bb>0&&RR>0)cx=_cl(Xw(camX),-HX+8,HX-8)*bb*RR;
+  if(cam._scram)cx=_cl(Xw(camX),-HX+6,HX-6);
+  else if(bb>0&&RR>0)cx=_cl(Xw(camX),-HX+8,HX-8)*bb*RR;
   h*=zf;const yc=camFy-h/Math.tan(af);cam.position.set(cx,h,Z(yc));cam.lookAt(cx,0,Z(yc+h/Math.tan(p)));cam.updateMatrixWorld();cam._h=h}
 let _pixDone=false;function pixelize(){_pixDone=true;scene.traverse(o=>{const ms=o.material?(Array.isArray(o.material)?o.material:[o.material]):[];for(const m of ms){const mp=m.map;if(mp&&mp.isCanvasTexture&&mp!==ftex&&mp.image&&mp.image.width>4){mp.magFilter=THREE.NearestFilter;mp.needsUpdate=true}}})}
 window.R3D=()=>{if(!_pixDone)pixelize();const st=G.st;if(window.MENU_ST?window.MENU_ST(st)||st==='vs':(st==='title'||st==='team')){ren.domElement.style.visibility='hidden';return}ren.domElement.style.visibility='visible';
@@ -358,13 +362,16 @@ window.R3D=()=>{if(!_pixDone)pixelize();const st=G.st;if(window.MENU_ST?window.M
   const c3=G.carrier,b3=G.ball,P=G.players||[],live=st==='live',ko=G.play&&G.play.t==='ko',pass=G.play&&G.play.t==='pass';
   const inAir=live&&b3&&!b3.caught;const drop=live&&pass&&!G.thrown&&!G.pend&&c3===G.qb&&!G.qbRun;const LA=CA.look;
   let fy=G.los,fx=HX,yN=CA.w.yN,want=0,stF=0.3;RQn=0;
-  if(!on||fgB||st==='fg'||st==='patpick'||st==='presnap'||!c3||!live&&st!=='result'){fy=G.los;want=0;for(const q of P)rqP(q,0);if(fgB||st==='fg'||st==='patpick')yN=0.02}
-  else if(st==='result'){const fo=G.loose?G.loose:b3&&!b3.caught&&G.play.t!=='ko'?b3:c3;fy=fo.y;fx=fo.x;yN=CA.t.yN;want=0;stF=0.45;if(fo===c3)rqP(c3,0);else rq(fo.x,fo.y,0.3)}
+  if(!on||fgB||st==='fg'||st==='patpick'||st==='presnap'||!c3||!live&&st!=='result'){fy=G.los;want=0;for(const q of P)rqP(q,0);if(fgB||st==='fg'||st==='patpick')yN=0.02;cam._scram=0}
+  else if(st==='result'){const fo=G.loose?G.loose:b3&&!b3.caught&&G.play.t!=='ko'?b3:c3;fy=fo.y;fx=fo.x;yN=CA.t.yN;want=0;stF=0.45;if(fo===c3)rqP(c3,0);else rq(fo.x,fo.y,0.3);cam._scram=0}
   else{const after=ko||(G.thrown&&!G.pend&&b3);
+   const scram=live&&pass&&!G.thrown&&!G.pend&&!ko&&c3===G.qb&&(G.qbRun||G.tuck);
+   cam._scram=scram?1:0;
    // Deep-route helpers: track deepest offensive route runner + aim lock
    const deepW=()=>{let best=null,by=-1e9;for(const w of P)if(w.team===0&&(w.role==='WR'||w.role==='TE')&&!(w.fallen>0)){const ey=(w.wp&&w.wp.length)?w.wp[w.wp.length-1].y:w.y;const dy=Math.max(w.y,ey);if(dy>by){by=dy;best=w}}return best};
    const aimT=(G.aim&&G.aim.lock)||(G.lastAim&&G.lastAim.lock)||(G.pend&&G.pend.w)||null;
-   if(!after){fy=drop?G.qb.y:c3.y;fx=drop?G.qb.x:c3.x;yN=drop?-0.5:-0.12;want=0.5;stF=drop?0.38:0.34;
+   if(scram){fy=G.qb.y;fx=G.qb.x;yN=-0.06;want=0.56;stF=0.22;rqP(G.qb,0.18);rq(G.qb.x-2.2,G.qb.y-1.4,0.3);rq(G.qb.x+2.2,G.qb.y+3.4,2.5)}
+   else if(!after){fy=drop?G.qb.y:c3.y;fx=drop?G.qb.x:c3.x;yN=drop?-0.5:-0.12;want=0.5;stF=drop?0.38:0.34;
     // Pre-throw: keep EVERYONE on screen (no off-screen runners)
     for(const q of P)rqP(q,LA*1.15);
     if(pass&&c3===G.qb){const dw=aimT||deepW();
@@ -390,12 +397,12 @@ window.R3D=()=>{if(!_pixDone)pixelize();const st=G.st;if(window.MENU_ST?window.M
   // Spring-smooth targets — avoid hard jumps except kickoff / huge state changes
   const jump=camFy===undefined||(st==='presnap'||G.st==='fg')&&Math.abs(camFy-fy)>48||ko&&live&&b3&&b3.t<0.12;
   if(cam._yW===undefined)cam._yW=CA.w.yN;if(jump&&camFy!==undefined&&!window.__hold)window.__fadeA=1;if(jump){camFy=fy;camX=fx;cam._yN=yN;cam._yW=want===0?yN:CA.w.yN;V.yW=0;V.fy=V.fx=V.yN=0;cam._R=cam._Rt||0;V.R=0;V.b=0;V.zf=0}
-  else{camFy=sdamp(camFy,fy,V,'fy',stF,dt);camX=sdamp(camX,fx,V,'fx',0.42,dt);cam._yN=sdamp(cam._yN,yN,V,'yN',0.36,dt);cam._R=sdamp(cam._R,cam._Rt||0,V,'R',0.28,dt);cam._yW=sdamp(cam._yW,want===0?yN:CA.w.yN,V,'yW',0.4,dt)}
+  else{camFy=sdamp(camFy,fy,V,'fy',stF,dt);camX=sdamp(camX,fx,V,'fx',cam._scram?0.18:0.42,dt);cam._yN=sdamp(cam._yN,yN,V,'yN',0.36,dt);cam._R=sdamp(cam._R,cam._Rt||0,V,'R',0.28,dt);cam._yW=sdamp(cam._yW,want===0?yN:CA.w.yN,V,'yW',0.4,dt)}
   RR=CA.ref?1:cam._R;
   // Pre-pass: widen until every player clears the HUD. Throws: tighten on the ball.
   // If nothing fits, pull back (v30) — the old path left bf at the tight preset and cropped deep routes.
-  cam._fitTop=(live&&!inAir&&!G.thrown&&!ko)?0.46:0.64;
-  const preWide=live&&!inAir&&!G.thrown&&!ko;
+  cam._fitTop=(live&&!inAir&&!G.thrown&&!ko&&!cam._scram)?0.46:0.64;
+  const preWide=live&&!inAir&&!G.thrown&&!ko&&!cam._scram;
   let bf=want,zt=1,fitted=false;const zCap=preWide?2.35:(live&&inAir)?1.12:(live?1.55:3.2);const bbMin=preWide?0.18:0.32;
   for(let bb=want;bb>=bbMin;bb-=0.04){camPose(CA,bb,want);if(camFits()){bf=bb;fitted=true;break}}
   if(!fitted){bf=preWide?bbMin:(live?0.4:0);for(zt=1;zt<zCap;zt+=0.06){camPose(CA,bf,want,zt);if(camFits()){fitted=true;break}}}

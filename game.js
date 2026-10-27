@@ -27,7 +27,7 @@ window.G=G;G.bulletPref=localStorage.getItem('pb_bullet')!=='0';G.adv=false;
 // ---------- input ----------
 const IN={jx:0,jy:0,taps:[],keyp:[],flick:0,truck:false,sprint:false,aimP:null};
 function pos(e){const r=C.getBoundingClientRect();const p=e.touches?e.touches[0]||e.changedTouches[0]:e;return[(p.clientX-r.left)*W/r.width,(p.clientY-r.top)*H/r.height]}
-const JB={x:W-150,y:H-130},DB={x:W-62,y:H-200},TB={x:W-108,y:H-92},BB={x:116,y:H-262};const PT=new Map(),STK={x:W-84,y:H-170,r:56},LJ={x:84,y:H-170,r:56};
+const JB={x:W-150,y:H-130},DB={x:W-62,y:H-200},TB={x:W-46,y:H-52},BB={x:116,y:H-262};const PT=new Map(),STK={x:W-84,y:H-170,r:56},LJ={x:84,y:H-170,r:56};
 function hudZones(){const z=[];const live=G.st==='live'&&!G.paused;
  if(G.st==='presnap'&&!G.audOpen){z.push({x:W-64,y:H-84,r:52});z.push({x:60,y:H-84,r:42})}
  const tuckOn=live&&passerPhase()&&G.carrier===G.qb&&!G.pend&&!G.ball;
@@ -307,15 +307,16 @@ function update(dt){
   const dx=a.x-b.x,dy=a.y-b.y,d=Math.hypot(dx,dy),m=ra+rb;if(d<m&&d>0.001){const ux=dx/d,uy=dy/d,pen=m-d;
    const aL=a.role==='OL'||a.role==='DL',bL=b.role==='OL'||b.role==='DL';
    const own=a.team===b.team&&((a===G.carrier&&bL)||(b===G.carrier&&aL));
-   if(own){const line=a===G.carrier?b:a,car=a===G.carrier?a:b;let nx=line.x-car.x,ny=line.y-car.y,nd=Math.hypot(nx,ny);
-    if(nd<0.05){nx=(line.num%2?1:-1);ny=0.15;nd=Math.hypot(nx,ny)}nx/=nd;ny/=nd;
-    const peel=(Math.abs(nx)<0.55?(line.num%2?1:-1):0);
-    line.x+=nx*(pen+0.16)+peel*0.35;line.y+=ny*(pen+0.16);
-    const rel=(line.vx-car.vx)*nx+(line.vy-car.vy)*ny;if(rel<0){line.vx-=rel*nx;line.vy-=rel*ny}
-    if(peel)line.vx+=peel*3.5;
-    line.x=cl(line.x,0.5,FIELDW-0.5)}
+   if(own){const line=a===G.carrier?b:a,car=a===G.carrier?a:b;const soft=0.35;if(d>=soft)continue;
+    let nx=line.x-car.x,ny=line.y-car.y,nd=Math.hypot(nx,ny)||0.01;nx/=nd;ny/=nd;
+    const forward=car.vy>0.8||G.qbRun,push=forward?0.45:0.7,side=Math.abs(nx)>0.4?Math.sign(nx):(line.num%2?1:-1);
+    line.x+=side*(soft-d+0.25)*1.4;line.y+=ny*(soft-d)*push*0.4;
+    if(forward){car.vy=Math.max(car.vy,1.8);car.vx+=side*-0.6}
+    const rel=(line.vx-car.vx)*nx+(line.vy-car.vy)*ny;if(rel<0){line.vx-=rel*nx*0.6;line.vy-=rel*ny*0.6}
+    line.x=cl(line.x,0.5,FIELDW-0.5);continue}
    else{const wa=a===G.carrier?0.35:1,wb=b===G.carrier?0.35:1,s=wa+wb;a.x+=ux*pen*(wa/s);a.y+=uy*pen*(wa/s);b.x-=ux*pen*(wb/s);b.y-=uy*pen*(wb/s);
     const rel=(a.vx-b.vx)*ux+(a.vy-b.vy)*uy;if(rel<0){const c=-rel*0.5;a.vx+=ux*c*(wa/s);a.vy+=uy*c*(wa/s);b.vx-=ux*c*(wb/s);b.vy-=uy*c*(wb/s)}}}}
+ if(G.carrier===G.qb&&(G.qbRun||G.tuck)&&G.snapT>0.3){for(const ol of P){if(ol.role!=='OL'||ol.team!==0)continue;const d=Math.hypot(G.qb.x-ol.x,G.qb.y-ol.y);if(d<0.55){const side=Math.sign(G.qb.x-ol.x)||(ol.num%2?1:-1);G.qb.x+=side*0.18;G.qb.vy=Math.max(G.qb.vy,2.2)}}}
  // ball flight
  if(G.ball&&!G.ball.caught){const b=G.ball;b.t+=dt;(G.trail=G.trail||[]).push([b.x,b.y,b.z,b.t,b.T,b.h0||1.6]);if(G.trail.length>16)G.trail.shift();if(G.assist&&b.tgt===G.assist&&b.t>b.T*0.35&&Math.hypot(b.tgt.x-b.tx,b.tgt.y-b.ty)<4){const w=b.tgt,a=Math.min(1,dt*(b.tt==='bullet'?2.5:1.6));b.tx+=(cl(w.x,1.5,FIELDW-1.5)-b.tx)*a;b.ty+=(Math.min(w.y,108.5)-b.ty)*a}{const k0=b.t/b.T;if(k0>0.8&&!b.dv&&G.play.t!=='ko'){for(const q of P)if(q.team===0&&(q.role==='WR'||q.role==='RB')&&!(q.fallen>0)&&(!b.tgt||q===b.tgt)){const d=Math.hypot(q.x-b.tx,q.y-b.ty);if(d>2.4&&d<4.8){b.dv=q;q.dive=0.45;const u=1/d;q.vx=(b.tx-q.x)*u*12;q.vy=(b.ty-q.y)*u*12;dust(q.x,q.y,8);break}}}}const k=Math.min(1,b.t/b.T);b.x=b.x0+(b.tx-b.x0)*k;b.y=b.y0+(b.ty-b.y0)*k;b.z=Math.sin(k*Math.PI)*b.h;
   if(G.play.t==='ko'&&k>0.7&&G.carrier&&Math.hypot(G.carrier.x-b.tx,G.carrier.y-b.ty)<3.5)G.carrier.reach=Math.max(G.carrier.reach||0,0.55);
