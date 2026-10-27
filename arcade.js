@@ -112,7 +112,7 @@ function arcRound(x,y,r,fill,pr,label,sz,icon,sub){const k='r'+x+'_'+y;const fl=
  if(icon){X.translate(x,y+d);icon()}X.restore()}
 window.arcRound=arcRound;
 rbtn=function(k,on,x,y,r,fill,stroke,label,icon){const a=ease(k,on);if(a<=0)return;const pr=on&&pressed(x-r,y-r,2*r,2*r);const e=1-Math.pow(1-a,3);
- X.save();X.globalAlpha=e;X.translate(x,y);const s=0.7+0.3*e;X.scale(s,s);X.translate(-x,-y);arcRound(x,y,Math.max(24,r-2),fill,pr,label,18,icon?()=>{X.translate(0,4);icon()}:null);X.restore()};
+ X.save();X.globalAlpha=e;X.translate(x,y);const s=0.7+0.3*e;X.scale(s,s);X.translate(-x,-y);arcRound(x,y,Math.max(28,r),fill,pr,label,14,icon?()=>{X.translate(0,4);icon()}:null);X.restore()};
 drawAudible=function(){const x=60,y=H-84;arcRound(x,y,32,'#2a56d6',pressed(24,H-120,72,72),'',0,()=>{X.fillStyle='#fff';X.strokeStyle='#0b0614';X.lineWidth=2;X.beginPath();X.moveTo(-13,-10);X.lineTo(7,-20);X.lineTo(7,4);X.lineTo(-13,-4);X.closePath();X.stroke();X.fill();X.fillRect(-17,-10,5,6)});
  arcTxt('AUDIBLE',x,y+15,10,['#fff','#dfe8ff'],{rim:false,shine:false});X.save();bevPanel(x+14,y-44,26,22,'#ffd23f',{c:5,drop:2});X.restore();txt(String(G.aud),x+27,y-33,13,'#141a36','center',false)};
 // ---------- fighter HUD ----------

@@ -72,36 +72,37 @@ function glyph(ti){
   return GLY[id]=g;
 }
 
-// Classic side-profile shell. Ids: 1 shell, 2 crown, 3 shade, 4 ear, 5 metal,
-// 7 rivet ring, 8 rivet dot, 9 screw disk, 10 screw X, 11 ink outline.
-const GW=32,GH=24,INK='#14161c',EAR='#101114',MET='#d5dbe3';
+// Side-profile shell traced from the tan/gold template: cream crown, dark lower shade,
+// black ear hole, white facemask cage, three cyan rivets. Only the shell recolors.
+// Ids: 1 shell, 2 crown, 3 shade, 4 ear, 5 mask, 6 rivet, 11 ink outline.
+const GW=32,GH=24,INK='#14161c',EAR='#0c0e12',MASK='#f4f6f8',CYAN='#3ad4f0';
 const MASTER=[
 '................................',
 '................................',
-'................................',
-'.........######.................',
-'.......###HHHHH###..............',
-'.....##############.....MMMMM...',
-'....################..MMM..MMMM.',
-'....################.MM..MM..MM.',
-'...##################MM..MM..MM.',
-'...##################MM..MM..MM.',
-'...##################MMMMMMMMMM.',
-'...##################MMMMMMMMMM.',
-'...######EEEE########MM..MM..MM.',
-'...######EEEE#####XOXMM..MM..MM.',
-'...#####EEEEEE####OXOMMMMMMMMMM.',
-'.########EEEE#####XO.MMMMMMMMMM.',
-'#########EEEE#RRR###...MMMMMMM..',
-'######RRR#####RDR##......MMM....',
-'######RDR#####RRR...............',
-'.SSSSSRR.SSSSSS.................',
-'...SSS..........................',
-'................................',
-'................................',
-'................................'
+'..........######................',
+'........##HHHHHH##..............',
+'.......#HH######HH#.............',
+'......#HH########HH#............',
+'.....#HH##########HH#...........',
+'....#HHHHHHHHHHHHHHHH#..........',
+'...#HH#################.........',
+'..#HH###################........',
+'.#HH#####################.......',
+'.#########################......',
+'.#########################......',
+'.########################.......',
+'.######EEE###############.......',
+'.#####EEEEE##############.......',
+'.#####EEEEE#############CMMM....',
+'.####EEEEEEE###########M...M....',
+'.####EEEEEEE##########M.MMM.M...',
+'..###EEEEEE##########M....M.M...',
+'..##SS#EEE##########CMMMM.M.M...',
+'...#SSS############M....M.M.....',
+'.....#SSSS########M.CMMM.M......',
+'.......##########M.MMMMM........'
 ];
-const ID={'.':0,'#':1,'H':2,'S':3,'E':4,'M':5,'R':7,'D':8,'O':9,'X':10};
+const ID={'.':0,'#':1,'H':2,'S':3,'E':4,'M':5,'C':6,'R':7,'D':8,'O':9,'X':10};
 function raster(){
   const g=new Uint8Array(GW*GH);
   for(let y=0;y<GH;y++)for(let x=0;x<GW;x++)g[y*GW+x]=ID[MASTER[y][x]]||0;
@@ -109,7 +110,7 @@ function raster(){
 }
 let _base=null;
 function baseGrid(){return _base||(_base=raster())}
-const PRI=[0,10,40,30,100,50,0,70,80,60,90,0];
+const PRI=[0,10,40,30,100,70,90,70,80,60,90,0];
 function downsample(src){
   const dw=GW>>1,dh=GH>>1,o=new Uint8Array(dw*dh);
   for(let y=0;y<dh;y++)for(let x=0;x<dw;x++){
@@ -141,8 +142,12 @@ function outline(g,w,h){
 function prepare(half,sil){
   let g=baseGrid(),w=GW,h=GH;
   if(half){const d=downsample(g);g=d.g;w=d.w;h=d.h}
-  if(sil){g=g.slice();for(let i=0;i<g.length;i++)if(g[i]===4)g[i]=0}
-  return {g:outline(g,w,h),w,h};
+  const ear=new Uint8Array(g.length);
+  for(let i=0;i<g.length;i++)if(g[i]===4)ear[i]=1;
+  if(sil){g=g.slice();for(let i=0;i<g.length;i++)if(ear[i])g[i]=0}
+  g=outline(g,w,h);
+  if(sil)for(let i=0;i<g.length;i++)if(ear[i])g[i]=0;
+  return {g,w,h};
 }
 function paint(t,ps,half,sil,color){
   const {g,w,h}=prepare(!!half,!!sil);
@@ -152,7 +157,7 @@ function paint(t,ps,half,sil,color){
   const hi=sil?color:mix(shell,1.72);
   const sh=sil?color:mix(shell,0.58);
   const ink=sil?(lum(color)>150?'#14161c':'#f4f7f2'):INK;
-  const col={1:shell,2:hi,3:sh,4:EAR,5:sil?color:MET,7:sil?color:'#e7ebf0',8:sil?ink:'#1a1c22',9:sil?color:MET,10:sil?ink:INK,11:ink};
+  const col={1:shell,2:hi,3:sh,4:EAR,5:sil?color:MASK,6:sil?color:CYAN,7:sil?color:MASK,8:sil?ink:'#1a1c22',9:sil?color:MASK,10:sil?ink:INK,11:ink};
   for(let y=0;y<h;y++)for(let i=0;i<w;i++){
     const id=g[y*w+i];if(!id)continue;
     x.fillStyle=col[id]||shell;x.fillRect(i*ps,y*ps,ps,ps);
@@ -199,19 +204,19 @@ function drawMark(g,x,y,size,color){
 // On-field stamp. Shell center sits on cx; top row is y0. Same features as the big shell, few frames.
 const STAMP={
   side:{ax:5,rows:[
-    '..HHH........',
-    '.H###HM......',
-    'H##EE##MM....',
-    'H#EEEE#XM....',
-    'H##EE##MMM...',
-    '.H#D#R#HMM...',
-    '..H###HMM....',
-    '...SSSS......']},
+    '..HHH......',
+    '.H###HM....',
+    'H##E##MC...',
+    'H#EEE#MM...',
+    'H##E##CMM..',
+    '.HS##HMM...',
+    '..H##HM....',
+    '...SS......']},
   front:{ax:4,rows:[
     '..HHHHH..',
     '.H#####H.',
-    'H##MMM##H',
-    'H#MMMMM#H',
+    'H#CMMMC#H',
+    'H#M#M#M#H',
     'H##MMM##H',
     '.H#MMM#H.',
     '..H###H..',
@@ -220,25 +225,25 @@ const STAMP={
     '..HHHHH..',
     '.H#####H.',
     'H#######H',
-    'H#######H',
     'H###H###H',
+    'H#######H',
     '.H#####H.',
     '..HH#HH..',
     '...SSS...']},
   diag:{ax:4,rows:[
-    '..HHHH....',
-    '.H###HM...',
-    'H##EE#MM..',
-    'H#EEEE#XM.',
-    'H##EE#MMM.',
-    '.H#D#RHM..',
-    '..H###M...',
-    '...SS....']},
+    '..HHHH...',
+    '.H###HM..',
+    'H##E##MC.',
+    'H#EEE#MM.',
+    'H##E#CMM.',
+    '.HS##HM..',
+    '..H##M...',
+    '...S....']},
   diagB:{ax:4,rows:[
     '..HHHH..',
     '.H####H.',
     'H#####M.',
-    'H####XM.',
+    'H####CM.',
     'H###HH..',
     '.H##H...',
     '..HHH...',
@@ -249,8 +254,7 @@ function stamp(g,cx,y0,view,t){
   const shell=(t&&t.h)||'#d9e3ef';
   const col={
     '#':shell,'H':mix(shell,1.7),'S':mix(shell,.58),
-    'E':'#101114','D':'#1a1c22','X':'#1a1c22',
-    'M':MET,'m':'#8e97a6','R':'#e7ebf0','O':MET
+    'E':EAR,'C':CYAN,'M':MASK,'m':'#c5ccd6'
   };
   const ax=s.ax|0;
   for(let y=0;y<s.rows.length;y++){
