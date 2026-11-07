@@ -518,11 +518,17 @@ function update(dt){
  if(IN.tuck){IN.tuck=false;if(passerPhase()){G.tuck=!G.tuck;G.aim=null;G.relAim=false;G.lastAim=null;say(G.tuck?'TUCKED':'READY TO THROW',0.7)}}
  if(IN.hand){IN.hand=0;if(canHand())handoff()}
  if(IN.thr){const{w,ht}=IN.thr;IN.thr=null;if(passerPhase()&&!G.tuck){if(w===G.rb&&canHand())handoff();else throwTo(w,true,holdType(ht))}}
- G.aim=null;if(passerPhase()&&!G.tuck&&IN.aimP&&IN.aimP.moved>4){const a=IN.aimP,fw=cl((a.y-a.sy)*0.3,2,60),lat=-(a.x-a.sx)*0.24;let tx=cl(cur.x+lat,1,FIELDW-1),ty=cur.y+fw;let lock=null,ld=0;
-  for(const w of P)if((w.role==='WR'||w.role==='RB')&&w!==cur){const d=Math.hypot(w.x-tx,w.y-ty);if(d<ld){ld=d;lock=w}}
-  if(lock){const T=0.22+Math.hypot(lock.x-cur.x,lock.y-cur.y)/40;tx=cl(lock.x+lock.vx*T,1,FIELDW-1);ty=lock.y+lock.vy*T}
-  {const S=G.aimS;if(S&&G.aimSid===a.t0){tx=S.x+(tx-S.x)*0.4;ty=S.y+(ty-S.y)*0.4}G.aimS={x:tx,y:ty};G.aimSid=a.t0;tx=cl(tx,1.5,FIELDW-1.5);ty=Math.min(ty,108.5)}
-  const pl=Math.hypot(a.x-a.sx,a.y-a.sy);const d0=Math.hypot(tx-cur.x,ty-cur.y),ty2=gType(d0);let ok=false;if(ty<=110&&tx>0.5&&tx<FIELDW-0.5)for(const w of targets()){if(w===G.rb&&!G.handed&&G.snapT<1.2)continue;const FT=flightT(d0,ty2),f=simAhead(w,FT+0.15),cd=Math.hypot(w.x-tx,w.y-ty);if(Math.hypot(f[0]-tx,f[1]-ty)<4.8||(cd<(ty2==='bomb'?24:ty2==='lob'?13:9)&&cd/FT<9.4)){ok=true;break}}G.aim={tx,ty,lock,ty2,ok}}
+ G.aim=null;if(passerPhase()&&!G.tuck&&IN.aimP&&IN.aimP.moved>4){const a=IN.aimP;let tx=cur.x,ty=cur.y+8,back=false;
+  if(window.PROJ&&window.groundAt){const base=PROJ(cur.x,cur.y,0.4);let sx=base[0]+(a.x-a.sx),sy=base[1]+(a.y-a.sy);let gnd=groundAt(sx,sy);
+   if(!gnd){let lo=sy,hi=Math.min(H-40,base[1]+40),hit=null;for(let i=0;i<8;i++){const mid=(lo+hi)/2,t=groundAt(sx,mid);if(t){hit=t;hi=mid}else lo=mid}gnd=hit}
+   if(gnd){tx=gnd.x;ty=gnd.y;back=ty<cur.y+1.5}}
+  else{const fw=(a.sy-a.y)*0.08,lat=(a.x-a.sx)*0.06;back=fw<1;tx=cur.x+lat;ty=cur.y+Math.max(2,fw)}
+  let lock=null;
+  let near=null,nd=1e9,lx=tx,ly=ty;for(const w of targets()){if(w===G.rb&&!G.handed&&G.snapT<1.2)continue;const d0=Math.hypot(w.x-cur.x,w.y-cur.y),lead=simAhead(w,flightT(d0,gType(d0))+0.12);const d=Math.hypot(lead[0]-tx,lead[1]-ty);if(d<nd){nd=d;near=w;lx=lead[0];ly=lead[1]}}
+  if(near&&nd<7){const k=nd<3.2?0.4:0.22;tx=tx*(1-k)+lx*k;ty=ty*(1-k)+ly*k;if(nd<3.2)lock=near}
+  const oob=back||ty>108||tx<1.2||tx>FIELDW-1.2;
+  {const S=G.aimS;if(S&&G.aimSid===a.t0){tx=S.x+(tx-S.x)*0.45;ty=S.y+(ty-S.y)*0.45}G.aimS={x:tx,y:ty};G.aimSid=a.t0;tx=cl(tx,1.5,FIELDW-1.5);ty=cl(ty,cur.y+1,108.5)}
+  const d0=Math.hypot(tx-cur.x,ty-cur.y),ty2=gType(d0);let ok=!oob;if(ok){ok=false;for(const w of targets()){if(w===G.rb&&!G.handed&&G.snapT<1.2)continue;const FT=flightT(d0,ty2),f=simAhead(w,FT+0.15);if(Math.hypot(f[0]-tx,f[1]-ty)<4.2){ok=true;break}}}G.aim={tx,ty,lock,ty2,ok}}
  if(G.relAim){G.relAim=false;if(G.lastAim&&passerPhase()&&!G.tuck)throwSpot(G.lastAim.tx,G.lastAim.ty,G.lastAim.lock,G.lastAim.ty2)}G.lastAim=G.aim;
  for(const k of keys){if('123'.includes(k)&&passerPhase()&&!G.tuck){const w=P.filter(q=>q.role==='WR')[+k-1];if(w)throwTo(w)}if(k==='b'&&G.ko)return touchback()}
  for(const t of taps)if(t&&G.ko&&t[0]<120&&t[1]>H-140)return touchback();
