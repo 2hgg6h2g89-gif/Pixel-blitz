@@ -20,7 +20,7 @@ const TEAMS=[
  {n:'GLACIER YETIS',a:'GLY',c1:'#e9f6ff',c2:'#16a07a',h:'#16a07a',p:'#e9f6ff'},
 ];
 const QLEN=180;
-const DIFFS=[{n:'ROOKIE',td:.18,fg:.14,clk:[75,105],def:.84,shed:1.65,int:.3,cov:2.8,sep:.9,pk:4.2},{n:'PRO',td:.28,fg:.2,clk:[60,90],def:.97,shed:1.25,int:.5,cov:2.0,sep:.6,pk:3.8},{n:'ALL-PRO',td:.38,fg:.22,clk:[50,78],def:1.06,shed:.85,int:.7,cov:1.1,sep:.25,pk:3.3},{n:'LEGEND',td:.5,fg:.22,clk:[40,65],def:1.14,shed:.7,int:.85,cov:.7,sep:0,pk:3.0}];
+const DIFFS=[{n:'ROOKIE',td:.18,fg:.14,clk:[75,105],def:.94,shed:1.65,int:.3,cov:2.8,sep:.9,pk:4.2},{n:'PRO',td:.28,fg:.2,clk:[60,90],def:.99,shed:1.25,int:.5,cov:2.0,sep:.6,pk:3.8},{n:'ALL-PRO',td:.38,fg:.22,clk:[50,78],def:1.03,shed:.85,int:.7,cov:1.1,sep:.25,pk:3.3},{n:'LEGEND',td:.5,fg:.22,clk:[40,65],def:1.06,shed:.7,int:.85,cov:.7,sep:0,pk:3.0}];
 const LS={get(){try{return JSON.parse(localStorage.getItem('pb_ladder')||'{}')}catch(e){return{}}},set(o){try{localStorage.setItem('pb_ladder',JSON.stringify(o))}catch(e){}}};
 const MAXLVL=9;function unlocked(){return Math.max(1,LS.get()['d'+G.diff]||1)}
 function lvlOpp(l){const o=[0,1,2,3].filter(i=>i!==G.home);return o[(l-1)%3]}
@@ -177,7 +177,7 @@ function setupPlay(p){
  {const late=G.q>=4&&G.clock<120||G.q===2&&G.clock<120,lead=G.sa>G.sh;let pb=G.togo<=2||L>=95?0.55:(G.down>=3&&G.togo>=7)?0.15:(late&&lead)?0.08:0.3;pb+=G.diff*0.04;const lbs=P.filter(q=>q.role==='LB');let n=0;lbs.forEach(l=>{l.blitz=false;l.spy=false;if(Math.random()<pb&&(n===0||Math.random()<0.25)){l.blitz=true;n++}});const sit=lbs.filter(l=>!l.blitz);if(sit.length&&Math.random()<(G.down>=3?0.5:0.25))sit[0].spy=true;G.blitzN=n}
  P.push(mk(1,'S',cx-9,L+13,31));P.push(mk(1,'S',cx+9,L+13,33));
  {const ols=P.filter(q=>q.role==='OL'),used=new Set();P.filter(q=>q.role==='DL').forEach(d=>{let b=null,bd=1e9;ols.forEach(o=>{if(used.has(o))return;const dd=Math.abs(o.x-d.x);if(dd<bd){bd=dd;b=o}});used.add(b);d.blk=b;b.blk=d;d.shedT=(p.t==='pass'?rnd(2.4,3.6):rnd(0.9,1.8))*DIFFS[G.diff].shed})}
- G.celeb=false;G.loose=null;lockNums(P);G.players=P;G.qb=qb;G.rb=rb;G.carrier=qb;G.ball=null;G.snapT=0;G.cam=L;G.juke=0;G.jcd=0;G.thrown=false;G.passer=true;
+ G.celeb=false;G.loose=null;lockNums(P);G.players=P;G.qb=qb;G.rb=rb;G.carrier=qb;G.ball=null;G.snapT=0;G.cam=L;G.juke=0;G.jcd=0;G.thrown=false;G.passer=true;G.pocketX=qb.x;
  G.st='presnap';G.handed=false;G.audOpen=false;G.pend=null;buildRoutesG();G.routeVer=(G.routeVer||0)+1;G.ovT=1.0;G.ko=false;hint('snap','ROUTES SHOWN FROM ABOVE|TAP SNAP TO START|AUDIBLE TO CHANGE IT UP');;
 }
 function buildRoutesG(){G.routes=G.players.filter(q=>q.role==='WR').map((w,i)=>w.route==='block'?null:Object.assign(simRoute(w),{i})).filter(Boolean);if(G.play&&G.play.t==='pass'&&G.rb&&G.qb){const r=G.rb,q=G.qb,pts=[];const P0=[[r.x,r.y],[q.x+1.4,q.y-0.6],[q.x+1.8,G.los+1],[q.x+2.4,G.los+5]];for(let s=0;s<3;s++)for(let k=0;k<6;k++){const u=k/6,A=P0[s],B=P0[s+1];pts.push([A[0]+(B[0]-A[0])*u,A[1]+(B[1]-A[1])*u])}pts.push(P0[3]);G.routes.push({w:r,pts,i:3})}G.routeVer=(G.routeVer||0)+1}
@@ -387,21 +387,75 @@ function recFrame(){
  const L=G.loose;
  buf.push({pl,b:packBall(),loose:L?{x:L.x,y:L.y,z:L.z,vx:L.vx,vy:L.vy,vz:L.vz,rx:L.rx||0,ry:L.ry||0,wx:L.wx||0}:null,ci:Math.max(0,G.players.indexOf(G.carrier)),cam:G.cam||0,snapT:G.snapT||0,thrown:G.thrown?1:0,hoT:G.hoT,juke:G.juke||0,tuck:G.tuck?1:0,qbRun:G.qbRun?1:0,passer:G.passer?1:0,dc:G.dcatch?1:0});
  if(buf.length>840)buf.shift()}
+// Series sim for a CPU possession. Field position is the CPU's own yard line
+// (0 = their goal, 100 = the end zone they are attacking). Nothing here reads
+// the score, and nobody is moved on the field.
+function simCpuDrive(){
+ const tier=Math.max(0,Math.min(3,G.diff|0));
+ const T=[
+  {comp:.74,ypa:8.4,deep:13,int:.022,sack:.045,run:5.1,boom:.09,boomY:18,tfl:.07,fum:.012,fgS:.72,fgL:.52,go:.04,rz:.64},
+  {comp:.78,ypa:8.8,deep:15,int:.018,sack:.038,run:5.4,boom:.11,boomY:20,tfl:.055,fum:.01,fgS:.8,fgL:.62,go:.08,rz:.72},
+  {comp:.81,ypa:9.2,deep:16,int:.015,sack:.032,run:5.6,boom:.13,boomY:22,tfl:.04,fum:.008,fgS:.86,fgL:.7,go:.11,rz:.78},
+  {comp:.84,ypa:9.6,deep:18,int:.012,sack:.026,run:5.8,boom:.14,boomY:24,tfl:.03,fum:.006,fgS:.9,fgL:.76,go:.14,rz:.84}
+ ][tier];
+ const lv=1+lvlStr(G.lvl||1)*0.35;
+ let y=25,down=1,togo=10,secs=0,plays=0;
+ const spot=()=>cl(Math.round(100-y),8,90);
+ const tick=inc=>{secs+=inc?rnd(2,5):rnd(5,9)};
+ while(plays<15&&y<100){
+  plays++;
+  if(down>=4){
+   const going=togo<=2&&y>=58&&Math.random()<T.go;
+   if(!going){
+    const dist=117-y;
+    if(y>=68&&dist<56){
+     tick(false);
+     if(Math.random()<(dist<38?T.fgS:T.fgL))return{pts:3,secs,spot:25,msg:'%A KICKED A FG',kind:'fg',plays,y};
+     return{pts:0,secs,spot:cl(spot(),18,80),msg:'%A MISSED A FG',kind:'miss',plays,y};
+    }
+    tick(true);
+    return{pts:0,secs,spot:cl(Math.round(100-(y+rnd(34,46))),12,42),msg:'%A PUNTED',kind:'punt',plays,y};
+   }
+  }
+  const rz=y>=80;
+  const pass=(togo>=8||(down>=3&&togo>=5))?0.64:0.38;
+  if(Math.random()<pass){
+   if(Math.random()<T.sack*(rz?0.75:1)){const loss=rnd(2,7);y=Math.max(1,y-loss);togo+=loss;down++;tick(false);continue}
+   if(Math.random()<T.int){tick(true);return{pts:0,secs,spot:spot(),msg:'%A THREW A PICK',kind:'int',plays,y}}
+   if(Math.random()>T.comp*(rz?0.97:1)){down++;tick(true);continue}
+   let gain=Math.random()<T.boom?rnd(T.deep,T.boomY):rnd(T.ypa*0.35,T.ypa*1.2);
+   if(rz)gain*=Math.random()<T.rz?1:0.5;
+   y+=Math.max(0,gain);togo-=gain;tick(false);
+  }else{
+   if(Math.random()<T.fum){tick(false);return{pts:0,secs,spot:spot(),msg:'%A LOST A FUMBLE',kind:'fum',plays,y}}
+   let gain;
+   if(Math.random()<T.tfl)gain=-rnd(0.4,3.2);
+   else if(Math.random()<T.boom*0.8)gain=rnd(7,T.boomY*0.65);
+   else gain=rnd(T.run*0.25,T.run*1.4)*lv;
+   if(rz&&gain>0)gain*=Math.random()<T.rz?1.05:0.65;
+   y=Math.max(1,y+gain);togo-=gain;tick(false);
+  }
+  if(y>=100){tick(true);return{pts:7,secs,spot:25,msg:'%A SCORED A TD',kind:'td',plays,y:100}}
+  if(togo<=0){down=1;togo=Math.min(10,100-y)}else down++;
+ }
+ tick(true);
+ return{pts:0,secs,spot:cl(Math.round(100-y),15,40),msg:'%A PUNTED',kind:'punt',plays,y};
+}
 function nextAfter(){G.fgDone=false;
  if(G.next==='kickoff'||(G.next==='drive'&&G.fg&&G.fg.res&&G.fg.res.good)){G.fg=null;G.fgBall=null;G.next='down';
   if(G.clock<=0){if(G.q>=4){G.st='final';finish();return}G.q++;G.clock=QLEN;G.log.unshift('END OF QUARTER '+(G.q-1))}
   startKickoff();return}
  if(G.next==='pat'){G.st='patpick';G.celeb=false;return}
  if(G.next==='drive'){ G.drive++;
-  // CPU possession sim
-  const D=DIFFS[G.diff],bonus=lvlStr(G.lvl),r=Math.random(),pts=r<D.td+bonus?7:r<D.td+bonus+D.fg?3:0;G.sa+=pts;
-  const ab=TEAMS[G.away].a;G.oppMsg=pts===7?ab+' SCORED A TD':pts===3?ab+' KICKED A FG':ab+' PUNTED';G.log.unshift(G.oppMsg);
-  G.clock-=rnd(D.clk[0],D.clk[1])*(1-bonus);G.oppT=2.4;G.afterOpp=true;
-  G.los=25;G.down=1;G.togo=10;if(G.clock<=0&&G.q>=4){G.st='final';finish();return}if(G.clock<=0){G.q++;G.clock=QLEN;if(G.q===3){startKickoff();banner(G.oppMsg,'HALFTIME KICKOFF');return}}autoPick();banner(G.oppMsg,'YOUR BALL  '+TEAMS[G.home].a+' '+G.sh+' - '+G.sa+' '+TEAMS[G.away].a);return}
+  // Play-by-play CPU drive. Points come only from the series, never from the score gap.
+  const sim=simCpuDrive();G.sa+=sim.pts;
+  const ab=TEAMS[G.away].a;G.oppMsg=sim.msg.replace('%A',ab);G.log.unshift(G.oppMsg);
+  G.clock-=sim.secs;G.oppT=2.4;G.afterOpp=true;
+  G.los=sim.spot;G.down=1;G.togo=Math.min(10,Math.max(1,100-G.los));if(G.clock<=0&&G.q>=4){G.st='final';finish();return}if(G.clock<=0){G.q++;G.clock=QLEN;if(G.q===3){startKickoff();banner(G.oppMsg,'HALFTIME KICKOFF');return}}autoPick();banner(G.oppMsg,'YOUR BALL  '+TEAMS[G.home].a+' '+G.sh+' - '+G.sa+' '+TEAMS[G.away].a);return}
  if(G.clock<=0){if(G.q>=4){G.st='final';finish();return}G.q++;G.clock=QLEN;G.log.unshift('END OF QUARTER '+(G.q-1));if(G.q===3){startKickoff();return}}
  autoPick();
 }
-function snap(){G.cdive=false;G.cslide=false;G.cdown=false;G.tuck=false;G.truckT=0;G.bullet=G.bulletPref;G.st='live';G.snapT=0;G.hoT=undefined;G.rbd=null;G.stam=1;G.qbRun=false;G.aim=null;G.runHinted=false;G.msg='';G.msgT=0;G._rec=[];G._recN=0;G.replay=null;if(G.play.t==='pass')G.dropY=G.qb.y-(G.diff<2?3.5:3);hint(G.adv?'passadv':'pass3',G.adv?'LEFT THUMB: MOVE THE QB|RIGHT THUMB: PULL BACK TO AIM|RELEASE TO THROW':'RIGHT SIDE: DRAG BACK TO AIM, RELEASE TO THROW|LEFT STICK: MOVE THE QB|SHORT DRAG BULLET, LONG DRAG LOB  TUCK: RUN|TAP HANDOFF ON THE RB');recFrame()}
+function snap(){G.cdive=false;G.cslide=false;G.cdown=false;G.tuck=false;G.truckT=0;G.bullet=G.bulletPref;G.st='live';G.snapT=0;G.hoT=undefined;G.rbd=null;G.stam=1;G.qbRun=false;G.aim=null;G.runHinted=false;G.msg='';G.msgT=0;G._rec=[];G._recN=0;G.replay=null;if(G.qb)G.pocketX=G.qb.x;if(G.play.t==='pass')G.dropY=G.qb.y-(G.diff<2?3.5:3);hint(G.adv?'passadv':'pass3',G.adv?'LEFT THUMB: MOVE THE QB|RIGHT THUMB: PULL BACK TO AIM|RELEASE TO THROW':'RIGHT SIDE: DRAG BACK TO AIM, RELEASE TO THROW|LEFT STICK: MOVE THE QB|SHORT DRAG BULLET, LONG DRAG LOB  TUCK: RUN|TAP HANDOFF ON THE RB');recFrame()}
 function startKickoff(){const cx=FIELDW/2,P=[];const ret=mk(0,'RB',cx+rnd(-6,6),4,22);P.push(ret);
  for(let i=0;i<7;i++)P.push(mk(0,'OL',cx-15+i*5,22+(i%2)*4,[72,65,60,66,77,51,58][i]));
  for(let i=0;i<10;i++){const d=mk(1,'LB',3+i*5.2,62,40+i);d.lane=d.x;P.push(d)}{const k=mk(1,'S',cx,68,9);k.kicker=true;P.push(k)}
@@ -442,7 +496,7 @@ function update(dt){
  if(jx||jy){const m=Math.min(1,Math.hypot(jx,jy));if(m<0.14){jx=jy=0;G._sa=null}else{let a=Math.atan2(jy,jx);const step=Math.PI/4;if(G._sa!=null){let d=a-G._sa;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;if(Math.abs(d)<step*0.62)a=G._sa;else a=Math.round(a/step)*step}else a=Math.round(a/step)*step;while(a>Math.PI)a-=Math.PI*2;while(a<=-Math.PI)a+=Math.PI*2;G._sa=a;jx=Math.cos(a)*m;jy=Math.sin(a)*m}}else G._sa=null;
  G._ix=jx;G._iy=jy;
  const cur=G.carrier;if(G.slow>0){G.slow-=dt}
- if(cur===G.qb&&p.t==='pass'&&!G.thrown&&cur.y>G.los+0.5&&!G.qbRun){G.qbRun=true;say('QB RUN!',0.8)}
+ if(cur===G.qb&&p.t==='pass'&&!G.thrown&&!G.qbRun){const px=G.pocketX!=null?G.pocketX:FIELDW/2;const escaped=Math.abs(cur.x-px)>4.4||(G.tuck&&(Math.abs(cur.vx)>2.3||cur.vy>1.5));if(cur.y>G.los+0.5||escaped){G.qbRun=true;say('QB RUN!',0.8)}}
  if(IN.truckTap){IN.truckTap=0;if(cornerBtn()==='truck'&&!(cur.dive>0)&&!(cur.slide>0)&&!(cur.fallen>0)){G.truckT=1.05;cur.stiffT=0.75;cur.catchT=0;cur.reach=0;cur.vy=Math.max(10.6,Math.abs(cur.vy)+1.6);cur.vx*=0.5;say('TRUCK!',0.7);dust(cur.x,cur.y,12)}}
  const runner=(G.tuck||!passerPhase()||cornerBtn()==='slide'||cornerBtn()==='truck')&&!G.pend&&(!G.ball||G.ball.caught)&&!(cur.slide>0);let runMul=1;G.truck=false;
  if(G.truckT>0)G.truckT-=dt;
@@ -466,7 +520,7 @@ function update(dt){
  for(const k of keys){if('123'.includes(k)&&passerPhase()&&!G.tuck){const w=P.filter(q=>q.role==='WR')[+k-1];if(w)throwTo(w)}if(k==='b'&&G.ko)return touchback()}
  for(const t of taps)if(t&&G.ko&&t[0]<120&&t[1]>H-140)return touchback();
  // Untucked pocket is a jog. Tuck is the RB-carry sprint. Ratio stays obvious behind the LOS.
- const SPD_POCKET=4.4,SPD_TUCK=10.8,SPD_RUN=8.2;
+ const SPD_POCKET=4.4,SPD_TUCK=9.05,SPD_RUN=8.2;
  const qbPocket=cur.role==='QB'&&passerPhase()&&!G.tuck&&!G.thrown;
  let sp=(qbPocket?SPD_POCKET:qbBurst?SPD_TUCK:SPD_RUN)*(G.slow>0?0.7:1);if(G.juke>PUR.jukeT)sp*=PUR.juke;if(G.play.t==='ko'&&cur.catchT>0)sp*=0.62;
  const thrownQ=G.thrown&&cur===G.qb&&!(G.ball&&G.ball.caught);
@@ -541,10 +595,13 @@ function update(dt){
    if(!d.dive&&dd<2.2&&dd>1.2&&G.snapT>0.6&&Math.random()<dt*(1.6-[0.45,0.65,0.85,1][G.diff]*0.6)){d.dive=0.4;const u=1/dd;d.vx=(cc.x+cc.vx*.25-d.x)*u*11;d.vy=(cc.y+cc.vy*.25-d.y)*u*11}
    if(G.juke>0&&G.jukeCut&&dd<2.6){d.dive=0.3;d.vx=-(G.jukeS||1)*7;d.vy=(cc.y-d.y)*2;d.brkTried=true;d.stun=PUR.whiff;say('WHIFF!',0.6);dust(d.x,d.y,8);continue}
    if(cc.catchT>0.27&&G.play.t!=='ko')continue;
-   if(dd<(d.dive?1.4:1.15)+((d.y<cc.y-0.3&&cc.vy>2)?PUR.behind:0)){
+   if(dd<(d.dive?1.32:1.12)+((d.y<cc.y-0.3&&cc.vy>2)?PUR.behind:0)){
    if(d.stun>0)continue;
-   const gang=G.players.some(q=>q.team!==cc.team&&q!==d&&!q.fallen&&dist(q,cc)<PUR.gang);
-   let brk=false;if(!d.brkTried||(G.truck&&!d._tr)){if(G.truck)brk=!gang;else if(!d.brkTried)brk=(cc.role!=='QB'||G.qbRun)&&!gang&&Math.random()<PUR.brkP+(cc.ovr-d.ovr)*0.01}d.brkTried=true;if(brk&&G.truck)d._tr=1;if(!brk&&gang)G.gang=1;
+   const gang=G.players.some(q=>q.team!==cc.team&&q!==d&&!q.fallen&&dist(q,cc)<1.15);
+   const aiT=aiTier(),inFront=d.y>cc.y-0.4,square=inFront&&Math.abs(d.x-cc.x)<1.2,closing=(d.vx*(cc.x-d.x)+d.vy*(cc.y-d.y))>0;
+   let miss=aiT.miss;if(square&&closing)miss*=0.7-aiT.edge*0.45;else if(!inFront)miss=Math.min(0.75,miss+0.18);
+   if(!gang&&!G.truck&&Math.random()<miss){d.brkTried=true;d.stun=0.24+aiT.miss*0.2;d.vx*=0.15;d.vy*=0.3;continue}
+   let brk=false;if(!d.brkTried||(G.truck&&!d._tr)){if(G.truck)brk=!gang;else if(!d.brkTried)brk=(cc.role!=='QB'||G.qbRun)&&!gang&&Math.random()<((square?PUR.brkP*0.35:PUR.brkP)+(cc.ovr-d.ovr)*0.008)}d.brkTried=true;if(brk&&G.truck)d._tr=1;if(!brk&&gang)G.gang=1;
    if(brk){d.fallen=PUR.brk;d.dive=0;const u=1/(dd||1);d.vx=(d.x-cc.x)*u*6;d.vy=(d.y-cc.y)*u*6;G.slow=G.truck?0.08:0.35;G.shake=G.truck?0.34:0.2;dust(d.x,d.y,G.truck?22:14);if(G.truck){cc.stiffT=0.7;cc.vy=Math.max(cc.vy,9.2);cc.vx*=0.4}say(G.truck?'TRUCKED!':'BROKEN TACKLE!',0.9);G.brk=(G.brk||0)+1;continue}
    dust(cc.x,cc.y,20);ring(cc.x,cc.y,'#fff',1);G.shake=0.22;d.fallen=2;cc.fallen=2;d.tackler=true;{const u=1/(dd||1),ox=(d.x-cc.x)*u||0,oy=(d.y-cc.y)*u||1,r=Math.max(dd,0.95);d.x=cc.x+ox*r;d.y=cc.y+oy*r;const mx=cc.vx*0.45+d.vx*0.15,my=cc.vy*0.45+d.vy*0.15;cc.vx=mx;cc.vy=my;d.vx=mx;d.vy=my}
    if(G.gang){G.gang=0;G.gangN=(G.gangN||0)+1;for(const q of P)if(q.team!==cc.team&&q!==d&&!q.fallen&&dist(q,cc)<PUR.gang){q.fallen=1.6;q.vx=(cc.x-q.x)*2;q.vy=(cc.y-q.y)*2;dust(q.x,q.y,10)}say('GANG TACKLE!',0.9);G.shake=0.3;ring(cc.x,cc.y,'#ff9a2f',1.8)}
@@ -563,7 +620,7 @@ function koBlock(w,dt){const c=G.carrier,b=G.ball,air=b&&!b.caught;const fx=air?
  if(w.hold>0){w.hold-=dt;const d=w.blkK;if(d&&!(d.fallen>0)&&dist(w,d)<2.9){w.eng=true;w.blk=d;steer(w,d.x+(fx-d.x)*0.05,d.y-0.9,spk*0.5,dt);d.blockT=0.12;return}w.hold=0}
  if(w.hcd>0)w.hcd-=dt;w.eng=false;
  let tg=null,bd=1e9;if(!air||b.t>b.T*KO.engageAt){for(const d of G.players)if(d.team===1&&!(d.fallen>0)&&!d.kicker&&!(d.blockT>0)){if(OL.some(o=>o!==w&&o.blkK===d))continue;const dd=dist(w,d)+Math.max(0,d.y-fy)*0.25;if(dd<bd&&dd<KO.reach){bd=dd;tg=d}}}
- if(tg&&!(w.hcd>0)){w.blkK=tg;const ux=fx-tg.x,uy=fy-tg.y,l=Math.hypot(ux,uy)||1;steer(w,tg.x+ux/l*1.1,tg.y+uy/l*1.1,spk,dt,10);if(dist(w,tg)<2.3){w.hold=rnd(KO.holdMin,KO.holdMax);w.hcd=0.6;dust(tg.x,tg.y,6)}return}
+ if(tg&&!(w.hcd>0)){w.blkK=tg;const ux=fx-tg.x,uy=fy-tg.y,l=Math.hypot(ux,uy)||1;steer(w,tg.x+ux/l*1.1,tg.y+uy/l*1.1,spk,dt,10);if(dist(w,tg)<2.3){w.hold=rnd(KO.holdMin,KO.holdMax)*(1.12-aiTier().edge*0.48);w.hcd=0.55;dust(tg.x,tg.y,6)}return}
  w.blkK=null;const k=i-(OL.length-1)/2;steer(w,cl(fx+k*2.4,2,FIELDW-2),fy+7-Math.abs(k)*1.1,Math.max(spk,7.6),dt,10)}
 function krHold(){if(!G.play||G.play.t!=='ko'||!G.ball||!G.ball.caught)return;const cc=G.carrier;if(!cc||cc.team)return;
  const ols=G.players.filter(q=>!q.team&&q.role==='OL'&&!(q.fallen>0));if(!ols.length)return;
@@ -574,30 +631,94 @@ function krHold(){if(!G.play||G.play.t!=='ko'||!G.ball||!G.ball.caught)return;co
 const KO={reach:34,blkSpd:0.9,engageAt:0.55,holdMin:1.0,holdMax:1.9,dMin:-4,dMax:6,tMin:3.6,tMax:4.2};window.KO=KO;
 const PUR={DL:6.8,LB:7.6,CB:8.15,S:8.25,gang:2.3,brkP:0.16,cut:0.2,maxT:2.2,juke:1.4,jukeT:0.14,behind:0.2,whiff:0.55,brk:0.8};window.PUR=PUR;
 function nearest(p,team,roles){let b=null,bd=1e9;for(const q of G.players)if(q.team===team&&roles.includes(q.role)){const d=dist(p,q);if(d<bd){bd=d;b=q}}return b}
+// Tier gap is recognition, landmark, and missed tackles. Top speed barely moves.
+const AI=[
+ {see:0.42,fit:0.48,miss:0.42,edge:0.34},
+ {see:0.24,fit:0.70,miss:0.22,edge:0.62},
+ {see:0.12,fit:0.86,miss:0.12,edge:0.84},
+ {see:0.04,fit:0.97,miss:0.04,edge:1}
+];
+function aiTier(){return AI[Math.max(0,Math.min(3,G.diff|0))]}
+function isEdge(d){if(d.role!=='DL')return false;let min=1e9,max=-1e9;for(const q of G.players)if(q.role==='DL'&&q.team===d.team){if(q.x<min)min=q.x;if(q.x>max)max=q.x}return d.x-min<0.4||max-d.x<0.4}
+function leftPocket(c){if(!c)return false;const px=G.pocketX!=null?G.pocketX:FIELDW/2;return !!(G.tuck||G.qbRun||Math.abs(c.x-px)>4.2||c.y>G.los+0.35)}
+function fitLandmark(d,c,fit){
+ if(d._off==null)d._off=(d.x-FIELDW/2)*0.08;
+ const lead=0.18+fit*0.55;
+ let tx=c.x+c.vx*lead+(d._off||0),ty=c.y+Math.max(0.4,c.vy)*lead;
+ const sid=c.vx>0.9||c.x>FIELDW*0.66?1:c.vx<-0.9||c.x<FIELDW*0.34?-1:0;
+ const onOutside=sid&&(d.x-c.x)*sid> -0.2;
+ if(sid&&onOutside&&(isEdge(d)||d.role==='CB'||d.role==='S')){
+  // Outside shoulder, a step in front. Not the boundary itself — that opens the cutback.
+  const aim=c.x+sid*(0.85+fit*0.9);
+  tx=c.x*(1-fit)+aim*fit;
+  ty=c.y+0.6+fit*1.3;
+ }else if(sid&&!onOutside){
+  // Inside fill: take away the bend-back lane.
+  tx=c.x-sid*(0.4+0.8*fit);
+  ty=c.y+0.8+fit;
+ }
+ if(d.y>c.y+1.2)ty=Math.min(d.y-0.4,Math.max(c.y+0.8,c.y+(d.y-c.y)*(0.35+fit*0.25)));
+ else if(d.y<c.y-0.3&&c.vy>0.6){ty=c.y+0.5+fit;tx=c.x+c.vx*0.2}
+ return{x:cl(tx,0.9,FIELDW-0.9),y:ty}}
 function defend(d,dt){if(d.dive>0)return;
- if(d.role==='DL'&&d.blk&&!d.shed&&!(d.fallen>0)){if(G.snapT>d.shedT||(G.carrier!==G.qb&&G.snapT>d.shedT*0.7)){d.shed=true;d.eng=false;d.vx+=(d.x<d.blk.x?-1:1)*5}else{d.eng=dist(d,d.blk)<2.9;const c=G.carrier;steer(d,c.x,c.y,G.play.t==='pass'?1.8:1.0,dt);return}}if(d.fallen>0||d.stun>0){d.vx*=0.9;d.vy*=0.9;return}
- const c=G.carrier,inAir=G.ball&&!G.ball.caught;
- if(G.play.t==='ko'){if(d.fallen>0||d.stun>0)return;if(d.blockT>0){d.blockT-=dt;d.eng=true;d.vx*=0.82;d.vy*=0.82;return}d.eng=false;const DFk=DIFFS[G.diff],spk=6.4*(DFk.def+lvlStr(G.lvl));const fx=inAir?G.ball.tx:c.x,fy=inAir?G.ball.ty:c.y;
-  if(d.kicker){const dd=Math.hypot(d.x-fx,d.y-fy);if(dd>9&&!inAir)return steer(d,cl(fx,4,FIELDW-4),Math.max(fy+10,d.y-0.01),spk*0.75,dt);if(inAir)return steer(d,cl(fx,4,FIELDW-4),fy+28,spk*0.6,dt)}
-  else{const dd=Math.hypot(d.x-fx,d.y-fy),k=cl(1-(dd-6)/18,0,1);const s=fx<FIELDW/2?-1:1;const out=(d.lane-fx)*s>0;const tx=d.lane+(fx+(out?s*2:0)-d.lane)*k;const ty=inAir?Math.max(fy+6,d.y-spk*dt):fy+(c.vy||0)*0.4*k;
-   return steer(d,cl(tx,1,FIELDW-1),ty,spk*(dd<4?0.85:dd>14?0.9:1),dt)}}const rushBoost=G.snapT>DIFFS[G.diff].pk?1.3:1;const DF=DIFFS[G.diff];let sp={DL:5.4*rushBoost,LB:6.2,CB:7,S:6.8}[d.role]*(DF.def+lvlStr(G.lvl));
- if(G.snapT<0.25)return;if(G.play.t!=='pass'&&G.snapT<1.3)sp*=d.role==='DL'?0.45:0.6;
- // pursuit
- const pursue=!G.passer||c.role!=='QB'||d.role==='DL'||(d.role==='LB'&&d.blitz)||(c.y>G.los-0.5);
- if(inAir){const b=G.ball;if(b.t>Math.max(0.3+(3-G.diff)*0.12,b.T*(0.62-G.diff*0.06))&&Math.hypot(d.x-b.tx,d.y-b.ty)<(b.tt==='bullet'?6:8.5))return steer(d,b.tx,b.ty,sp*(b.tt==='bullet'?0.82:0.92)+sp*G.diff*0.06,dt)}
- if(d.role==='CB'&&!pursue&&d.man){return steer(d,d.man.x+(d.man.x<FIELDW/2?-1:1)*(1.2+DIFFS[G.diff].cov*0.3)+d.man.vx*0.2,d.man.y+DIFFS[G.diff].cov*0.45+(d.man.y>G.los+12?d.man.vy*0.4+1.5:0),sp*(d.man.y>G.los+12?1.05:0.95),dt)}
- if(d.role==='S'&&!pursue){const wrs=G.players.filter(q=>q.role==='WR');let deep=wrs.reduce((a,b)=>a.y>b.y?a:b);return steer(d,cl((deep.x+FIELDW/2)/2+(d.x<FIELDW/2?-3:3),6,FIELDW-6),Math.max(deep.y+5,G.los+Math.max(13,G.togo+5)),sp*0.8,dt)}
- if(d.role==='LB'&&!pursue&&d.spy){return steer(d,cl(c.x,4,FIELDW-4),G.los+3.5,sp*0.7,dt)}
- if(d.role==='LB'&&!pursue){return steer(d,cl(c.x+(d.x<FIELDW/2?-5:5),4,FIELDW-4),G.los+Math.min(G.togo,8)+1,sp*0.6,dt)}
- // lead the carrier
- const runner=!(c.role==='QB'&&!G.qbRun&&G.passer);if(runner)sp=Math.max(sp,PUR[d.role]*(DF.def+lvlStr(G.lvl)));const disc=[0.45,0.65,0.85,1][G.diff],sticks=G.los+G.togo,dd=dist(d,c);let lead=Math.min(1.2,dd/sp);
- if(runner){let tI=0;for(let it=0;it<6;it++){const px=c.x+c.vx*tI,py=c.y+c.vy*tI;tI=Math.min(PUR.maxT,Math.hypot(px-d.x,py-d.y)/sp)}lead=tI/0.8}
- if(c.role==='QB'&&!G.qbRun&&G.passer){return steer(d,c.x+c.vx*lead*0.8,c.y+c.vy*lead*0.8,sp,dt)}
- const s=c.x<FIELDW/2?-1:1;const outside=(d.x-c.x)*s>0;let tx=c.x+c.vx*lead*0.8,ty=c.y+c.vy*lead*0.8;
- if(dd>2.2){tx+=s*disc*(outside?1.8:0.9)*Math.min(1,dd/9);if(d.y>c.y)ty=Math.max(c.y+1.2*disc,Math.min(ty,sticks+1));else ty=c.y+c.vy*lead}
- if(d.role==='S'&&runner&&d.y>c.y+3){ty=Math.max(ty,c.y+c.vy*lead+3);tx=c.x+c.vx*lead*0.9}
- if(c.y>sticks-4||c.y>95)sp*=1+0.08*disc;if(dd<3.5&&!runner)sp*=0.9;
- steer(d,cl(tx,0.8,FIELDW-0.8),ty,sp,dt)}
+ const ai=aiTier(),c=G.carrier;
+ if(d.role==='DL'&&d.blk&&!d.shed&&!(d.fallen>0)){
+  const px=G.pocketX!=null?G.pocketX:FIELDW/2;
+  const escaping=c&&c.team===0&&c.role==='QB'&&!G.thrown&&(Math.abs(c.x-px)>3.6||(G.tuck&&Math.abs(c.vx)>1.8));
+  const edge=isEdge(d),onSide=!!(c&&((d.x-px)*(c.x-px)>0.2||Math.abs(c.x-px)<1.4));
+  if(edge&&escaping&&onSide&&d._edgeAt==null)d._edgeAt=G.snapT+ai.see*0.9;
+  const know=!(edge&&escaping)||G.snapT>=(d._edgeAt||0);
+  let shedAt=d.shedT;if(edge&&escaping&&onSide&&know)shedAt*=(1.05-0.42*ai.edge);
+  if(G.snapT>shedAt||(c&&c!==G.qb&&G.snapT>d.shedT*0.7)){d.shed=true;d.eng=false;d.vx+=(d.x<(d.blk?d.blk.x:d.x)?-1:1)*2.2}
+  else{d.eng=d.blk&&dist(d,d.blk)<2.9;
+   if(edge&&escaping&&onSide&&c&&know){const s=Math.sign(c.x-px)||Math.sign(d.x-px)||1;steer(d,cl(c.x+s*(1.05+ai.fit*0.7),1.2,FIELDW-1.2),Math.max(c.y+0.3,G.los-0.2),3.4+ai.edge*2.4,dt,8+ai.edge*6)}
+   else if(edge&&escaping&&!know){if(d._home==null){const s=Math.sign(d.x-px)||1;d._home=cl(d.x+s*2.4,1.4,FIELDW-1.4)}steer(d,d._home,G.los+0.6,1.3,dt,6)}
+   else if(c)steer(d,px,Math.min(c.y+1.2,G.los+0.4),G.play.t==='pass'?1.7:1.1,dt);
+   return}}
+ if(d.fallen>0||d.stun>0){d.vx*=0.9;d.vy*=0.9;return}
+ const inAir=G.ball&&!G.ball.caught;
+ if(G.play&&G.play.t==='ko'){
+  if(d.blockT>0){d.blockT-=dt;d.eng=true;d.vx*=0.82;d.vy*=0.82;return}
+  d.eng=false;
+  const fx=inAir?G.ball.tx:c.x,fy=inAir?G.ball.ty:c.y;
+  const gun=d.lane!=null&&(d.lane<8||d.lane>FIELDW-8);
+  const spd=Math.min(8.15,(gun?5.6:5.2)+ai.edge*2.4),sh=5+ai.fit*9;
+  if(d.kicker)return steer(d,cl(fx,6,FIELDW-6),Math.max(fy+16,d.y-0.2),spd*0.7,dt,sh);
+  if(inAir){
+   const squeeze=0.12+ai.fit*0.42;
+   const wide=gun?(d.lane<FIELDW/2?Math.max(1.6,fx-(18-ai.fit*6)):Math.min(FIELDW-1.6,fx+(18-ai.fit*6))):d.lane+(fx-d.lane)*squeeze;
+   const jog=G.snapT<(0.1+(1-ai.edge)*3.05)?0.35:1;
+   return steer(d,cl(wide,1,FIELDW-1),fy+(18-ai.fit*8),spd*jog,dt,sh*jog)}
+  if(c){const pt=fitLandmark(d,c,ai.fit);if(gun){const s=d.lane<FIELDW/2?-1:1;pt.x=s<0?Math.min(pt.x,c.x-1.05):Math.max(pt.x,c.x+1.05)}return steer(d,pt.x,pt.y,spd,dt,sh)}
+  return}
+ const DF=DIFFS[G.diff];
+ const rushBoost=G.snapT>DF.pk?1.18:1;
+ let sp={DL:5.45*rushBoost,LB:6.3,CB:7.2,S:6.95}[d.role]*(0.96+ (DF.def-0.94)*0.35 + lvlStr(G.lvl)*0.25);
+ if(G.snapT<0.22)return;
+ if(G.play.t!=='pass'&&G.snapT<0.7)sp*=d.role==='DL'?0.55:0.75;
+ const px0=G.pocketX!=null?G.pocketX:FIELDW/2;
+ const qbScram=!!(c&&c.role==='QB'&&!G.thrown&&G.passer&&(G.qbRun||G.tuck||leftPocket(c)));
+ const past=!!(c&&(c.y>G.los+2.2||Math.abs(c.x-px0)>9));
+ const edge=isEdge(d);
+ // Corners stay on their man until the QB is actually out. Edges and backers fit the scramble.
+ const chase=qbScram&&(edge||d.role==='LB'||(past&&(d.role==='CB'||d.role==='S')));
+ const pursue=!qbScram&&( !G.passer||!c||c.role!=='QB'||d.role==='DL'||(d.role==='LB'&&d.blitz)||(c.y>G.los-0.5));
+ if(inAir&&G.ball&&!qbScram){const b=G.ball;if(b.t>Math.max(0.28+(3-G.diff)*0.1,b.T*(0.58-G.diff*0.04))&&Math.hypot(d.x-b.tx,d.y-b.ty)<(b.tt==='bullet'?6:8.5))return steer(d,b.tx,b.ty,sp*(b.tt==='bullet'?0.84:0.94),dt,10)}
+ if(qbScram&&chase){if(d._fitAt==null)d._fitAt=G.snapT+ai.see*(edge?0.35:0.85)}
+ if(qbScram&&chase&&G.snapT<(d._fitAt||0)){
+  if(d._home==null){const s=Math.sign(d.x-px0)||1;d._home=cl(d.x+s*(edge?2.4:0.4),1.4,FIELDW-1.4)}
+  if(d.role==='LB')return steer(d,cl(d._home,4,FIELDW-4),G.los+3.4,sp*0.6,dt,7);
+  return steer(d,d._home,G.los+1.1,sp*0.5,dt,7)}
+ if(d.role==='CB'&&d.man&&!chase&&!pursue){const out=d.man.x<FIELDW/2?-1:1;const shoulder=out*(0.35+(1-ai.fit)*1.35);return steer(d,d.man.x+shoulder+d.man.vx*0.12,d.man.y+DF.cov*0.38+(d.man.y>G.los+12?d.man.vy*0.3+1:0),sp*0.96,dt,8+ai.fit*4)}
+ if(d.role==='S'&&!chase&&!pursue){const wrs=G.players.filter(q=>q.role==='WR');if(wrs.length){let deep=wrs[0];for(const w of wrs)if(w.y>deep.y)deep=w;return steer(d,cl((deep.x+px0)/2+(d.x<px0?-2.4:2.4),6,FIELDW-6),Math.max(deep.y+4,G.los+12),sp*0.8,dt,9)}}
+ if(d.role==='LB'&&!chase&&!pursue&&c)return steer(d,cl(c.x+(d.x<px0?-3.2:3.2),4,FIELDW-4),G.los+Math.min(G.togo||8,8),sp*(d.spy?0.72:0.64),dt,8);
+ if(d.role==='DL'&&!edge&&qbScram&&c)return steer(d,px0+(d.x-px0)*0.4,G.los+0.3,sp*0.85,dt,8);
+ const runner=chase||pursue||(c&&c.role!=='QB')||(c&&!G.passer);
+ if(!(c&&runner)){if(c)return steer(d,c.x,c.y,sp*0.8,dt,8);return}
+ if(runner)sp=Math.max(sp,(PUR[d.role]||6.5)*(0.88+ai.fit*0.08));
+ const fit=ai.fit,pt=fitLandmark(d,c,chase||c.role==='QB'?fit:Math.min(fit,0.75));
+ let ty=pt.y;if(d.y>c.y+0.4)ty=Math.max(c.y+0.6,Math.min(ty,d.y-0.3));
+ steer(d,pt.x,ty,sp,dt,7+fit*7)}
 function pickTarget(x,y){let best=null,bd=70;const tg=targets();for(const w of tg){const b=bubblePos(w),ic=iconPos(tg.indexOf(w)),s2=scr(w.x,w.y,1);const d=Math.min(Math.hypot(b[0]-x,b[1]-y),Math.hypot(ic[0]-x,ic[1]-y),Math.hypot(s2[0]-x,s2[1]-y));if(d<bd){bd=d;best=w}}return best}
 function slotAngles(){const ws=targets().filter(w=>w!==G.rb).map(w=>[w,tgtAngle0(w)]).sort((a,b)=>a[1]-b[1]);const n=ws.length,m=new Map();ws.forEach(([w],i)=>m.set(w,-Math.PI*(n>1?0.85-0.7*i/(n-1):0.5)));return m}
 function tgtAngle(w){return slotAngles().get(w)??-Math.PI/2}
@@ -859,3 +980,4 @@ window.__frame=frameStep;
 function loop(n){const dt=Math.min(0.1,(n-last)/1000);last=n;if(!window.__hold){frameStep(dt)}else{window.__fdt=undefined;if(window.R3D)window.R3D();render()}requestAnimationFrame(loop)}requestAnimationFrame(loop);
 if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 window.__step=(s,n=1)=>{for(let i=0;i<n;i++)update(s);if(window.R3D)window.R3D();render()};
+window.__api={setupPlay,snap,startKickoff,throwTo,handoff,simCpuDrive,DIFFS,PLAYS,FIELDW,IN,KEYS,update,AI};
