@@ -269,7 +269,9 @@ function drawCHub(){
   const prog=phase==='reg'?wk/17:phase==='po'?0.9:phase==='done'||(S&&S.phase==='done')?1:0.05;
   meter(28,172,W-56,8,prog,'#4fa3ff');
   let sub='Build your dynasty',playLab='PLAY';
-  if(g)sub=(g.atHome?'HOME':'AWAY')+' vs '+TEAMS[g.opp].city+' '+TEAMS[g.opp].nick;
+  if(window.wxLock&&S)wxLock();
+  const wxLab=G.wx?(G.wx.k.toUpperCase()+(G.wx.s?' '+G.wx.s+' MPH':'')):'CLEAR';
+  if(g)sub=(g.atHome?'HOME':'AWAY')+'  '+TEAMS[g.opp].a+'  '+wxLab;
   else if(C.draft||C.phase==='draft'){sub='Draft is open';playLab='ENTER DRAFT'}
   else if(C.phase==='fa'){sub='Sign free agents';playLab='FREE AGENTS'}
   else if(C.phase==='resign'){sub='Renew expiring deals';playLab='CONTRACTS'}
@@ -297,7 +299,7 @@ function drawCHub(){
   const line=starters().filter(s=>s.p&&'QB RB WR TE'.includes(s.pos)).slice(0,4);
   pill(12,452,W-24,70,'rgba(18,10,36,.92)','#3a2a6a');
   uiTxt('LINEUP',24,468,11,PAL.yel,'left',false);
-  line.forEach((s,i)=>{const x=20+i*((W-40)/4);uiTxt(s.pos,x+8,490,11,'#9fb3ff','left',false);uiTxt(s.p.nm.split(' ').pop(),x+8,508,12,'#fff','left',false);uiTxt(String(s.p.ovr),x+((W-40)/4)-16,508,12,PAL.yel,'right',false)});
+  line.forEach((s,i)=>{const x=20+i*((W-40)/4);const last=(s.p.nm.split(' ').pop()||'').slice(0,8);uiTxt(s.pos,x+8,486,11,'#9fb3ff','left',false);uiTxt(last,x+8,502,11,'#fff','left',false);uiTxt(String(s.p.ovr),x+8,516,11,PAL.yel,'left',false)});
   btn(16,534,W-32,64,(window.midForHub&&midForHub(true)&&playLab==='PLAY')?'RESUME':playLab,'#e8344e','#ffe7a0',20);
   hubNav().forEach(n=>btn(n.x,n.y,n.w,n.h,n.lab,'#1f4fb0','#d7e6ff',n.lab.length>10?11:13));
   ui.maxScr=0;

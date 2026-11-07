@@ -68,7 +68,7 @@ const MENU=['modesel','team','hub','standings','schedule','bracket','career','ct
 let sel=0,tab=0,scroll=0,teamDiff=(G.diff|0);
 function hitR(t,x,y,w,h){return t&&t[0]>=x&&t[0]<=x+w&&t[1]>=y&&t[1]<=y+h}
 function gridPos(i){const cols=4,cw=(W-24)/cols,rh=54;return[12+(i%cols)*cw,136+Math.floor(i/cols)*rh,cw-6,rh-6]}
-function startMyGame(){const g=myGame();if(!g)return;G.season=true;G.career=!!(S&&S.career&&window.__career&&window.__career.get());G.home=S.team;G.away=g.opp;G.atHome=!!g.atHome;if(window.setDiff)setDiff(G.diff);else G.diff=S.diff!=null?S.diff:G.diff;S.diff=G.diff;G.lvl=1;
+function startMyGame(){const g=myGame();if(!g)return;G.season=true;G.career=!!(S&&S.career&&window.__career&&window.__career.get());G.home=S.team;G.away=g.opp;G.atHome=!!g.atHome;if(window.setDiff)setDiff(G.diff);else G.diff=S.diff!=null?S.diff:G.diff;S.diff=G.diff;if(window.wxLock)wxLock();G.lvl=1;
  Object.assign(G,{sh:0,sa:0,drive:0,q:1,clock:QLEN,aud:4,los:25,down:1,togo:10,log:[],stats:{py:0,ry:0,td:0,int:0,sack:0},two:false,fgDone:false,paused:false});G.st='vs';G.vsT=0}
 window.startMyGame=startMyGame;
 const _u=update;update=function(dt){
@@ -83,10 +83,11 @@ function menuTap(t){const[x,y]=t;
   if(hitR(t,b.x,b.cy,b.w,b.h)){G.career=true;const C=window.__career&&window.__career.load();if(C&&C.v>=2){const cs=loadSlot(CKEY);const shared=loadSlot(KEY);let slot=(cs&&cs.v&&cs.career)?cs:null;if(!slot&&shared&&shared.career&&Number(shared.team)===Number(C.team))slot=shared;S=slot;if(!S||Number(S.team)!==Number(C.team)){newSeason(C.team,C.diff||1,true);S.year=C.year||1;save()}else{if(S.year==null)S.year=C.year||1;save()}G.st='chub';window.__career.applyRatings()}else G.st='ccoach';return}return}
  if(G.st==='career'){if(hitR(t,40,700,W-80,56)){G.career=false;G.st='modesel'}return}
  if(G.st==='team'){for(let i=0;i<32;i++){const[a,b,w,h]=gridPos(i);if(hitR(t,a,b,w,h)){sel=i;return}}
-  const bw=(W-32)/4;for(let i=0;i<4;i++)if(hitR(t,16+i*bw,690,bw,40)){teamDiff=i;if(window.setDiff)setDiff(i);return}
+  const bw=(W-32)/4;for(let i=0;i<4;i++)if(hitR(t,16+i*bw,668,bw,28)){if(window.wxSet)wxSet(['clear','rain','snow','wind'][i]);return}
+  for(let i=0;i<4;i++)if(hitR(t,16+i*bw,702,bw,36)){teamDiff=i;if(window.setDiff)setDiff(i);return}
   if(hitR(t,40,750,W-80,56)){newSeason(sel,teamDiff);G.st='hub'}
   if(hitR(t,12,40,90,40)){if(S&&S.v===1)G.st='hub';else{G.career=false;G.st='modesel'}}return}
- if(G.st==='hub'){if(window.hitDiffRow&&hitDiffRow(t,16,246,W-32,30))return;if(hitR(t,30,520,W-60,64)){if(S.phase==='done'||(S.phase==='po'&&!alive())){finishOutPlayoffs();return}const mid=window.midForHub&&midForHub(false);if(mid){resumeMid(mid);return}startMyGame();return}
+ if(G.st==='hub'){if(window.hitDiffRow&&hitDiffRow(t,16,246,W-32,30))return;const wbw=(W-32)/4;for(let i=0;i<4;i++)if(hitR(t,16+i*wbw,668,wbw,28)){if(window.wxSet)wxSet(['clear','rain','snow','wind'][i]);return}if(hitR(t,30,520,W-60,64)){if(S.phase==='done'||(S.phase==='po'&&!alive())){finishOutPlayoffs();return}const mid=window.midForHub&&midForHub(false);if(mid){resumeMid(mid);return}startMyGame();return}
   const bw=(W-60-16)/3;['standings','schedule','bracket'].forEach((s,i)=>{if(hitR(t,30+i*(bw+8),604,bw,52))G.st=s,scroll=0});
   if(hitR(t,W/2-80,780,160,34)){S=null;localStorage.removeItem(KEY);localStorage.removeItem(AKEY);sel=0;G.st='team'}return}
  if(hitR(t,12,40,90,40)){G.st=G.career?'chub':'hub';return}
@@ -121,11 +122,12 @@ function drawCareer(){bg();hdr('CAREER MODE');txt('YOU ARE THE COACH',W/2,120,16
  btn(40,700,W-80,56,'BACK TO MODES','#2b3a7a','#8fc4ff',16)}
 function drawTeam(){bg();back();txt('PICK YOUR TEAM',W/2,60,24,PAL.yel);txt('32 TEAMS  -  17 GAMES  -  PLAYOFFS',W/2,92,11,PAL.cy,'center',false);txt('TAP A HELMET',W/2,118,10,'#9fb3ff','center',false);
  for(let i=0;i<32;i++){const[a,b,w,h]=gridPos(i);const on=i===sel;pill(a,b,w,h,on?'#2a1450':'rgba(18,10,36,.9)',on?PAL.yel:TEAMS[i].c1);X.save();X.fillStyle='rgba(255,248,230,.2)';X.beginPath();X.ellipse(a+w/2,b+19,16,12,0,0,7);X.fill();X.restore();HELM.drawHelmet(X,a+w/2,b+18,28,TEAMS[i],false,i);txt(TEAMS[i].a,a+w/2,b+h-8,11,on?PAL.yel:'#fff','center',false)}
- const t=TEAMS[sel];pill(16,602,W-32,72,'#120a24',t.c1);uiTxt(t.city,W/2,622,13,'#c9d4ff','center',false);uiTxt(t.nick,W/2,646,22,'#fff');txt('OVR '+t.rat+'   '+CABR[confOf(sel)]+' '+DIVN[divOf(sel)]+'   QB '+last(t.r.QB),W/2,664,10,PAL.cy,'center',false);
- const bw=(W-32)/4;DIFFS.forEach((d,i)=>{const x=16+i*bw;box(x+3,690,bw-6,40,teamDiff===i?PAL.pink:'#120a24',teamDiff===i?PAL.yel:'#5a4a8a');txt(d.n,x+bw/2,710,d.n.length>5?11:13,PAL.txt)});
+ const t=TEAMS[sel];pill(16,602,W-32,60,'#120a24',t.c1);uiTxt(t.city+' '+t.nick,W/2,622,16,'#fff');txt('OVR '+t.rat+'   '+CABR[confOf(sel)]+' '+DIVN[divOf(sel)],W/2,648,10,PAL.cy,'center',false);
+ const bw=(W-32)/4;['CLEAR','RAIN','SNOW','WIND'].forEach((n,i)=>{const x=16+i*bw;const on=(G.wxPick||'clear')===['clear','rain','snow','wind'][i];box(x+3,668,bw-6,28,on?'#1f6fd6':'#120a24',on?'#ffd23f':'#5a4a8a');txt(n,x+bw/2,682,10,PAL.txt)});
+ DIFFS.forEach((d,i)=>{const x=16+i*bw;box(x+3,702,bw-6,36,teamDiff===i?PAL.pink:'#120a24',teamDiff===i?PAL.yel:'#5a4a8a');txt(d.n,x+bw/2,720,d.n.length>5?10:12,PAL.txt)});
  btn(40,750,W-80,56,'START SEASON','#ff4f7a','#ffd0dc',20)}
 function drawHub(){bg();const t=TEAMS[S.team];hdr(t.nick);txt(t.city,W/2,36,12,'#c9d4ff','center',false);
- HELM.drawHelmet(X,W/2,142,96,t,false,S.team);txt('RECORD  '+recStr(S.team)+'   '+CABR[confOf(S.team)]+' '+DIVN[divOf(S.team)],W/2,214,13,'#fff');if(window.drawDiffRow)drawDiffRow(16,246,W-32,30);
+ HELM.drawHelmet(X,W/2,142,96,t,false,S.team);txt('RECORD  '+recStr(S.team)+'   '+CABR[confOf(S.team)]+' '+DIVN[divOf(S.team)],W/2,214,13,'#fff');if(window.wxLock)wxLock();if(window.drawDiffRow)drawDiffRow(16,246,W-32,30);
  if(S.last){const L=S.last;const w=L.us>L.them;txt('LAST: '+L.lab+'  '+(w?'W':L.us<L.them?'L':'T')+' '+L.us+'-'+L.them+' VS '+TEAMS[L.opp].a,W/2,290,11,w?'#5dff8a':'#ff6a7a','center',false)}
  let label='PLAY',sub='';const g=myGame();
  if(S.phase==='reg'){sub='WEEK '+(S.week+1)+' OF 17'}else if(S.phase==='po'){sub=alive()?RND[S.po.round]:'ELIMINATED'}else sub='SEASON COMPLETE';
@@ -135,7 +137,8 @@ function drawHub(){bg();const t=TEAMS[S.team];hdr(t.nick);txt(t.city,W/2,36,12,'
  else{txt(S.phase==='po'?'YOUR SEASON IS OVER':'',W/2,400,16,'#ff6a7a');label='SIM PLAYOFFS'}
  btn(30,520,W-60,64,label,'#ff4f7a','#ffd0dc',22);
  const bw=(W-60-16)/3;['STANDINGS','SCHEDULE','BRACKET'].forEach((s,i)=>btn(30+i*(bw+8),604,bw,52,s,'#1f6fd6','#8fc4ff',12));
- txt('PROGRESS SAVES AUTOMATICALLY',W/2,690,10,'#8a7ab0','center',false);btn(W/2-80,780,160,34,'NEW SEASON','#3a2a6a','#8a7ab0',11)}
+ {const labs=['CLEAR','RAIN','SNOW','WIND'],keys=['clear','rain','snow','wind'],wbw=(W-32)/4;labs.forEach((n,i)=>{const x=16+i*wbw,on=(G.wx&&G.wx.k)===keys[i];box(x+2,668,wbw-4,28,on?'#1f6fd6':'#120a24',on?'#ffd23f':'#5a4a8a');txt(n,x+wbw/2,682,10,'#fff')})}
+ txt('PROGRESS SAVES AUTOMATICALLY',W/2,720,10,'#8a7ab0','center',false);btn(W/2-80,780,160,34,'NEW SEASON','#3a2a6a','#8a7ab0',11)}
 function drawStandings(){bg();hdr('STANDINGS');back();btn(W/2-150,92,148,34,'BLITZ','#'+(tab?'2b3a7a':'ff4f7a'),'#fff',13);btn(W/2+2,92,148,34,'PIXEL','#'+(tab?'ff4f7a':'2b3a7a'),'#fff',13);
  const sd=S.phase!=='reg'&&S.po?S.po.seeds[tab]:seeds(tab);
  const nameW=W-168; // leave room for W-L-T + PF + PA columns

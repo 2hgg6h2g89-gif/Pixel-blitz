@@ -112,6 +112,27 @@ if(jr[0].long<1)fails.push('Rookie cutback return never reaches 25');
 if(report.keep.postLive!=='8/8')fails.push('Post-throw ended a live pass '+report.keep.postLive);
 if(+report.keep.latMean<1.2)fails.push('Lateral stick froze in the OL '+report.keep.latMean);
 if(report.keep.latBack>6)fails.push('Lateral stick jittered backward '+report.keep.latBack);
+const w1=api.wxFrom('wind',42),w2=api.wxFrom('wind',42);
+if(JSON.stringify(w1)!==JSON.stringify(w2)||w1.k!=='wind'||!(w1.s>0))fails.push('wxFrom unstable '+JSON.stringify(w1));
+if(api.wxFrom('clear',9).s!==0||api.wxFrom('nope',3).k!=='clear')fails.push('clear/invalid weather not calm');
+const store={};g.localStorage.getItem=k=>store[k]??null;g.localStorage.setItem=(k,v)=>{store[k]=String(v)};g.localStorage.removeItem=k=>{delete store[k]};
+fresh(1);api.wxApply({k:'rain',s:4,x:1.5,y:-0.4});api.saveMid();
+const saved=api.loadMid(false);
+if(!saved||!saved.wx||saved.wx.k!=='rain'||saved.wx.s!==4)fails.push('mid save dropped rain '+JSON.stringify(saved&&saved.wx));
+const old=JSON.parse(JSON.stringify(saved));delete old.wx;api.wxApply({k:'snow',s:3,x:2,y:1});api.resumeMid(old);
+if(!G.wx||G.wx.k!=='clear'||G.wx.s!==0)fails.push('old save without wx did not resume clear '+JSON.stringify(G.wx));
+function spot(wx){return withSeed(9,()=>{fresh(1);api.wxApply(wx);clearKeys();api.setupPlay(api.PLAYS[0]);api.snap();G.tuck=true;let n=0;while(G.st==='live'&&n<80){keys(1,1);api.update(1/60);n++}clearKeys();return G.carrier?G.carrier.y:G.los})}
+const yClear=spot({k:'clear',s:0,x:0,y:0}),yRain=spot({k:'rain',s:4,x:0,y:0});
+if(yRain>yClear+0.2)fails.push('rain traction faster than clear '+yRain+' vs '+yClear);
+function passX(wx){return withSeed(4,()=>{fresh(1);api.wxApply(wx);api.setupPlay(api.PLAYS[0]);api.snap();const w=G.players.find(p=>p.role==='WR');api.throwTo(w,false,'lob');let n=0,x=null;while(n<50){api.update(1/60);if(G.ball&&!G.ball.caught&&G.ball.t>0.25){x=G.ball.x;break}n++}return x})}
+const xClear=passX({k:'clear',s:0,x:0,y:0}),xWind=passX({k:'wind',s:8,x:8,y:0});
+if(xClear==null||xWind==null||Math.abs(xWind-xClear)<0.05)fails.push('wind did not move a live pass '+xClear+' '+xWind);
+vm.runInContext(fs.readFileSync(path.join(__dirname,'..','fg.js'),'utf8'),g,{filename:'fg.js'});
+function fgDrift(wx){fresh(1);api.wxApply(wx);g.startFG(false);G.fg.ph='acc';G.fg.pow=88;G.fg.acc=0;api.IN.taps.push(null);g.update(1/60);for(let i=0;i<40&&G.fg&&G.fg.ph==='fly';i++)g.update(1/60);return G.fgBall?G.fgBall.x:null}
+const fgC=fgDrift({k:'clear',s:0,x:0,y:0}),fgW=fgDrift({k:'wind',s:8,x:8,y:0});
+if(fgC==null||fgW==null||Math.abs(fgW-fgC)<0.02)fails.push('FG wind missing '+fgC+' '+fgW);
+report.wx={rainDelta:+(yClear-yRain).toFixed(2),passDrift:+(xWind-xClear).toFixed(2),fgDrift:+(fgW-fgC).toFixed(2),saved:saved.wx.k,old:'clear'};
+api.wxApply({k:'clear',s:0,x:0,y:0});
 console.log(JSON.stringify(report,null,2));
 if(fails.length){console.error('FAIL');fails.forEach(f=>console.error(' - '+f));process.exit(1)}
 console.log('PASS');

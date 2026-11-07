@@ -33,7 +33,7 @@ const PLAYS=[
  {n:'QB KEEPER',t:'keep',r:[['go',-1],['go',1],['block',-1]]},
  {n:'SWEEP LEFT',t:'sweep',r:[['block',-1],['block',1],['block',-1]]},
 ];
-let G={diff:1,lvl:1,clock:QLEN,aud:4,paused:false,st:'modesel',t:0,home:0,away:1,sh:0,sa:0,q:1,drive:0,maxDrives:8,los:25,down:1,togo:10,msg:'',msgT:0,sel:0,players:[],ball:null,carrier:null,stats:{py:0,ry:0,td:0,int:0,sack:0},log:[],juke:0,jcd:0,cam:0,snapT:0,shake:0,parts:[]};
+let G={diff:1,lvl:1,clock:QLEN,aud:4,paused:false,st:'modesel',t:0,home:0,away:1,sh:0,sa:0,q:1,drive:0,maxDrives:8,los:25,down:1,togo:10,msg:'',msgT:0,sel:0,players:[],ball:null,carrier:null,stats:{py:0,ry:0,td:0,int:0,sack:0},log:[],juke:0,jcd:0,cam:0,snapT:0,shake:0,parts:[],wx:{k:'clear',s:0,x:0,y:0},wxPick:'clear'};
 window.G=G;G.bulletPref=localStorage.getItem('pb_bullet')!=='0';G.adv=false;
 try{const d=parseInt(localStorage.getItem('pb_diff'),10);if(d>=0&&d<DIFFS.length)G.diff=d}catch(e){}
 function setDiff(i){i=Math.max(0,Math.min(DIFFS.length-1,i|0));G.diff=i;try{localStorage.setItem('pb_diff',String(i))}catch(e){}
@@ -46,14 +46,21 @@ function hitDiffRow(t,x,y,w,h){if(!t)return false;for(const b of diffRowGeom(x,y
 function midCareer(){const S=window.__season&&__season.get&&__season.get();return !!(G.career||(S&&S.career))}
 function midKey(c){return c?'pb_mid_career':'pb_mid_arcade'}
 function saveMid(){const S=window.__season&&__season.get&&__season.get();const c=midCareer();
- const snap={v:1,mode:c?'career':'arcade',home:G.home,away:G.away,atHome:!!G.atHome,sh:G.sh|0,sa:G.sa|0,q:G.q||1,clock:G.clock,down:G.down||1,togo:G.togo||10,los:G.los,drive:G.drive|0,diff:G.diff|0,lvl:G.lvl||1,aud:G.aud|0,stats:Object.assign({py:0,ry:0,td:0,int:0,sack:0},G.stats||{}),log:(G.log||[]).slice(0,12),two:!!G.two,season:!!G.season,kick:G.st==='patpick'?'patpick':(G.st==='fg'&&G.fg?(G.fg.pat?'pat':'fg'):'down'),week:S?S.week:null,phase:S?S.phase:null,team:S?S.team:G.home};
+ const snap={v:1,mode:c?'career':'arcade',home:G.home,away:G.away,atHome:!!G.atHome,sh:G.sh|0,sa:G.sa|0,q:G.q||1,clock:G.clock,down:G.down||1,togo:G.togo||10,los:G.los,drive:G.drive|0,diff:G.diff|0,lvl:G.lvl||1,aud:G.aud|0,stats:Object.assign({py:0,ry:0,td:0,int:0,sack:0},G.stats||{}),log:(G.log||[]).slice(0,12),two:!!G.two,season:!!G.season,kick:G.st==='patpick'?'patpick':(G.st==='fg'&&G.fg?(G.fg.pat?'pat':'fg'):'down'),week:S?S.week:null,phase:S?S.phase:null,team:S?S.team:G.home,wx:G.wx?{k:G.wx.k,s:G.wx.s,x:G.wx.x,y:G.wx.y}:null};
  try{localStorage.setItem(midKey(c),JSON.stringify(snap));G.midNote='SAVED'}catch(e){G.midNote='NO SAVE'}}
 function loadMid(c){try{return JSON.parse(localStorage.getItem(midKey(!!c))||'null')}catch(e){return null}}
 function clearMid(c){try{localStorage.removeItem(midKey(!!c))}catch(e){}}
 function midForHub(c){const snap=loadMid(!!c);if(!snap||snap.v!==1)return null;const S=window.__season&&__season.get&&__season.get();if(!S||!!S.career!==!!c)return null;if(Number(snap.team)!==Number(S.team))return null;if(snap.week!==S.week||snap.phase!==S.phase)return null;return snap}
 function resumeMid(snap){if(!snap)return false;G.season=!!snap.season;G.career=snap.mode==='career';G.home=snap.home|0;G.away=snap.away|0;G.atHome=!!snap.atHome;setDiff(snap.diff|0);G.lvl=snap.lvl||1;
  Object.assign(G,{sh:snap.sh|0,sa:snap.sa|0,q:snap.q||1,clock:snap.clock,down:snap.down||1,togo:snap.togo||10,los:+snap.los||25,drive:snap.drive|0,aud:snap.aud!=null?snap.aud:4,log:snap.log||[],stats:Object.assign({py:0,ry:0,td:0,int:0,sack:0},snap.stats||{}),two:!!snap.two,fgDone:false,paused:false,fg:null,fgBall:null,ball:null,carrier:null,players:[],msg:'',msgT:0,banner:null,midNote:'',read:0,_rk:null});
- if(snap.kick==='pat'){startFG(true);return true}if(snap.kick==='fg'){startFG(false);return true}if(snap.kick==='patpick'){G.st='patpick';return true}autoPick();return true}
+ wxApply(snap.wx);if(snap.kick==='pat'){startFG(true);return true}if(snap.kick==='fg'){startFG(false);return true}if(snap.kick==='patpick'){G.st='patpick';return true}autoPick();return true}
+const WXKIND=['clear','rain','snow','wind'];
+function wxFrom(kind,seed){kind=WXKIND.includes(kind)?kind:'clear';let s=seed>>>0||1;const rnd=()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296};const base=kind==='wind'?7:kind==='rain'?3:kind==='snow'?2:0;const mph=kind==='clear'?0:base+Math.floor(rnd()*3);const a=rnd()*Math.PI*2;return {k:kind,s:mph,x:+(Math.cos(a)*mph).toFixed(2),y:+(Math.sin(a)*mph).toFixed(2)}}
+function wxApply(o){if(!o||!WXKIND.includes(o.k)){G.wx={k:'clear',s:0,x:0,y:0};return G.wx}G.wx={k:o.k,s:+o.s||0,x:+o.x||0,y:+o.y||0};return G.wx}
+function wxKey(){const S=window.__season&&__season.get&&__season.get();if(!S)return 'arcade';return (S.phase||'reg')+':'+(S.week|0)+':'+(S.po?S.po.round|0:0)}
+function wxLock(){const S=window.__season&&__season.get&&__season.get();const key=wxKey();if(S){if(!S.wx||S.wx.key!==key){const kind=S.career?WXKIND[((S.week|0)*3+(S.team|0))%4]:(G.wxPick||'clear');S.wx=Object.assign({key},wxFrom(kind,(S.week|0)*97+(S.team|0)*13+1));if(window.__season.save)__season.save()}wxApply(S.wx)}else wxApply(wxFrom(G.wxPick||'clear',7));return G.wx}
+function wxSet(kind){if(!WXKIND.includes(kind))return G.wx;G.wxPick=kind;const S=window.__season&&__season.get&&__season.get();if(S){S.wx=Object.assign({key:wxKey()},wxFrom(kind,(S.week|0)*97+(S.team|0)*13+1));if(window.__season.save)__season.save();wxApply(S.wx)}else wxApply(wxFrom(kind,7));return G.wx}
+window.wxLock=wxLock;window.wxSet=wxSet;window.wxApply=wxApply;window.WXKIND=WXKIND;
 function pauseGeom(){const x=32,w=W-64;return{diff:{x:28,y:206,w:W-56,h:36},resume:{x,y:258,w,h:48},save:{x,y:316,w,h:48},quit:{x,y:374,w,h:48}}}
 function hitBox(t,b){return t&&b&&t[0]>=b.x&&t[0]<=b.x+b.w&&t[1]>=b.y&&t[1]<=b.y+b.h}
 window.setDiff=setDiff;window.drawDiffRow=drawDiffRow;window.hitDiffRow=hitDiffRow;window.saveMid=saveMid;window.clearMid=clearMid;window.midForHub=midForHub;window.resumeMid=resumeMid;
@@ -522,7 +529,7 @@ function update(dt){
  // Untucked pocket is a jog. Tuck is the RB-carry sprint. Ratio stays obvious behind the LOS.
  const SPD_POCKET=4.4,SPD_TUCK=9.05,SPD_RUN=8.2;
  const qbPocket=cur.role==='QB'&&passerPhase()&&!G.tuck&&!G.thrown;
- let sp=(qbPocket?SPD_POCKET:qbBurst?SPD_TUCK:SPD_RUN)*(G.slow>0?0.7:1);if(G.juke>PUR.jukeT)sp*=PUR.juke;if(G.play.t==='ko'&&cur.catchT>0)sp*=0.62;
+ let sp=(qbPocket?SPD_POCKET:qbBurst?SPD_TUCK:SPD_RUN)*(G.slow>0?0.7:1);if(G.wx&&G.wx.k==='rain')sp*=0.96;else if(G.wx&&G.wx.k==='snow')sp*=0.94;if(G.juke>PUR.jukeT)sp*=PUR.juke;if(G.play.t==='ko'&&cur.catchT>0)sp*=0.62;
  const thrownQ=G.thrown&&cur===G.qb&&!(G.ball&&G.ball.caught);
  if(cur.slide>0){cur.slide-=dt;cur.vx*=0.88;cur.vy=Math.max(2.05,Math.abs(cur.vy)*0.955);if(((G.snapT*60)|0)%3===0)dust(cur.x,cur.y,2);if(cur.slide<=0){cur.fallen=0.35;cur.vx*=0.2;cur.slide=0;if(qbIgnored()){}else if(cur.y>=100){endPlay('td',100);return}else{endPlay('tackle',cur.y);return}}}
  else if(thrownQ){cur.vx*=0.8;cur.vy*=0.8}
@@ -574,7 +581,7 @@ function update(dt){
   const rel=(a.vx-b.vx)*ux+(a.vy-b.vy)*uy;if(rel<0){const c=-rel*0.5;a.vx+=ux*c*(wa/s);a.vy+=uy*c*(wa/s);b.vx-=ux*c*(wb/s);b.vy-=uy*c*(wb/s)}}
  ownGap();krHold();if(!G.play||G.play.t!=='ko')preserveStick(G.carrier);
  // ball flight
- if(G.ball&&!G.ball.caught){const b=G.ball;b.t+=dt;(G.trail=G.trail||[]).push([b.x,b.y,b.z,b.t,b.T,b.h0||1.6]);if(G.trail.length>16)G.trail.shift();if(G.assist&&b.tgt===G.assist&&b.t>b.T*0.35&&Math.hypot(b.tgt.x-b.tx,b.tgt.y-b.ty)<4){const w=b.tgt,a=Math.min(1,dt*(b.tt==='bullet'?2.5:1.6));b.tx+=(cl(w.x,1.5,FIELDW-1.5)-b.tx)*a;b.ty+=(Math.min(w.y,108.5)-b.ty)*a}{const k0=b.t/b.T;if(k0>0.8&&!b.dv&&G.play.t!=='ko'){for(const q of P)if(q.team===0&&(q.role==='WR'||q.role==='RB')&&!(q.fallen>0)&&(!b.tgt||q===b.tgt)){const d=Math.hypot(q.x-b.tx,q.y-b.ty);if(d>2.4&&d<4.8){b.dv=q;q.dive=0.45;const u=1/d;q.vx=(b.tx-q.x)*u*12;q.vy=(b.ty-q.y)*u*12;dust(q.x,q.y,8);break}}}}const k=Math.min(1,b.t/b.T);b.x=b.x0+(b.tx-b.x0)*k;b.y=b.y0+(b.ty-b.y0)*k;b.z=Math.sin(k*Math.PI)*b.h;
+ if(G.ball&&!G.ball.caught){const b=G.ball;b.t+=dt;(G.trail=G.trail||[]).push([b.x,b.y,b.z,b.t,b.T,b.h0||1.6]);if(G.trail.length>16)G.trail.shift();if(G.assist&&b.tgt===G.assist&&b.t>b.T*0.35&&Math.hypot(b.tgt.x-b.tx,b.tgt.y-b.ty)<4){const w=b.tgt,a=Math.min(1,dt*(b.tt==='bullet'?2.5:1.6));b.tx+=(cl(w.x,1.5,FIELDW-1.5)-b.tx)*a;b.ty+=(Math.min(w.y,108.5)-b.ty)*a}{const k0=b.t/b.T;if(k0>0.8&&!b.dv&&G.play.t!=='ko'){for(const q of P)if(q.team===0&&(q.role==='WR'||q.role==='RB')&&!(q.fallen>0)&&(!b.tgt||q===b.tgt)){const d=Math.hypot(q.x-b.tx,q.y-b.ty);if(d>2.4&&d<4.8){b.dv=q;q.dive=0.45;const u=1/d;q.vx=(b.tx-q.x)*u*12;q.vy=(b.ty-q.y)*u*12;dust(q.x,q.y,8);break}}}}const k=Math.min(1,b.t/b.T);b.x=b.x0+(b.tx-b.x0)*k;b.y=b.y0+(b.ty-b.y0)*k;b.z=Math.sin(k*Math.PI)*b.h;if(G.wx&&G.wx.s&&G.st==='live')b.x=cl(b.x+G.wx.x*Math.min(b.t,1.2)*0.045,0.4,FIELDW-0.4);
   if(G.play.t==='ko'&&k>0.7&&G.carrier&&Math.hypot(G.carrier.x-b.tx,G.carrier.y-b.ty)<3.5)G.carrier.reach=Math.max(G.carrier.reach||0,0.55);
   if(k>0.8&&!b.cst&&G.play.t!=='ko'){const nr=P.filter(q=>!(q.fallen>0)&&q!==G.qb&&q.role!=='OL'&&q.role!=='DL'&&Math.hypot(q.x-b.tx,q.y-b.ty)<2.6);if(nr.length){b.cst=true;nr.forEach(q=>{q.reach=0.45});if(nr.some(q=>q.team===0)&&nr.some(q=>q.team===1)){G.tsT=0.35;say('CONTESTED!',0.6)}}}
   if(k>=1&&b.tip){const near=P.filter(q=>!(q.fallen>0)&&q!==G.qb&&q.role!=='K'&&Math.hypot(q.x-b.x,q.y-b.y)<1.7);const o=near.filter(q=>q.team===0),d=near.filter(q=>q.team===1);const r=Math.random();let who=null;
@@ -666,7 +673,7 @@ function defend(d,dt){if(d.dive>0)return;
   const px=G.pocketX!=null?G.pocketX:FIELDW/2;
   const escaping=c&&c.team===0&&c.role==='QB'&&!G.thrown&&(Math.abs(c.x-px)>3.6||(G.tuck&&Math.abs(c.vx)>1.8));
   const edge=isEdge(d),onSide=!!(c&&((d.x-px)*(c.x-px)>0.2||Math.abs(c.x-px)<1.4));
-  if(edge&&escaping&&onSide&&d._edgeAt==null)d._edgeAt=G.snapT+ai.see*0.9;
+  if(edge&&escaping&&onSide&&d._edgeAt==null)d._edgeAt=G.snapT+ai.see*0.62;
   const know=!(edge&&escaping)||G.snapT>=(d._edgeAt||0);
   let shedAt=d.shedT;if(edge&&escaping&&onSide&&know)shedAt*=(1.05-0.42*ai.edge);
   if(G.snapT>shedAt||(c&&c!==G.qb&&G.snapT>d.shedT*0.7)){d.shed=true;d.eng=false;d.vx+=(d.x<(d.blk?d.blk.x:d.x)?-1:1)*2.2}
@@ -980,4 +987,4 @@ window.__frame=frameStep;
 function loop(n){const dt=Math.min(0.1,(n-last)/1000);last=n;if(!window.__hold){frameStep(dt)}else{window.__fdt=undefined;if(window.R3D)window.R3D();render()}requestAnimationFrame(loop)}requestAnimationFrame(loop);
 if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 window.__step=(s,n=1)=>{for(let i=0;i<n;i++)update(s);if(window.R3D)window.R3D();render()};
-window.__api={setupPlay,snap,startKickoff,throwTo,handoff,simCpuDrive,DIFFS,PLAYS,FIELDW,IN,KEYS,update,AI};
+window.__api={setupPlay,snap,startKickoff,throwTo,handoff,simCpuDrive,DIFFS,PLAYS,FIELDW,IN,KEYS,update,AI,wxApply,wxFrom,wxSet,saveMid,loadMid,resumeMid};
