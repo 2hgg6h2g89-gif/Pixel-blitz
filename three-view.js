@@ -119,7 +119,7 @@ function paintWall(){wallTex=cvs(512,64,(g,w,h)=>{const gr=g.createLinearGradien
  g.fillStyle='rgba(255,255,255,.12)';for(let x=0;x<w;x+=32){g.beginPath();g.moveTo(x,h);g.lineTo(x+16,0);g.lineTo(x+24,0);g.lineTo(x+8,h);g.fill()}
  if(window.pxText){pxText(g,'PIXEL BLITZ',w*.3,h/2,4,'#fff',{al:'center',out:'#140818',sk:0.08});pxText(g,home().a||home().nick,w*.78,h/2,4,'#fff',{al:'center',out:'#140818',sk:0.08})}g.fillStyle='#fff';g.fillRect(0,0,w,3)});
  ledTex=cvs(1024,32,(g,w,h)=>{const segs=[[home().c1,'GO '+home().a],['#0c1020','PIXEL BLITZ'],[away().c1,away().a],['#ffd23f','NOISE'],[home().c2,'BLITZ']];const sw=w/segs.length;
-  segs.forEach((s,i)=>{g.fillStyle=s[0];g.fillRect(i*sw,0,sw,h);const lum=parseInt(String(s[0]).replace('#','').slice(0,2),16)*.3+parseInt(String(s[0]).replace('#','').slice(2,4),16)*.59+parseInt(String(s[0]).replace('#','').slice(4,6),16)*.11;const ink=lum>150?'#141a3a':'#fff';if(window.pxText)pxText(g,String(s[1]),i*sw+sw/2,h/2,3,ink,{al:'center',out:ink==='#fff'?'#140818':null,sk:0.06})});
+  segs.forEach((s,i)=>{g.fillStyle=s[0];g.fillRect(i*sw,0,sw,h);const lum=parseInt(String(s[0]).replace('#','').slice(0,2),16)*.3+parseInt(String(s[0]).replace('#','').slice(2,4),16)*.59+parseInt(String(s[0]).replace('#','').slice(4,6),16)*.11;const ink=lum>150?'#141a3a':'#fff';const lab=String(s[1]);if(window.pxText)pxText(g,lab,i*sw+sw/2,h/2,lab.length>8?2:3,ink,{al:'center',out:ink==='#fff'?'#140818':null,sk:0.06})});
   g.fillStyle='rgba(0,0,0,.25)';for(let x=0;x<w;x+=3)g.fillRect(x,0,1,h)})}
 paintWall();
 const wallMat=new THREE.MeshBasicMaterial({map:wallTex});ringWall(-0.3,0,2.2,wallMat,24);
