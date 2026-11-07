@@ -301,25 +301,25 @@ function bar(parent,w,h,d,x,y,z,rx){const m=new THREE.Mesh(new THREE.BoxGeometry
 function makeBody(){
  const g=new THREE.Group(),pivot=new THREE.Group();g.add(pivot);
  const hips=new THREE.Group();hips.position.y=0.82;pivot.add(hips);
- const hip=new THREE.Mesh(new THREE.SphereGeometry(0.16,8,6),new THREE.MeshLambertMaterial({color:'#222'}));hip.scale.set(1.2,0.7,0.95);hips.add(hip);
- const torso=new THREE.Group();torso.position.y=0.16;hips.add(torso);
- const chest=new THREE.Mesh(new THREE.SphereGeometry(0.26,10,8),new THREE.MeshLambertMaterial({color:'#888'}));chest.scale.set(1.2,0.82,0.78);chest.position.y=0.28;torso.add(chest);
- const waist=new THREE.Mesh(new THREE.SphereGeometry(0.15,8,6),new THREE.MeshLambertMaterial({color:'#666'}));waist.scale.set(1.05,0.72,0.82);waist.position.y=0.06;torso.add(waist);
- const yoke=new THREE.Mesh(new THREE.SphereGeometry(0.12,8,6),new THREE.MeshLambertMaterial({color:'#999'}));yoke.scale.set(1.7,0.45,1.05);yoke.position.y=0.4;torso.add(yoke);
- const padL=new THREE.Mesh(new THREE.SphereGeometry(0.13,8,6),new THREE.MeshLambertMaterial({color:'#aaa'}));padL.scale.set(1.35,0.62,1.05);padL.position.set(-0.32,0.42,0.02);torso.add(padL);
- const padR=new THREE.Mesh(new THREE.SphereGeometry(0.13,8,6),new THREE.MeshLambertMaterial({color:'#aaa'}));padR.scale.set(1.35,0.62,1.05);padR.position.set(0.32,0.42,0.02);torso.add(padR);
- const helmG=new THREE.Group();helmG.position.y=0.64;torso.add(helmG);
- const helm=new THREE.Mesh(new THREE.SphereGeometry(0.17,12,10),new THREE.MeshLambertMaterial({color:'#ddd'}));helm.scale.set(1.05,0.92,1.16);helmG.add(helm);
- const stripe=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.025,0.3),new THREE.MeshLambertMaterial({color:'#fff'}));stripe.position.set(0,0.145,-0.02);helmG.add(stripe);
- bar(helmG,0.3,0.045,0.05,0,-0.04,0.26);bar(helmG,0.28,0.04,0.05,0,0.03,0.27);bar(helmG,0.24,0.035,0.045,0,0.09,0.25);bar(helmG,0.05,0.22,0.05,-0.12,0.02,0.25);bar(helmG,0.04,0.2,0.045,0,0.02,0.27);bar(helmG,0.05,0.22,0.05,0.12,0.02,0.25);
- const thighL=limb(hips,0,0.4,0.13,'#333');thighL.position.x=-0.11;
- const thighR=limb(hips,0,0.4,0.13,'#333');thighR.position.x=0.11;
- const shinL=limb(thighL,-0.4,0.36,0.1,'#333');const shinR=limb(thighR,-0.4,0.36,0.1,'#333');
+ const hip=new THREE.Mesh(new THREE.SphereGeometry(0.14,8,6),new THREE.MeshLambertMaterial({color:'#222'}));hip.scale.set(1.15,0.72,0.9);hips.add(hip);
+ const torso=new THREE.Group();torso.position.y=0.12;hips.add(torso);
+ const chest=new THREE.Mesh(new THREE.LatheGeometry([new THREE.Vector2(0.11,0),new THREE.Vector2(0.15,0.08),new THREE.Vector2(0.2,0.2),new THREE.Vector2(0.25,0.34),new THREE.Vector2(0.18,0.42)],10),new THREE.MeshLambertMaterial({color:'#888'}));chest.position.y=0;torso.add(chest);
+ const waist=chest;
+ const yoke=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.06,0.2),new THREE.MeshLambertMaterial({color:'#999'}));yoke.position.y=0.36;torso.add(yoke);
+ const padL=new THREE.Mesh(new THREE.BoxGeometry(0.26,0.07,0.2),new THREE.MeshLambertMaterial({color:'#aaa'}));padL.position.set(-0.2,0.38,0.02);padL.rotation.z=0.42;torso.add(padL);
+ const padR=new THREE.Mesh(new THREE.BoxGeometry(0.26,0.07,0.2),new THREE.MeshLambertMaterial({color:'#aaa'}));padR.position.set(0.2,0.38,0.02);padR.rotation.z=-0.42;torso.add(padR);
+ const helmG=new THREE.Group();helmG.position.y=0.58;torso.add(helmG);
+ const helm=new THREE.Mesh(new THREE.SphereGeometry(0.16,12,10),new THREE.MeshLambertMaterial({color:'#ddd'}));helm.scale.set(1.08,0.9,1.2);helmG.add(helm);
+ const stripe=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.02,0.28),new THREE.MeshLambertMaterial({color:'#fff'}));stripe.position.set(0,0.14,-0.01);helmG.add(stripe);
+ bar(helmG,0.26,0.035,0.04,0,-0.03,0.22);bar(helmG,0.24,0.03,0.035,0,0.03,0.23);bar(helmG,0.035,0.14,0.035,-0.09,0,0.22);bar(helmG,0.03,0.12,0.03,0,0,0.235);bar(helmG,0.035,0.14,0.035,0.09,0,0.22);
+ const thighL=limb(hips,0,0.38,0.16,'#333');thighL.position.x=-0.1;
+ const thighR=limb(hips,0,0.38,0.16,'#333');thighR.position.x=0.1;
+ const shinL=limb(thighL,-0.38,0.34,0.12,'#333');const shinR=limb(thighR,-0.38,0.34,0.12,'#333');
  const footL=new THREE.Mesh(new THREE.SphereGeometry(0.07,6,5),SHOEMAT);footL.scale.set(0.85,0.5,1.55);footL.position.set(0,-0.34,0.05);shinL.add(footL);
  const footR=new THREE.Mesh(new THREE.SphereGeometry(0.07,6,5),SHOEMAT);footR.scale.set(0.85,0.5,1.55);footR.position.set(0,-0.34,0.05);shinR.add(footR);
- const armL=limb(torso,0.4,0.3,0.09,'#c08a5e');armL.position.x=-0.24;
- const armR=limb(torso,0.4,0.3,0.09,'#c08a5e');armR.position.x=0.24;
- const foreL=limb(armL,-0.3,0.26,0.075,'#c08a5e');const foreR=limb(armR,-0.3,0.26,0.075,'#c08a5e');
+ const armL=limb(torso,0.36,0.28,0.11,'#c08a5e');armL.position.x=-0.22;
+ const armR=limb(torso,0.36,0.28,0.11,'#c08a5e');armR.position.x=0.22;
+ const foreL=limb(armL,-0.28,0.24,0.09,'#c08a5e');const foreR=limb(armR,-0.28,0.24,0.09,'#c08a5e');
  const skinM=new THREE.MeshLambertMaterial({color:'#c08a5e'});
  const handL=new THREE.Mesh(new THREE.SphereGeometry(0.05,6,5),skinM);handL.position.y=-0.28;foreL.add(handL);
  const handR=new THREE.Mesh(new THREE.SphereGeometry(0.05,6,5),skinM);handR.position.y=-0.28;foreR.add(handR);
@@ -476,7 +476,7 @@ const wxDrop=[];
 for(let i=0;i<WXN;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.55,0.04),wxMat);m.position.set((Math.random()-.5)*14,(Math.random()-.5)*8,(Math.random()-.5)*6);wxGrp.add(m);wxDrop.push(m)}
 window.__wxVis=function(dt){const k=G.wx&&G.wx.k,on=k==='rain'||k==='snow';wxGrp.visible=!!on;if(!on){if(wxGrp.userData.on){scene.fog.color.set(0xc5e2fb);HEMI.intensity=2.35;wxGrp.userData.on=0}return}wxGrp.userData.on=1;const snow=k==='snow';scene.fog.color.set(snow?0xd7e2ee:0x9aafc4);HEMI.intensity=snow?2.15:1.7;cam.getWorldDirection(wxDir);wxGrp.position.copy(cam.position).addScaledVector(wxDir,16);wxGrp.quaternion.copy(cam.quaternion);const fall=(snow?1.4:8)*dt,drift=(G.wx.x||0)*0.05*dt;wxMat.opacity=snow?0.75:0.45;wxMat.color.set(snow?0xffffff:0xd5e8ff);for(const m of wxDrop){m.scale.set(snow?3.2:1,snow?0.28:1,snow?3.2:1);m.position.y-=fall;m.position.x+=drift;if(m.position.y<-4.5){m.position.y=4+Math.random()*2;m.position.x=(Math.random()-.5)*14;m.position.z=(Math.random()-.5)*6}}};
 function trailMode(){
- const st=G.st;if(st==='fg'||st==='patpick')return null;
+ const st=G.st;if(st==='fg'||st==='patpick')return 'fg';
  if(st==='replay')return'replay';if(st==='presnap')return'pre';
  if(st!=='live'&&st!=='result')return null;
  const b=G.ball,ko=G.play&&G.play.t==='ko';
@@ -491,18 +491,31 @@ function trailCam(dt,mode){
  let fx=sub?sub.x:FW/2,fy=sub?sub.y:(G.los||25);
  if(mode==='pre'){fx=G.qb?G.qb.x:FW/2;fy=G.qb?G.qb.y:(G.los||25)}
  else if(mode==='pass'&&b){fx=b.x*0.55+(c?c.x:b.x)*0.45;fy=b.y*0.62+(c?c.y:b.y)*0.38}
- else if(mode==='kick'&&b){fx=b.x;fy=b.y}
+ else if(mode==='kick'&&b){const cy=c?c.y:b.y,cx=c?c.x:b.x;fx=(cx+b.x)*0.5;fy=(cy+b.y)*0.5}
  const V=cam._tv||(cam._tv={fx:0,fy:0,bk:0});
  const jump=camFy===undefined||cam._tm&&cam._tm!==mode&&(mode==='pre'||cam._tm==='pre');
  if(jump){camFy=fy;camX=fx;V.fx=V.fy=0}else{camFy=sdamp(camFy,fy,V,'fy',mode==='run'?0.28:0.4,dt);camX=sdamp(camX,fx,V,'fx',0.32,dt)}
  camX=_cl(camX,5,FW-5);
  cam._tm=mode;
+ if(mode==='kick'||mode==='fg'){
+  let rear=fy,far=fy+14;
+  if(mode==='kick'&&b){rear=Math.min(c?c.y:b.y,b.y);far=Math.max(c?c.y:b.y,b.y);fx=c?c.x:b.x}
+  if(mode==='fg'){rear=(G.los||80)-10;far=112;fx=FW/2}
+  const span=Math.max(10,far-rear),bk=mode==='fg'?24:18,ahead=mode==='kick'?9:Math.min(28,span*0.5);
+  const fov=mode==='fg'?52:58;
+  if(Math.abs(cam.fov-fov)>0.3){cam.fov=fov;cam.updateProjectionMatrix()}
+  camFy=rear;camX=_cl(fx,5,FW-5);cam._bk=bk;
+  const cx=Xw(camX),eye=mode==='fg'?11:12;
+  cam.position.set(cx,eye,Z(rear-bk));
+  clook.set(cx,mode==='fg'?3.2:2.4,Z(rear+ahead));
+  cam.lookAt(clook);cam.updateMatrixWorld();
+  cpos.copy(cam.position);SPKT=1;cam._scram=0;return}
  const fov=mode==='pre'||mode==='drop'?84:mode==='kick'?56:mode==='pass'?60:56;
  if(Math.abs(cam.fov-fov)>0.3){cam.fov=fov;cam.updateProjectionMatrix()}
  const ahead=mode==='pass'?8:mode==='drop'?6:mode==='kick'?8:2.2;
  let back=cam._bk||16;
  function pose(bk){const cx=Xw(camX),eye=6.4+bk*0.06;cam.position.set(cx,eye,Z(camFy-bk));clook.set(cx*0.35+Xw(fx)*0.65,1.15,Z(camFy+ahead));cam.lookAt(clook);cam.updateMatrixWorld()}
- function score(bk){pose(bk);const hd=ndcOf(fx,fy,2.05),ft=ndcOf(fx,fy,0.02);if(hd.z>=1||ft.z>=1)return 1e9;let s=0;if(hd.y>0.48)s+=(hd.y-0.48)*4;if(hd.y<0.16)s+=(0.16-hd.y)*8;if(ft.y<-0.22)s+=(-0.22-ft.y)*12;if(ft.y>-0.02)s+=(ft.y+0.02)*4;const span=hd.y-ft.y;const want=mode==='pre'||mode==='drop'?0.14:0.3;if(span<want)s+=(want-span)*8;if(span>0.5)s+=(span-0.5)*4;if(mode==='pre'||mode==='drop'){for(const p of (G.players||[]))if(!p.team&&(p.role==='WR'||p.role==='QB'||p.role==='RB')){const n=ndcOf(p.x,p.y,1.5);if(Math.abs(n.x)>0.92)s+=(Math.abs(n.x)-0.92)*18}}if(mode==='run'||mode==='drop'){for(const p of (G.players||[]))if(Math.hypot(p.x-fx,p.y-fy)<7){const n=ndcOf(p.x,p.y,0.05);if(n.z<1&&n.y<-0.34)s+=(-0.34-n.y)*8}}return s}
+ function score(bk){pose(bk);const hd=ndcOf(fx,fy,2.05),ft=ndcOf(fx,fy,0.02);if(hd.z>=1||ft.z>=1)return 1e9;let s=0;const top=window.safeTop?safeTop():0,bot=window.safeBottom?safeBottom():0,headLim=1-2*(top+96)/H,feetLim=1-2*(H-bot-200)/H;if(hd.y>headLim)s+=(hd.y-headLim)*16;if(ft.y<feetLim)s+=(feetLim-ft.y)*16;if(hd.y>0.48)s+=(hd.y-0.48)*4;if(hd.y<0.16)s+=(0.16-hd.y)*8;if(ft.y<-0.22)s+=(-0.22-ft.y)*12;if(ft.y>-0.02)s+=(ft.y+0.02)*4;const span=hd.y-ft.y;const want=mode==='pre'||mode==='drop'?0.14:0.3;if(span<want)s+=(want-span)*8;if(span>0.5)s+=(span-0.5)*4;if(mode==='pre'||mode==='drop'){for(const p of (G.players||[]))if(!p.team&&(p.role==='WR'||p.role==='QB'||p.role==='RB')){const n=ndcOf(p.x,p.y,1.5);if(Math.abs(n.x)>0.92)s+=(Math.abs(n.x)-0.92)*18}}if(mode==='run'||mode==='drop'){for(const p of (G.players||[]))if(Math.hypot(p.x-fx,p.y-fy)<7){const n=ndcOf(p.x,p.y,0.05);if(n.z<1&&n.y<-0.34)s+=(-0.34-n.y)*8}}return s}
  let fit=16,bs=1e9;const blo=mode==='pre'||mode==='drop'?10:11;for(let bk=blo;bk<=30;bk+=0.6){const s=score(bk);if(s<bs){bs=s;fit=bk}}
  if(jump){back=fit;V.bk=0}else back=sdamp(back,fit,V,'bk',0.45,dt);
  cam._bk=back;pose(back);cpos.copy(cam.position);SPKT=1;cam._scram=mode==='run'?1:0}

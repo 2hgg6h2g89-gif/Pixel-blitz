@@ -1,17 +1,20 @@
 'use strict';
 const C=document.getElementById('c'),X=C.getContext('2d');const DPR=Math.min(3,window.devicePixelRatio||1);C.width=390*DPR;C.height=844*DPR;X.imageSmoothingEnabled=false;
 const W=390,H=844,PPY=7.3; // px per yard
-// Canvas HUD ignores CSS. When the home indicator is present, lift only the
-// bottom controls a hair (12–24 canvas px). Top inset stays in CSS (pb-v57).
-let _sb=null;
-function safeBottom(){
- if(_sb!=null)return _sb;
+// The picture fills the phone. Safe insets only move the HUD and the camera
+// band, so the notch and home indicator do not cover buttons or the carrier.
+function readInset(side){
+ if(side==='top'&&window.__safeTop!=null)return window.__safeTop|0;
+ if(side==='bot'&&window.__safeBottom!=null)return window.__safeBottom|0;
  const rh=C.getBoundingClientRect().height;
  if(!(rh>1))return 0;
  let css=0;
- try{const d=document.createElement('div');d.style.cssText='position:fixed;bottom:0;width:0;height:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none';document.body.appendChild(d);css=d.getBoundingClientRect().height||0;d.remove()}catch(e){}
- _sb=css>0?Math.round(Math.min(24,Math.max(12,css*(H/rh)))):0;
- return _sb}
+ try{const d=document.createElement('div');d.style.cssText='position:fixed;'+(side==='top'?'top:0;height:env(safe-area-inset-top,0px)':'bottom:0;height:env(safe-area-inset-bottom,0px)')+';width:0;visibility:hidden;pointer-events:none';document.body.appendChild(d);css=d.getBoundingClientRect().height||0;d.remove()}catch(e){}
+ return css>0?Math.round(Math.min(64,css*(H/rh))):0}
+let _sb=null,_st=null;
+function safeBottom(){if(window.__safeBottom!=null)return window.__safeBottom|0;if(_sb==null)_sb=readInset('bot');return _sb}
+function safeTop(){if(window.__safeTop!=null)return window.__safeTop|0;if(_st==null)_st=readInset('top');return _st}
+window.safeBottom=safeBottom;window.safeTop=safeTop;
 const FIELDW=53.3;
 const TEAMS=[
  {n:'NEON COYOTES',a:'NCY',c1:'#e8344e',c2:'#ffd23f',h:'#ffd23f',p:'#f4f0e6'},

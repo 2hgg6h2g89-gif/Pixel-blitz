@@ -122,8 +122,8 @@ function momentum(){const b=G.banner;if(b&&b!==lastB){lastB=b;const s=(b.t+' '+b
  mom*=0.9995;mom=Math.max(-1,Math.min(1,mom));return mom}
 window.__mom=()=>mom;
 let dispL=0.5,dispR=0.5,dmgL=0.5,dmgR=0.5;
-drawHUD2=function(){const h=TEAMS[G.home],a=TEAMS[G.away];gear(26,28);const m=momentum();
- const y=48,bh=36,x=50,w=W-58;
+drawHUD2=function(){const h=TEAMS[G.home],a=TEAMS[G.away];const top=typeof safeTop==='function'?safeTop():0;gear(26,Math.max(28,top+14));const m=momentum();
+ const y=Math.max(48,top+18),bh=36,x=50,w=W-58;
  X.save();X.beginPath();X.roundRect(x,y,w,bh,7);X.fillStyle='rgba(8,12,20,.68)';X.fill();X.lineWidth=1.5;X.strokeStyle='rgba(255,255,255,.22)';X.stroke();
  X.fillStyle=h.c1;X.fillRect(x+7,y+7,6,bh-14);arcTxt(h.a,x+18,y+12,11,['#fff','#e7eef8'],{al:'left',sk:0.06,rim:false,px:true});arcTxt(String(G.sh),x+18,y+26,15,['#fff','#fff'],{al:'left',sk:0.05,rim:false,px:true});
  arcTxt('Q'+G.q+'  '+fmtClock(G.clock),x+w/2,y+12,12,['#fff','#d7e6ff'],{sk:0.05,rim:false,px:true});
