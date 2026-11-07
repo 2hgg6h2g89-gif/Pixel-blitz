@@ -23,14 +23,19 @@ function clearKeys(){const K=api.KEYS;K.ArrowLeft=K.ArrowRight=K.ArrowUp=K.Arrow
 function qbRun(diff,side,seed){return withSeed(seed,()=>{fresh(diff);clearKeys();api.setupPlay(api.PLAYS[0]);api.snap();G.tuck=true;const y0=G.los;let n=0;while(G.st==='live'&&n<900){keys(n<28?side:side,1);api.update(1/60);n++}clearKeys();const r=yardsOf(y0);r.n=n;r.x=G.carrier?+G.carrier.x.toFixed(1):0;return r})}
 function kickRet(diff,side,seed){return withSeed(seed,()=>{fresh(diff);clearKeys();api.startKickoff();let caught=null,n=0,drop=0;while(G.st==='live'&&n<1100){const air=G.ball&&!G.ball.caught;if(!air&&caught==null)caught=G.carrier?G.carrier.y:G.los;keys(air?0:side,1);api.update(1/60);n++;if(G.banner&&/DROPPED/.test(G.banner.t||''))drop=1}clearKeys();const end=G.banner&&/TOUCHDOWN/.test(G.banner.t||'')?100:(G.los||(caught||0));return{y:drop?0:end-(caught==null?0:caught),td:G.banner&&/TOUCHDOWN/.test(G.banner.t||'')?1:0,drop,caught:caught==null?null:+caught.toFixed(1),n}})}
 function insideRun(diff,seed){return withSeed(seed,()=>{fresh(diff);clearKeys();api.setupPlay(api.PLAYS[3]);api.snap();const y0=G.los;let n=0;while(G.st==='live'&&n<700){keys(0,1);api.update(1/60);n++}clearKeys();return yardsOf(y0)})}
-function quickPass(diff,seed){return withSeed(seed,()=>{fresh(diff);api.setupPlay(api.PLAYS[0]);api.snap();let n=0,threw=0;while(G.st==='live'&&n<700){api.IN.jx=0;api.IN.jy=0;if(!threw&&n>40){const w=G.players.find(p=>p.role==='WR');api.throwTo(w,false,'bullet');threw=1}api.update(1/60);n++}const t=(G.banner&&G.banner.t)||'';const comp=/CAUGHT|TOUCHDOWN|\+/.test(t)||(G.stats.py>0);const sack=/SACK/.test(t);const inc=/INCOMPLETE|OUT OF BOUNDS|BROKEN|DROP|REACH/.test(t);const pick=/INTERCEPT|PICK/.test(t);return{comp:comp&&!inc&&!pick?1:0,sack:sack?1:0,inc:inc?1:0,pick:pick?1:0,t}})}
+function calledRun(diff,seed){return withSeed(seed,()=>{fresh(diff);clearKeys();const kind=seed%3;api.setupPlay(api.PLAYS[kind===0?3:kind===1?5:4]);api.snap();if(api.PLAYS[kind===0?3:kind===1?5:4].t==='keep')G.tuck=true;const y0=G.los;let n=0;const side=kind===1?-1:kind===2?1:0;while(G.st==='live'&&n<700){if(kind===2&&n===36)api.IN.jk=1;keys(side,1);api.update(1/60);n++}clearKeys();return yardsOf(y0)})}
+function passResult(t){const sack=/SACK/.test(t),inc=/INCOMPLETE|OUT OF BOUNDS|BROKEN|DROP|REACH/.test(t),pick=/INTERCEPT|PICK/.test(t);const comp=(/CAUGHT|TOUCHDOWN|\+/.test(t)||G.stats.py>0)&&!inc&&!pick&&!sack;return{comp:comp?1:0,sack:sack?1:0,inc:inc&&!pick?1:0,pick:pick?1:0,t}}
+function quickPass(diff,seed){return withSeed(seed,()=>{fresh(diff);api.setupPlay(api.PLAYS[0]);api.snap();let n=0,threw=0;while(G.st==='live'&&n<700){api.IN.jx=0;api.IN.jy=0;if(!threw&&n>40){const w=G.players.find(p=>p.role==='WR');api.throwTo(w,false,'bullet');threw=1}api.update(1/60);n++}return passResult((G.banner&&G.banner.t)||'')})}
+function variedPass(diff,seed){return withSeed(seed,()=>{fresh(diff);clearKeys();api.setupPlay(api.PLAYS[seed%3]);api.snap();const wait=32+(seed%7)*8;let n=0,threw=0;while(G.st==='live'&&n<760){if(!threw&&n>=wait){const ws=G.players.filter(p=>p.role==='WR'&&p.route!=='block');const w=ws[(seed>>2)%Math.max(1,ws.length)];if(w){const d=Math.hypot(w.x-G.qb.x,w.y-G.qb.y);api.throwTo(w,false,d<15?'bullet':d<28?'lob':'bomb')}threw=1}api.update(1/60);n++}clearKeys();return passResult((G.banner&&G.banner.t)||'')})}
+function jukeScram(diff,seed){return withSeed(seed,()=>{fresh(diff);clearKeys();api.setupPlay(api.PLAYS[0]);api.snap();G.tuck=true;const y0=G.los,side=seed%2?1:-1;let n=0;while(G.st==='live'&&n<900){if(n===42)api.IN.jk=1;keys(n<42?side:-side,1);api.update(1/60);n++}clearKeys();const r=yardsOf(y0);return r})}
+function jukeRet(diff,seed){return withSeed(seed,()=>{fresh(diff);clearKeys();api.startKickoff();let caught=null,n=0,since=0;while(G.st==='live'&&n<1100){const air=G.ball&&!G.ball.caught;if(!air&&caught==null)caught=G.carrier?G.carrier.y:G.los;if(!air)since++;if(since===28)api.IN.jk=1;keys(air?0:(since<28?0.2:1),1);api.update(1/60);n++}clearKeys();const td=G.banner&&/TOUCHDOWN/.test(G.banner.t||'');const end=td?100:(G.los||(caught||0));return{y:(caught==null?0:end-caught),td:td?1:0}}) }
 function postThrow(seed){return withSeed(seed,()=>{fresh(1);api.setupPlay(api.PLAYS[0]);api.snap();let n=0;while(G.st==='live'&&n<30){api.update(1/60);n++}const w=G.players.find(p=>p.role==='WR');api.throwTo(w,false,'lob');for(let i=0;i<25&&G.st==='live';i++){if(G.qb){G.qb.x=0.3;G.qb.y=G.los-1}api.update(1/60)}const air=!!(G.ball&&!G.ball.caught)||!!G.pend;return{live:G.st==='live'&&air}})}
 function lateral(seed){return withSeed(seed,()=>{fresh(1);clearKeys();api.setupPlay(api.PLAYS[0]);api.snap();G.tuck=true;const x0=G.qb.x;let back=0,prev=x0,n=0;while(n<70&&G.st==='live'){keys(1,0);api.update(1/60);if(G.qb.x<prev-0.08)back++;prev=G.qb.x;n++}clearKeys();return{gain:G.qb.x-x0,back,live:G.st==='live'}})}
 function cpu(diff,seed){return withSeed(seed,()=>{fresh(diff);return api.simCpuDrive()})}
 function sum(rows,key){return rows.map(r=>r[key]?1:0)}
 const TIERS=['ROOKIE','PRO','ALL-PRO','LEGEND'];
-const report={qb:{},ret:{},run:{},pass:{},cpu:{},keep:{}};
-const NQB=24,NRET=16,NRUN=12,NPASS=12,NCPU=80;
+const report={qb:{},ret:{},run:{},pass:{},cpu:{},keep:{},mix:{},vp:{},juke:{},jret:{}};
+const NQB=24,NRET=16,NRUN=12,NPASS=12,NCPU=80,NMIX=18,NVP=36,NJ=16;
 for(let d=0;d<4;d++){
  const L=[],R=[];
  for(let i=0;i<NQB;i++){L.push(qbRun(d,-1,1000+d*1000+i));R.push(qbRun(d,1,5000+d*1000+i))}
@@ -44,6 +49,14 @@ for(let d=0;d<4;d++){
  report.run[TIERS[d]]={n:runs.length,mean:+mean(runs.map(r=>r.y)).toFixed(2),td:pct(runs.map(r=>r.td))};
  const ps=[];for(let i=0;i<NPASS;i++)ps.push(quickPass(d,30000+d*100+i));
  report.pass[TIERS[d]]={n:ps.length,comp:pct(ps.map(r=>r.comp)),sack:pct(ps.map(r=>r.sack)),inc:pct(ps.map(r=>r.inc)),pick:pct(ps.map(r=>r.pick))};
+ const mix=[];for(let i=0;i<NMIX;i++)mix.push(calledRun(d,110000+d*200+i));
+ report.mix[TIERS[d]]={n:mix.length,mean:+mean(mix.map(r=>r.y)).toFixed(2),med:+med(mix.map(r=>r.y)).toFixed(2),td:pct(mix.map(r=>r.td)),plus3:pct(mix.map(r=>r.y>=3?1:0))};
+ const vp=[];for(let i=0;i<NVP;i++)vp.push(variedPass(d,150000+d*400+i));
+ report.vp[TIERS[d]]={n:vp.length,comp:pct(vp.map(r=>r.comp)),sack:pct(vp.map(r=>r.sack)),inc:pct(vp.map(r=>r.inc)),pick:pct(vp.map(r=>r.pick))};
+ const jk=[];for(let i=0;i<NJ;i++)jk.push(jukeScram(d,180000+d*300+i));
+ report.juke[TIERS[d]]={n:jk.length,mean:+mean(jk.map(r=>r.y)).toFixed(2),td:pct(jk.map(r=>r.td)),big:pct(jk.map(r=>r.y>=10?1:0))};
+ const jr=[];for(let i=0;i<NJ;i++)jr.push(jukeRet(d,210000+d*300+i));
+ report.jret[TIERS[d]]={n:jr.length,mean:+mean(jr.map(r=>r.y)).toFixed(2),td:pct(jr.map(r=>r.td)),long:jr.filter(r=>r.y>=25).length};
  const cs=[];for(let i=0;i<NCPU;i++)cs.push(cpu(d,40000+i+d*1000));
  const kinds={};
  for(const c of cs)kinds[c.kind]=(kinds[c.kind]||0)+1;
@@ -83,6 +96,19 @@ const pass=TIERS.map(t=>report.pass[t]);
 if(+pass[1].comp<15||+pass[1].comp>90)fails.push('Pro completion '+pass[1].comp);
 if(pass.some(p=>+p.sack>80))fails.push('A tier sacked almost every pass');
 if(+pass[3].comp>+pass[0].comp+5)fails.push('Legend passes easier than rookie');
+const vp=TIERS.map(t=>report.vp[t]);
+if(+vp[0].comp<+vp[3].comp+8)fails.push('Varied pass tier flat '+vp.map(p=>p.comp).join(','));
+if(+vp[3].comp>+vp[1].comp+1)fails.push('Legend completes more varied passes than Pro '+vp[3].comp+' vs '+vp[1].comp);
+if(+vp[2].comp>+vp[0].comp)fails.push('All-Pro varied passes easier than Rookie');
+const mix=TIERS.map(t=>report.mix[t]);
+if(+mix[3].mean<1.2)fails.push('Legend called runs dead '+mix[3].mean);
+if(+mix[0].plus3<15)fails.push('Rookie called runs never gain 3');
+const jk=TIERS.map(t=>report.juke[t]);
+if(+jk[0].mean<5)fails.push('Rookie cutback stuffed '+jk[0].mean);
+if(+jk[0].big<5)fails.push('No rookie scramble breakaway');
+const jr=TIERS.map(t=>report.jret[t]);
+if(+jr[0].mean<=+jr[3].mean)fails.push('Cutback returns not tiered '+jr.map(x=>x.mean).join('>'));
+if(jr[0].long<1)fails.push('Rookie cutback return never reaches 25');
 if(report.keep.postLive!=='8/8')fails.push('Post-throw ended a live pass '+report.keep.postLive);
 if(+report.keep.latMean<1.2)fails.push('Lateral stick froze in the OL '+report.keep.latMean);
 if(report.keep.latBack>6)fails.push('Lateral stick jittered backward '+report.keep.latBack);
